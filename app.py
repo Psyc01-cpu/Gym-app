@@ -6,11 +6,15 @@ from datetime import datetime
 from streamlit_gsheets import GSheetsConnection
 
 def is_user_active(value):
+    if value is None:
+        return False
+
     if isinstance(value, bool):
         return value
-    if isinstance(value, str):
-        return value.strip().lower() == "true"
-    return False
+
+    value_str = str(value).strip().lower()
+
+    return value_str in ["true", "vrai", "1", "yes", "y"]
 
 # ---------------- CONFIG ----------------
 st.set_page_config(page_title="Projet Gotham", page_icon="🦇", layout="centered")
