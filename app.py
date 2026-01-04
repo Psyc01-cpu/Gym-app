@@ -5,6 +5,13 @@ import uuid
 from datetime import datetime
 from streamlit_gsheets import GSheetsConnection
 
+def is_user_active(value):
+    if isinstance(value, bool):
+        return value
+    if isinstance(value, str):
+        return value.strip().lower() == "true"
+    return False
+
 # ---------------- CONFIG ----------------
 st.set_page_config(page_title="Projet Gotham", page_icon="🦇", layout="centered")
 st.title("🦇 Projet Gotham")
@@ -80,7 +87,7 @@ def create_user(username: str, password: str) -> tuple[bool, str]:
         "username": username,
         "password_hash": hash_password(password),
         "role": "user",
-        "is_active": "true",
+        "is_active": True,
         "created_at": now_iso(),
     }])
 
@@ -98,7 +105,7 @@ def login_user(username: str, password: str) -> tuple[bool, str]:
         return False, "Identifiants invalides."
 
     u = row.iloc[0].to_dict()
-    if str(u.get("is_active", "true")).lower() != "true":
+    if not is_user_active(u.get("is_active", True)):
         return False, "Compte désactivé."
 
     if not check_password(password, str(u.get("password_hash", ""))):
