@@ -1,3 +1,4 @@
+from fastapi import Body, HTTPException
 from fastapi import FastAPI
 from fastapi.responses import HTMLResponse
 from fastapi.staticfiles import StaticFiles
@@ -19,6 +20,12 @@ def home(request: Request):
         "index.html",
         {"request": request}
     )
+
+@app.get("/dashboard", response_class=HTMLResponse)
+def dashboard(request: Request, user: str):
+    return templates.TemplateResponse(
+        "dashboard.html",
+        {"request": request, "user": user}
 
 from fastapi import Form
 from fastapi.responses import JSONResponse
