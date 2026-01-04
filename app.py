@@ -114,8 +114,11 @@ def login_user(username: str, password: str) -> tuple[bool, str]:
         return False, "Identifiants invalides."
 
     u = row.iloc[0].to_dict()
-    if not bool(u.get("is_active", True)):
-        return False, "Compte désactivé."
+    st.write("DEBUG is_active brut =", u.get("is_active"), type(u.get("is_active")))
+st.write("DEBUG is_active interprété =", is_user_active(u.get("is_active", None)))
+
+    if not is_user_active(u.get("is_active")):
+    return False, "Compte désactivé."
 
     if not check_password(password, str(u.get("password_hash", ""))):
         return False, "Identifiants invalides."
@@ -126,8 +129,6 @@ def login_user(username: str, password: str) -> tuple[bool, str]:
         "role": u.get("role", "user"),
     }
     return True, "Connecté."
-    
-    u = row.iloc[0].to_dict()
 
 
 def logout():
