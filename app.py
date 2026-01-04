@@ -16,16 +16,17 @@ URL = "https://docs.google.com/spreadsheets/d/1JqA_BaanjhljtGswHsPG2oMIIT9VjEa4Y
 conn = st.connection("gsheets", type=GSheetsConnection)
 
 COLUMNS = ["Date", "Exercice", "Poids", "Reps", "Notes"]
+WORKSHEET = "Feuille 1"
 
 # ---------------- FONCTIONS ----------------
 def load_data():
-    data = conn.read(spreadsheet=URL)
-    if data is None or data.empty:
+    df = conn.read(worksheet=WORKSHEET, ttl=0)
+    if df is None or df.empty:
         return pd.DataFrame(columns=COLUMNS)
-    return data
+    return df
 
 def save_data(df):
-    conn.update(spreadsheet=URL, data=df)
+    conn.update(worksheet=WORKSHEET, data=df)
 
 # ---------------- INTERFACE ----------------
 tab1, tab2, tab3 = st.tabs([
