@@ -5,68 +5,58 @@ const loginBtn = document.getElementById("login-btn");
 const viewBtn = document.getElementById("view-btn");
 const passwordInput = document.getElementById("password");
 
-let selectedUser = null;
+let currentUser = null;
 
-// ouvrir la modale
+// Ouvrir la modale
 document.querySelectorAll(".profile-btn").forEach(btn => {
   btn.addEventListener("click", () => {
-    selectedUser = btn.dataset.user;
-    modalTitle.textContent = `Profil : ${selectedUser}`;
+    currentUser = btn.dataset.user;
+    modalTitle.textContent = `Profil : ${currentUser}`;
     modal.classList.remove("hidden");
+    passwordInput.value = "";
   });
 });
 
-// fermer
+// Fermer la modale
 closeBtn.addEventListener("click", () => {
   modal.classList.add("hidden");
-  passwordInput.value = "";
-  selectedUser = null;
+  currentUser = null;
 });
 
-// connexion
+// Connexion
 loginBtn.addEventListener("click", async () => {
-  if (!selectedUser) {
-    alert("Aucun utilisateur sélectionné");
-    return;
-  }
-
   const password = passwordInput.value;
+
   if (!password) {
-    alert("Mot de passe manquant");
+    alert("Entre un mot de passe");
     return;
   }
 
   try {
     const response = await fetch("/api/login", {
       method: "POST",
-      headers: { "Content-Type": "application/json" },
+      headers: {
+        "Content-Type": "application/json"
+      },
       body: JSON.stringify({
-        username: selectedUser,
+        username: currentUser,
         password: password
       })
     });
 
     const data = await response.json();
 
-    if (!response.ok) {
+    if (response.ok) {
+      window.location.href = `/dashboard?user=${currentUser}`;
+    } else {
       alert(data.detail || "Erreur de connexion");
-      return;
     }
-
-    // succès
-    window.location.href = `/dashboard?user=${selectedUser}`;
-
   } catch (err) {
-    console.error(err);
-    alert("Erreur réseau");
+    alert("Erreur serveur");
   }
 });
 
-// voir profil (sans login pour l’instant)
+// Voir le profil (placeholder)
 viewBtn.addEventListener("click", () => {
-  if (!selectedUser) {
-    alert("Aucun utilisateur");
-    return;
-  }
-  window.location.href = `/dashboard?user=${selectedUser}`;
+  alert("Profil à venir");
 });
