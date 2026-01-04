@@ -59,11 +59,17 @@ def check_password(pw: str, pw_hash: str) -> bool:
 def get_users() -> pd.DataFrame:
     df = read_sheet(USERS_SHEET, USERS_COLS)
 
-    # nettoyage strict du champ is_active
-    df["is_active"] = df["is_active"].apply(is_user_active)
+    st.write("🔎 DEBUG — données brutes users :")
+    st.dataframe(df)
 
-    # normalisation username
+    st.write("🔎 DEBUG — types des colonnes :")
+    st.write(df.dtypes)
+
+    df["is_active"] = df["is_active"].apply(is_user_active)
     df["username"] = df["username"].astype(str).str.strip().str.lower()
+
+    st.write("🔎 DEBUG — après normalisation is_active :")
+    st.dataframe(df[["username", "is_active"]])
 
     return df
 
