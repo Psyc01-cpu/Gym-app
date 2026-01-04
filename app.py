@@ -267,6 +267,8 @@ elif page == "Admin":
     st.subheader("Admin — Utilisateurs")
 
     users = get_users()
+    st.write("DEBUG onglet users :", users)
+    st.write("DEBUG is_active brut :", users["is_active"].tolist())
     st.dataframe(users, use_container_width=True)
 
     st.info("À ce stade on ne montre PAS les mots de passe (sécurité). Prochaine étape : désactiver / supprimer / impersonation.")
