@@ -1,39 +1,30 @@
-// ---------------- ELEMENTS ----------------
+// === éléments DOM ===
 const modal = document.getElementById("modal-overlay");
 const modalTitle = document.getElementById("modal-title");
-
 const closeBtn = document.getElementById("close-btn");
 const loginBtn = document.getElementById("login-btn");
-const viewBtn = document.getElementById("view-btn");
-
 const passwordInput = document.getElementById("password");
 
 let selectedUser = null;
 
-// ---------------- OUVERTURE MODALE ----------------
+// === ouvrir la modale ===
 document.querySelectorAll(".profile-btn").forEach(btn => {
   btn.addEventListener("click", () => {
     selectedUser = btn.dataset.user;
     modalTitle.textContent = `Profil : ${selectedUser}`;
-    passwordInput.value = "";
     modal.classList.remove("hidden");
+    passwordInput.value = "";
   });
 });
 
-// ---------------- FERMER MODALE ----------------
+// === fermer la modale ===
 closeBtn.addEventListener("click", () => {
   modal.classList.add("hidden");
   selectedUser = null;
-  passwordInput.value = "";
 });
 
-// ---------------- CONNEXION ----------------
+// === connexion ===
 loginBtn.addEventListener("click", async () => {
-  if (!selectedUser) {
-    alert("Aucun profil sélectionné");
-    return;
-  }
-
   const password = passwordInput.value;
 
   if (!password) {
@@ -55,20 +46,16 @@ loginBtn.addEventListener("click", async () => {
 
     const data = await response.json();
 
-    if (response.ok && data.success) {
-      window.location.href = `/dashboard?user=${selectedUser}`;
-    } else {
-      alert(data.message || "Erreur de connexion");
+    if (!response.ok) {
+      alert(data.detail || "Erreur de connexion");
+      return;
     }
 
-  } catch (err) {
-    alert("Erreur serveur");
-    console.error(err);
-  }
-});
+    // ✅ succès → dashboard
+    window.location.href = `/dashboard?user=${selectedUser}`;
 
-// ---------------- VOIR PROFIL (DEMO POUR L’INSTANT) ----------------
-viewBtn.addEventListener("click", () => {
-  if (!selectedUser) return;
-  alert(`Voir le profil de ${selectedUser} (à venir)`);
+  } catch (err) {
+    console.error(err);
+    alert("Erreur serveur");
+  }
 });
