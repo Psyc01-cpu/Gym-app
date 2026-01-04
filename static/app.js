@@ -1,3 +1,7 @@
+alert("JS CHARGÉ");
+console.log("JS chargé");
+
+
 document.addEventListener("DOMContentLoaded", () => {
 
   const modal = document.getElementById("modal-overlay");
