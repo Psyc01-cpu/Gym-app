@@ -189,54 +189,53 @@ def get_profile(user_id: str) -> dict:
     return row.iloc[0].to_dict()
 
 
-# ---------------- UI ----------------
+# ---------------- UI CONNEXION (BATMAN STYLE) ----------------
 if not is_logged_in():
-    st.subheader("Connexion")
+    st.markdown("""
+        <h1 style='text-align:center; color:#f5c400;'>BATMAN TRAINING</h1>
+        <p style='text-align:center; color:gray;'>Bienvenue dans la Batcave</p>
+        <h3 style='text-align:center; color:#f5c400;'>Classement des Profils</h3>
+    """, unsafe_allow_html=True)
 
-    tab_login, tab_signup = st.tabs(["Se connecter", "Créer un compte"])
+    users = get_active_users()
 
-    with tab_login:
-        users = get_active_users()
+    if users.empty:
+        st.warning("Aucun profil disponible.")
+        st.stop()
 
-        if users.empty:
-            st.warning("Aucun compte actif.")
-        else:
-            usernames = users["username"].tolist()
+    # état : quel profil est sélectionné
+    if "selected_user" not in st.session_state:
+        st.session_state["selected_user"] = None
 
-            selected_user = st.selectbox(
-                "Choisis ton profil",
-                usernames
+    cols = st.columns(3)
+    for idx, row in users.iterrows():
+        col = cols[idx % 3]
+
+        with col:
+            clicked = st.button(
+                f"🦇 {row['username']}\n\nBRONZE I",
+                use_container_width=True
             )
 
-            with st.form("login_form"):
-                password = st.text_input("Mot de passe", type="password")
-                submit = st.form_submit_button("Connexion")
+            if clicked:
+                st.session_state["selected_user"] = row["username"]
 
-            if submit:
-                ok, msg = login_user(selected_user, password)
-                if ok:
-                    st.success(msg)
-                    st.rerun()
-                else:
-                    st.error(msg)
+    # ----------- “MODALE” DE CONNEXION -----------
+    if st.session_state["selected_user"]:
+        st.markdown("---")
+        st.subheader(f"Connexion – {st.session_state['selected_user']}")
 
-    with tab_signup:
-        st.info("Crée ton compte. Ton mot de passe n’est jamais stocké en clair.")
-        with st.form("signup_form"):
-            username = st.text_input("Nom d’utilisateur (min 3 caractères)")
-            password = st.text_input("Mot de passe (min 6 caractères)", type="password")
-            password2 = st.text_input("Confirmer le mot de passe", type="password")
-            submit2 = st.form_submit_button("Créer mon compte")
+        with st.form("login_form"):
+            password = st.text_input("Mot de passe", type="password")
+            submit = st.form_submit_button("Connexion")
 
-        if submit2:
-            if password != password2:
-                st.error("Les mots de passe ne correspondent pas.")
+        if submit:
+            ok, msg = login_user(st.session_state["selected_user"], password)
+            if ok:
+                st.success(msg)
+                st.rerun()
             else:
-                ok, msg = create_user(username, password)
-                if ok:
-                    st.success(msg)
-                else:
-                    st.error(msg)
+                st.error(msg)
 
     st.stop()
 
