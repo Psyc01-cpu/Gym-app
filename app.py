@@ -5,17 +5,6 @@ import uuid
 from datetime import datetime
 from streamlit_gsheets import GSheetsConnection
 
-def is_user_active(value):
-    if value is None:
-        return True
-    if isinstance(value, bool):
-        return value
-
-    s = str(value).strip().lower()
-    if s == "":
-        return True
-    return s in {"true", "vrai", "1", "yes", "oui", "y", "t"}
-
 # ---------------- CONFIG ----------------
 st.set_page_config(page_title="Projet Gotham", page_icon="🦇", layout="centered")
 st.title("🦇 Projet Gotham")
@@ -103,10 +92,20 @@ def create_user(username: str, password: str) -> tuple[bool, str]:
     write_sheet(USERS_SHEET, users)
     return True, "Compte créé. Tu peux te connecter."
 
+def is_user_active(value):
+    if value is None:
+        return False
+    if isinstance(value, bool):
+        return value
+
+    s = str(value).strip().lower()
+    return s in {"true", "vrai", "1", "yes", "oui", "y", "t"}
 
 def login_user(username: str, password: str) -> tuple[bool, str]:
     username = username.strip().lower()
     users = get_users()
+
+    # Debug temporaire (tu pourras enlever après)
     st.write(users[["username", "role", "is_active"]])
 
     row = users[users["username"] == username]
@@ -114,20 +113,23 @@ def login_user(username: str, password: str) -> tuple[bool, str]:
         return False, "Identifiants invalides."
 
     u = row.iloc[0].to_dict()
-    
+
+    # 🔒 Vérification compte actif
     if not is_user_active(u.get("is_active")):
         return False, "Compte désactivé."
 
+    # 🔑 Vérification mot de passe
     if not check_password(password, str(u.get("password_hash", ""))):
         return False, "Identifiants invalides."
 
+    # ✅ Connexion OK
     st.session_state["auth"] = {
-        "user_id": u["user_id"],
-        "username": u["username"],
+        "user_id": u.get("user_id"),
+        "username": u.get("username"),
         "role": u.get("role", "user"),
     }
-    return True, "Connecté."
 
+    return True, "Connecté."
 
 def logout():
     st.session_state.pop("auth", None)
