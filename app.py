@@ -5,6 +5,10 @@ import uuid
 from datetime import datetime
 from streamlit_gsheets import GSheetsConnection
 
+# Mémoire pour savoir si une "fenêtre de connexion" est ouverte
+if "modal_user" not in st.session_state:
+    st.session_state["modal_user"] = None
+
 # ---------------- CONFIG ----------------
 st.set_page_config(page_title="Projet Gotham", page_icon="🦇", layout="centered")
 st.title("🦇 Projet Gotham")
@@ -192,65 +196,78 @@ def get_profile(user_id: str) -> dict:
 # ---------------- UI CONNEXION (BATMAN STYLE AVEC MODALE) ----------------
 if not is_logged_in():
 
+    st.subheader("Connexion")
+
     users = get_active_users()
 
     if users.empty:
         st.warning("Aucun profil disponible.")
         st.stop()
 
-    # état modale
+    # état de la pseudo-modale
     if "selected_user" not in st.session_state:
         st.session_state["selected_user"] = None
 
-    # -------- CARTES PROFILS --------
+    # -------- CARTES / BOUTONS PROFILS --------
+    st.markdown("### Classement des Profils")
+
     cols = st.columns(3)
     for idx, row in users.iterrows():
-        col = cols[idx % 3]
-
-        with col:
+        with cols[idx % 3]:
             if st.button(
                 row["username"],
                 use_container_width=True
             ):
                 st.session_state["selected_user"] = row["username"]
 
-    # -------- MODALE (FAUSSE MAIS PRO) --------
+    # -------- MODALE (SIMULÉE) --------
     if st.session_state["selected_user"]:
+
         st.markdown("---")
         st.markdown(
-            f"<h3 style='text-align:center;'>Profil : {st.session_state['selected_user']}</h3>",
+            f"""
+            <div style="
+                max-width: 500px;
+                margin: auto;
+                padding: 25px;
+                border-radius: 12px;
+                background: #0e1117;
+                border: 1px solid #2c2f36;
+            ">
+                <h3 style="text-align:center; margin-bottom:20px;">
+                    Profil : {st.session_state['selected_user']}
+                </h3>
+            """,
             unsafe_allow_html=True
         )
 
-        with st.container():
+        with st.form("login_form"):
+            password = st.text_input("Mot de passe", type="password")
 
-            with st.form("login_form"):
-                password = st.text_input("Mot de passe", type="password")
-                col1, col2 = st.columns(2)
+            col1, col2 = st.columns(2)
+            with col1:
+                submit = st.form_submit_button("Connexion")
+            with col2:
+                view = st.form_submit_button("Voir le profil")
 
-                with col1:
-                    submit = st.form_submit_button("Connexion")
-                with col2:
-                    view = st.form_submit_button("Voir le profil")
+        st.markdown("</div>", unsafe_allow_html=True)
 
-            st.markdown("</div>", unsafe_allow_html=True)
-
-            # ---- ACTIONS ----
-            if submit:
-                ok, msg = login_user(st.session_state["selected_user"], password)
-                if ok:
-                    st.success(msg)
-                    st.session_state["selected_user"] = None
-                    st.rerun()
-                else:
-                    st.error(msg)
-
-            if view:
-                st.info("Voir le profil (à développer plus tard)")
-
-            if st.button("Fermer"):
+        # -------- ACTIONS --------
+        if submit:
+            ok, msg = login_user(st.session_state["selected_user"], password)
+            if ok:
+                st.success(msg)
                 st.session_state["selected_user"] = None
                 st.rerun()
+            else:
+                st.error(msg)
+
+        if view:
+            st.info("Voir le profil (à développer plus tard)")
+
+        if st.button("Fermer"):
+            st.session_state["selected_user"] = None
+            st.rerun()
 
     st.stop()
 
