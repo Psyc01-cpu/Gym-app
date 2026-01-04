@@ -12,8 +12,28 @@
   <p>Bienvenue dans la Batcave</p>
 
   <div class="profiles">
-    <button class="profile-btn">dan</button>
-    <button class="profile-btn">papy</button>
+    <button class="profile-btn" data-user="dan">dan</button>
+    <button class="profile-btn" data-user="papy">papy</button>
+  </div>
+
+  <!-- MODALE -->
+  <div id="modal-overlay" class="hidden">
+    <div class="modal">
+      <h2 id="modal-title">Profil</h2>
+
+      <input
+        type="password"
+        placeholder="Mot de passe"
+        id="password"
+      />
+
+      <div class="modal-actions">
+        <button id="login-btn">Connexion</button>
+        <button id="view-btn">Voir le profil</button>
+      </div>
+
+      <button id="close-btn" class="close">Fermer</button>
+    </div>
   </div>
 
   <script src="/static/app.js"></script>
