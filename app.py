@@ -1,143 +1,253 @@
 import streamlit as st
-from streamlit_gsheets import GSheetsConnection
 import pandas as pd
+import bcrypt
+import uuid
 from datetime import datetime
+from streamlit_gsheets import GSheetsConnection
 
 # ---------------- CONFIG ----------------
-st.set_page_config(
-    page_title="Projet Gotham",
-    page_icon="🦇",
-    layout="centered"
-)
-
+st.set_page_config(page_title="Projet Gotham", page_icon="🦇", layout="centered")
 st.title("🦇 Projet Gotham")
 
-URL = "https://docs.google.com/spreadsheets/d/1JqA_BaanjhljtGswHsPG2oMIIT9VjEa4YjH3mLAUczA/edit?usp=sharing"
 conn = st.connection("gsheets", type=GSheetsConnection)
 
-COLUMNS = ["Date", "Exercice", "Poids", "Reps", "Notes"]
-WORKSHEET = "Feuille 1"
+USERS_SHEET = "users"
+PROFILES_SHEET = "profiles"
 
-# ---------------- FONCTIONS ----------------
-def load_data():
-    df = conn.read(worksheet=WORKSHEET, ttl=0)
+USERS_COLS = ["user_id", "username", "password_hash", "role", "is_active", "created_at"]
+PROFILES_COLS = ["user_id", "display_name", "age", "sex", "height_cm", "weight_kg", "goal", "activity_level", "created_at"]
+
+
+# ---------------- HELPERS ----------------
+def now_iso():
+    return datetime.utcnow().isoformat(timespec="seconds")
+
+
+def read_sheet(name: str, cols: list[str]) -> pd.DataFrame:
+    df = conn.read(worksheet=name, ttl=0)
     if df is None or df.empty:
-        return pd.DataFrame(columns=COLUMNS)
+        return pd.DataFrame(columns=cols)
+    # Ajoute colonnes manquantes
+    for c in cols:
+        if c not in df.columns:
+            df[c] = None
+    return df[cols].copy()
+
+
+def write_sheet(name: str, df: pd.DataFrame):
+    conn.update(worksheet=name, data=df)
+
+
+def hash_password(pw: str) -> str:
+    # bcrypt stocke un hash, pas le mdp
+    salt = bcrypt.gensalt()
+    return bcrypt.hashpw(pw.encode("utf-8"), salt).decode("utf-8")
+
+
+def check_password(pw: str, pw_hash: str) -> bool:
+    try:
+        return bcrypt.checkpw(pw.encode("utf-8"), pw_hash.encode("utf-8"))
+    except Exception:
+        return False
+
+
+def get_users() -> pd.DataFrame:
+    df = read_sheet(USERS_SHEET, USERS_COLS)
+    # nettoyage
+    df["username"] = df["username"].astype(str).str.strip().str.lower()
+    df["is_active"] = df["is_active"].astype(str).str.lower().replace({"true": "true", "false": "false"})
     return df
 
-def save_data(df):
-    conn.update(worksheet=WORKSHEET, data=df)
 
-# ---------------- INTERFACE ----------------
-tab1, tab2, tab3 = st.tabs([
-    "➕ Nouvelle séance",
-    "📄 Historique",
-    "📈 Progression"
-])
+def get_profiles() -> pd.DataFrame:
+    return read_sheet(PROFILES_SHEET, PROFILES_COLS)
 
-# ---------- ONGLET 1 : SAISIE ----------
-with tab1:
-    st.subheader("Ajouter une séance")
 
-    with st.form("gym_form", clear_on_submit=True):
-        exercice = st.selectbox(
-            "Exercice",
-            [
-                "Développé couché",
-                "Squat",
-                "Soulevé de terre",
-                "Tractions",
-                "Dips",
-                "Fentes"
-            ]
-        )
+def create_user(username: str, password: str) -> tuple[bool, str]:
+    username = username.strip().lower()
+    if len(username) < 3:
+        return False, "Le nom d’utilisateur doit faire au moins 3 caractères."
+    if len(password) < 6:
+        return False, "Le mot de passe doit faire au moins 6 caractères."
 
-        col1, col2 = st.columns(2)
-        with col1:
-            poids = st.number_input("Poids (kg)", min_value=0, step=1)
-        with col2:
-            reps = st.number_input("Répétitions", min_value=0, step=1)
+    users = get_users()
+    if (users["username"] == username).any():
+        return False, "Ce nom d’utilisateur existe déjà."
 
-        notes = st.text_input("Notes")
-        submit = st.form_submit_button("Enregistrer")
+    user_id = str(uuid.uuid4())
+    new_row = pd.DataFrame([{
+        "user_id": user_id,
+        "username": username,
+        "password_hash": hash_password(password),
+        "role": "user",
+        "is_active": "true",
+        "created_at": now_iso(),
+    }])
 
-    if submit:
-        df = load_data()
+    users = pd.concat([users, new_row], ignore_index=True)
+    write_sheet(USERS_SHEET, users)
+    return True, "Compte créé. Tu peux te connecter."
 
-        new_row = pd.DataFrame([{
-            "Date": datetime.now().strftime("%Y-%m-%d"),
-            "Exercice": exercice,
-            "Poids": int(poids),
-            "Reps": int(reps),
-            "Notes": notes
-        }])
 
-        df = pd.concat([df, new_row], ignore_index=True)
-        save_data(df)
+def login_user(username: str, password: str) -> tuple[bool, str]:
+    username = username.strip().lower()
+    users = get_users()
 
-        st.success("Séance enregistrée avec succès")
+    row = users[users["username"] == username]
+    if row.empty:
+        return False, "Identifiants invalides."
 
-# ---------- ONGLET 2 : HISTORIQUE ----------
-with tab2:
-    st.subheader("Historique des séances")
+    u = row.iloc[0].to_dict()
+    if str(u.get("is_active", "true")).lower() != "true":
+        return False, "Compte désactivé."
 
-    df = load_data()
+    if not check_password(password, str(u.get("password_hash", ""))):
+        return False, "Identifiants invalides."
 
-    if df.empty:
-        st.info("Aucune séance enregistrée pour le moment.")
+    st.session_state["auth"] = {
+        "user_id": u["user_id"],
+        "username": u["username"],
+        "role": u.get("role", "user"),
+    }
+    return True, "Connecté."
+
+
+def logout():
+    st.session_state.pop("auth", None)
+
+
+def is_logged_in() -> bool:
+    return "auth" in st.session_state
+
+
+def current_user():
+    return st.session_state.get("auth")
+
+
+def upsert_profile(user_id: str, data: dict):
+    profiles = get_profiles()
+    existing = profiles[profiles["user_id"] == user_id]
+
+    row = {
+        "user_id": user_id,
+        "display_name": data.get("display_name", ""),
+        "age": data.get("age", None),
+        "sex": data.get("sex", ""),
+        "height_cm": data.get("height_cm", None),
+        "weight_kg": data.get("weight_kg", None),
+        "goal": data.get("goal", ""),
+        "activity_level": data.get("activity_level", ""),
+        "created_at": now_iso(),
+    }
+
+    if existing.empty:
+        profiles = pd.concat([profiles, pd.DataFrame([row])], ignore_index=True)
     else:
-        df["Date"] = pd.to_datetime(df["Date"], errors="coerce")
-        df["Poids"] = pd.to_numeric(df["Poids"], errors="coerce")
-        df["Reps"] = pd.to_numeric(df["Reps"], errors="coerce")
+        idx = existing.index[0]
+        for k, v in row.items():
+            profiles.loc[idx, k] = v
 
-        filtres = st.multiselect(
-            "Filtrer par exercice",
-            sorted(df["Exercice"].dropna().unique())
-        )
+    write_sheet(PROFILES_SHEET, profiles)
 
-        if filtres:
-            df = df[df["Exercice"].isin(filtres)]
 
-        st.dataframe(
-            df.sort_values("Date", ascending=False),
-            use_container_width=True
-        )
+def get_profile(user_id: str) -> dict:
+    profiles = get_profiles()
+    row = profiles[profiles["user_id"] == user_id]
+    if row.empty:
+        return {}
+    return row.iloc[0].to_dict()
 
-        csv = df.to_csv(index=False).encode("utf-8")
-        st.download_button(
-            "Télécharger les données (CSV)",
-            data=csv,
-            file_name="projet_gotham_gym_tracker.csv",
-            mime="text/csv"
-        )
 
-# ---------- ONGLET 3 : PROGRESSION ----------
-with tab3:
-    st.subheader("Progression par exercice")
+# ---------------- UI ----------------
+if not is_logged_in():
+    st.subheader("Connexion")
 
-    df = load_data()
+    tab_login, tab_signup = st.tabs(["Se connecter", "Créer un compte"])
 
-    if df.empty:
-        st.info("Pas assez de données pour afficher une progression.")
-    else:
-        df["Date"] = pd.to_datetime(df["Date"], errors="coerce")
-        df["Poids"] = pd.to_numeric(df["Poids"], errors="coerce")
+    with tab_login:
+        with st.form("login_form"):
+            username = st.text_input("Nom d’utilisateur")
+            password = st.text_input("Mot de passe", type="password")
+            submit = st.form_submit_button("Connexion")
 
-        exercice = st.selectbox(
-            "Choisir un exercice",
-            sorted(df["Exercice"].dropna().unique())
-        )
+        if submit:
+            ok, msg = login_user(username, password)
+            if ok:
+                st.success(msg)
+                st.rerun()
+            else:
+                st.error(msg)
 
-        d = df[df["Exercice"] == exercice].dropna(subset=["Date", "Poids"])
+    with tab_signup:
+        st.info("Crée ton compte. Ton mot de passe n’est jamais stocké en clair.")
+        with st.form("signup_form"):
+            username = st.text_input("Nom d’utilisateur (min 3 caractères)")
+            password = st.text_input("Mot de passe (min 6 caractères)", type="password")
+            password2 = st.text_input("Confirmer le mot de passe", type="password")
+            submit2 = st.form_submit_button("Créer mon compte")
 
-        if d.empty:
-            st.info("Pas encore de données pour cet exercice.")
-        else:
-            progression = (
-                d.groupby(d["Date"].dt.date)["Poids"]
-                .max()
-                .reset_index()
-                .rename(columns={"Poids": "Poids max"})
-            )
+        if submit2:
+            if password != password2:
+                st.error("Les mots de passe ne correspondent pas.")
+            else:
+                ok, msg = create_user(username, password)
+                if ok:
+                    st.success(msg)
+                else:
+                    st.error(msg)
 
-            st.line_chart(progression, x="Date", y="Poids max")
+    st.stop()
+
+# ----------- Zone privée -----------
+auth = current_user()
+st.sidebar.markdown(f"Connecté : **{auth['username']}**")
+st.sidebar.markdown(f"Rôle : **{auth.get('role','user')}**")
+
+if st.sidebar.button("Se déconnecter"):
+    logout()
+    st.rerun()
+
+# Navigation simple (on fera mieux après)
+page = st.sidebar.radio("Navigation", ["Dashboard", "Mon profil"] + (["Admin"] if auth.get("role") == "admin" else []))
+
+if page == "Dashboard":
+    st.subheader("Dashboard")
+    st.write("Étape 1 OK : authentification + profils.")
+    st.info("Prochaine étape : exercices + séances + stats.")
+
+elif page == "Mon profil":
+    st.subheader("Mon profil")
+
+    profile = get_profile(auth["user_id"])
+
+    with st.form("profile_form"):
+        display_name = st.text_input("Nom affiché", value=str(profile.get("display_name", "")))
+        age = st.number_input("Âge", min_value=0, max_value=120, value=int(profile.get("age") or 0))
+        sex = st.selectbox("Sexe", ["", "Homme", "Femme", "Autre"], index=0 if not profile.get("sex") else ["", "Homme", "Femme", "Autre"].index(profile.get("sex")))
+        height_cm = st.number_input("Taille (cm)", min_value=0, max_value=250, value=int(profile.get("height_cm") or 0))
+        weight_kg = st.number_input("Poids (kg)", min_value=0.0, max_value=400.0, value=float(profile.get("weight_kg") or 0.0))
+        goal = st.selectbox("Objectif", ["", "Perte de poids", "Maintien", "Prise de masse"], index=0 if not profile.get("goal") else ["", "Perte de poids", "Maintien", "Prise de masse"].index(profile.get("goal")))
+        activity_level = st.selectbox("Niveau d’activité", ["", "Faible", "Modéré", "Élevé"], index=0 if not profile.get("activity_level") else ["", "Faible", "Modéré", "Élevé"].index(profile.get("activity_level")))
+
+        save = st.form_submit_button("Enregistrer le profil")
+
+    if save:
+        upsert_profile(auth["user_id"], {
+            "display_name": display_name,
+            "age": age if age > 0 else None,
+            "sex": sex,
+            "height_cm": height_cm if height_cm > 0 else None,
+            "weight_kg": weight_kg if weight_kg > 0 else None,
+            "goal": goal,
+            "activity_level": activity_level,
+        })
+        st.success("Profil enregistré.")
+        st.rerun()
+
+elif page == "Admin":
+    st.subheader("Admin — Utilisateurs")
+
+    users = get_users()
+    st.dataframe(users, use_container_width=True)
+
+    st.info("À ce stade on ne montre PAS les mots de passe (sécurité). Prochaine étape : désactiver / supprimer / impersonation.")
