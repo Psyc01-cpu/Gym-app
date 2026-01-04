@@ -36,3 +36,34 @@ def login(username: str = Form(...), password: str = Form(...)):
         status_code=401,
         content={"status": "error", "message": "Mot de passe incorrect"}
     )
+
+from fastapi import FastAPI
+from fastapi.responses import JSONResponse
+from fastapi import Body
+
+app = FastAPI()
+
+# FAKE USERS (temporaire)
+USERS = {
+    "dan": "1234",
+    "papy": "abcd"
+}
+
+@app.post("/api/login")
+def login(data: dict = Body(...)):
+    username = data.get("username")
+    password = data.get("password")
+
+    if username not in USERS:
+        return JSONResponse(
+            status_code=401,
+            content={"success": False, "message": "Utilisateur inconnu"}
+        )
+
+    if USERS[username] != password:
+        return JSONResponse(
+            status_code=401,
+            content={"success": False, "message": "Mot de passe incorrect"}
+        )
+
+    return {"success": True}
