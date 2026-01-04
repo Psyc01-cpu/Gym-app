@@ -116,7 +116,7 @@ def login_user(username: str, password: str) -> tuple[bool, str]:
     u = row.iloc[0].to_dict()
     
     if not is_user_active(u.get("is_active")):
-    return False, "Compte désactivé."
+        return False, "Compte désactivé."
 
     if not check_password(password, str(u.get("password_hash", ""))):
         return False, "Identifiants invalides."
