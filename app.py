@@ -25,12 +25,17 @@ def now_iso():
 
 def read_sheet(name: str, cols: list[str]) -> pd.DataFrame:
     df = conn.read(worksheet=name, ttl=0)
+
     if df is None or df.empty:
         return pd.DataFrame(columns=cols)
-    # Ajoute colonnes manquantes
+
+    # 🔧 NORMALISATION DES COLONNES
+    df.columns = [c.strip() for c in df.columns]
+
     for c in cols:
         if c not in df.columns:
             df[c] = None
+
     return df[cols].copy()
 
 
