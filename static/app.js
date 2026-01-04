@@ -58,10 +58,10 @@ loginBtn.addEventListener("click", async () => {
 
   const data = await response.json();
 
-  if (response.ok) {
-    alert("Connexion réussie : " + data.user);
-    // plus tard → redirect vers dashboard
-  } else {
-    alert(data.message);
-  }
+if (response.ok) {
+  window.location.href = `/dashboard?user=${selectedUser}`;
+} else {
+  alert(data.message);
+}
+
 });
