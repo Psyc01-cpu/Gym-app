@@ -202,14 +202,25 @@ if not is_logged_in():
 
     tab_login, tab_signup = st.tabs(["Se connecter", "Créer un compte"])
 
-    with tab_login:
+with tab_login:
+    users = get_active_users()
+
+    if users.empty:
+        st.warning("Aucun compte actif.")
+    else:
+        usernames = users["username"].tolist()
+
+        selected_user = st.selectbox(
+            "Choisis ton profil",
+            usernames
+        )
+
         with st.form("login_form"):
-            username = st.text_input("Nom d’utilisateur")
             password = st.text_input("Mot de passe", type="password")
             submit = st.form_submit_button("Connexion")
 
         if submit:
-            ok, msg = login_user(username, password)
+            ok, msg = login_user(selected_user, password)
             if ok:
                 st.success(msg)
                 st.rerun()
