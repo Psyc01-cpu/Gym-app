@@ -1,7 +1,3 @@
-alert("JS CHARGÉ");
-console.log("JS chargé");
-
-
 document.addEventListener("DOMContentLoaded", () => {
 
   const modal = document.getElementById("modal-overlay");
@@ -40,6 +36,9 @@ document.addEventListener("DOMContentLoaded", () => {
   loginBtn.addEventListener("click", async () => {
     const password = passwordInput.value;
 
+    console.log("CLICK LOGIN", currentUser, password);
+    alert("clic login détecté");
+    
     if (!password) {
       alert("Entre un mot de passe");
       return;
