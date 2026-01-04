@@ -1,43 +1,45 @@
-// === éléments DOM ===
 const modal = document.getElementById("modal-overlay");
 const modalTitle = document.getElementById("modal-title");
 const closeBtn = document.getElementById("close-btn");
 const loginBtn = document.getElementById("login-btn");
+const viewBtn = document.getElementById("view-btn");
 const passwordInput = document.getElementById("password");
 
 let selectedUser = null;
 
-// === ouvrir la modale ===
+// ouvrir la modale
 document.querySelectorAll(".profile-btn").forEach(btn => {
   btn.addEventListener("click", () => {
     selectedUser = btn.dataset.user;
     modalTitle.textContent = `Profil : ${selectedUser}`;
     modal.classList.remove("hidden");
-    passwordInput.value = "";
   });
 });
 
-// === fermer la modale ===
+// fermer
 closeBtn.addEventListener("click", () => {
   modal.classList.add("hidden");
+  passwordInput.value = "";
   selectedUser = null;
 });
 
-// === connexion ===
+// connexion
 loginBtn.addEventListener("click", async () => {
-  const password = passwordInput.value;
+  if (!selectedUser) {
+    alert("Aucun utilisateur sélectionné");
+    return;
+  }
 
+  const password = passwordInput.value;
   if (!password) {
-    alert("Mot de passe requis");
+    alert("Mot de passe manquant");
     return;
   }
 
   try {
     const response = await fetch("/api/login", {
       method: "POST",
-      headers: {
-        "Content-Type": "application/json"
-      },
+      headers: { "Content-Type": "application/json" },
       body: JSON.stringify({
         username: selectedUser,
         password: password
@@ -51,11 +53,20 @@ loginBtn.addEventListener("click", async () => {
       return;
     }
 
-    // ✅ succès → dashboard
+    // succès
     window.location.href = `/dashboard?user=${selectedUser}`;
 
   } catch (err) {
     console.error(err);
-    alert("Erreur serveur");
+    alert("Erreur réseau");
   }
+});
+
+// voir profil (sans login pour l’instant)
+viewBtn.addEventListener("click", () => {
+  if (!selectedUser) {
+    alert("Aucun utilisateur");
+    return;
+  }
+  window.location.href = `/dashboard?user=${selectedUser}`;
 });
