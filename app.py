@@ -62,7 +62,7 @@ def get_users() -> pd.DataFrame:
     df = read_sheet(USERS_SHEET, USERS_COLS)
     # nettoyage
     df["username"] = df["username"].astype(str).str.strip().str.lower()
-    df["is_active"] = df["is_active"].astype(str).str.lower().replace({"true": "true", "false": "false"})
+    df["is_active"] = df["is_active"].apply(is_user_active)
     return df
 
 
@@ -105,7 +105,7 @@ def login_user(username: str, password: str) -> tuple[bool, str]:
         return False, "Identifiants invalides."
 
     u = row.iloc[0].to_dict()
-    if not is_user_active(u.get("is_active", True)):
+    if not bool(u.get("is_active", True)):
         return False, "Compte désactivé."
 
     if not check_password(password, str(u.get("password_hash", ""))):
