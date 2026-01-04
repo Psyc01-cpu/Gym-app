@@ -106,9 +106,16 @@ def create_user(username: str, password: str) -> tuple[bool, str]:
 def is_user_active(value):
     if value is None:
         return False
+
+    # bool natif
     if isinstance(value, bool):
         return value
 
+    # nombres (Google Sheets → float64)
+    if isinstance(value, (int, float)):
+        return value == 1
+
+    # chaînes
     s = str(value).strip().lower()
     return s in {"true", "vrai", "1", "yes", "oui", "y", "t"}
 
