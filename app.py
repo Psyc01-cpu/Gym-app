@@ -126,6 +126,8 @@ def login_user(username: str, password: str) -> tuple[bool, str]:
         "role": u.get("role", "user"),
     }
     return True, "Connecté."
+    
+    u = row.iloc[0].to_dict()
 
 
 def logout():
