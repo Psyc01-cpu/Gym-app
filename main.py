@@ -5,24 +5,17 @@ from fastapi.templating import Jinja2Templates
 
 app = FastAPI()
 
-# ---------- CONFIG ----------
 app.mount("/static", StaticFiles(directory="static"), name="static")
 templates = Jinja2Templates(directory="templates")
 
-# FAKE USERS (TEMPORAIRE)
 USERS = {
     "dan": "admin123",
     "papy": "user123"
 }
 
-# ---------- ROUTES HTML ----------
-
 @app.get("/", response_class=HTMLResponse)
 def home(request: Request):
-    return templates.TemplateResponse(
-        "index.html",
-        {"request": request}
-    )
+    return templates.TemplateResponse("index.html", {"request": request})
 
 @app.get("/dashboard", response_class=HTMLResponse)
 def dashboard(request: Request, user: str):
@@ -30,8 +23,6 @@ def dashboard(request: Request, user: str):
         "dashboard.html",
         {"request": request, "user": user}
     )
-
-# ---------- API LOGIN ----------
 
 @app.post("/api/login")
 def login(data: dict = Body(...)):
