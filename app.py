@@ -73,10 +73,12 @@ def get_users() -> pd.DataFrame:
 
     return df
 
+def get_active_users() -> pd.DataFrame:
+    users = get_users()
+    return users[users["is_active"] == True].copy()
 
 def get_profiles() -> pd.DataFrame:
     return read_sheet(PROFILES_SHEET, PROFILES_COLS)
-
 
 def create_user(username: str, password: str) -> tuple[bool, str]:
     username = username.strip().lower()
