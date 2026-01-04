@@ -1,3 +1,4 @@
+// ---------------- ELEMENTS ----------------
 const modal = document.getElementById("modal-overlay");
 const modalTitle = document.getElementById("modal-title");
 
@@ -5,63 +6,69 @@ const closeBtn = document.getElementById("close-btn");
 const loginBtn = document.getElementById("login-btn");
 const viewBtn = document.getElementById("view-btn");
 
-let currentUser = null;
-
-// ouvrir la modale
-document.querySelectorAll(".profile-btn").forEach(btn => {
-  btn.addEventListener("click", () => {
-    currentUser = btn.dataset.user;
-    modalTitle.innerText = "Profil : " + currentUser;
-    modal.classList.remove("hidden");
-  });
-});
-
-// fermer
-closeBtn.addEventListener("click", () => {
-  modal.classList.add("hidden");
-  currentUser = null;
-});
-
-// actions (pour l’instant demo)
-loginBtn.addEventListener("click", () => {
-  alert("Connexion pour " + currentUser);
-});
-
-viewBtn.addEventListener("click", () => {
-  alert("Voir le profil de " + currentUser);
-});
-
-const loginBtn = document.getElementById("login-btn");
 const passwordInput = document.getElementById("password");
 
 let selectedUser = null;
 
+// ---------------- OUVERTURE MODALE ----------------
 document.querySelectorAll(".profile-btn").forEach(btn => {
   btn.addEventListener("click", () => {
     selectedUser = btn.dataset.user;
     modalTitle.textContent = `Profil : ${selectedUser}`;
+    passwordInput.value = "";
     modal.classList.remove("hidden");
   });
 });
 
+// ---------------- FERMER MODALE ----------------
+closeBtn.addEventListener("click", () => {
+  modal.classList.add("hidden");
+  selectedUser = null;
+  passwordInput.value = "";
+});
+
+// ---------------- CONNEXION ----------------
 loginBtn.addEventListener("click", async () => {
+  if (!selectedUser) {
+    alert("Aucun profil sélectionné");
+    return;
+  }
+
   const password = passwordInput.value;
 
-  const formData = new FormData();
-  formData.append("username", selectedUser);
-  formData.append("password", password);
+  if (!password) {
+    alert("Mot de passe requis");
+    return;
+  }
 
-  const response = await fetch("/login", {
-    method: "POST",
-    body: formData
-  });
+  try {
+    const response = await fetch("/api/login", {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json"
+      },
+      body: JSON.stringify({
+        username: selectedUser,
+        password: password
+      })
+    });
 
-  const data = await response.json();
+    const data = await response.json();
 
-if (response.ok) {
-  window.location.href = `/dashboard?user=${selectedUser}`;
-} else {
-  alert(data.message);
-}
+    if (response.ok && data.success) {
+      window.location.href = `/dashboard?user=${selectedUser}`;
+    } else {
+      alert(data.message || "Erreur de connexion");
+    }
 
+  } catch (err) {
+    alert("Erreur serveur");
+    console.error(err);
+  }
+});
+
+// ---------------- VOIR PROFIL (DEMO POUR L’INSTANT) ----------------
+viewBtn.addEventListener("click", () => {
+  if (!selectedUser) return;
+  alert(`Voir le profil de ${selectedUser} (à venir)`);
 });
