@@ -192,12 +192,6 @@ def get_profile(user_id: str) -> dict:
 # ---------------- UI CONNEXION (BATMAN STYLE AVEC MODALE) ----------------
 if not is_logged_in():
 
-    st.markdown("""
-        <h1 style='text-align:center; color:#f5c400;'>BATMAN TRAINING</h1>
-        <p style='text-align:center; color:gray;'>Bienvenue dans la Batcave</p>
-        <h3 style='text-align:center; color:#f5c400;'>Classement des Profils</h3>
-    """, unsafe_allow_html=True)
-
     users = get_active_users()
 
     if users.empty:
@@ -229,16 +223,6 @@ if not is_logged_in():
         )
 
         with st.container():
-            st.markdown("""
-            <div style="
-                background-color:#111;
-                padding:20px;
-                border-radius:12px;
-                border:1px solid #333;
-                max-width:400px;
-                margin:auto;
-            ">
-            """, unsafe_allow_html=True)
 
             with st.form("login_form"):
                 password = st.text_input("Mot de passe", type="password")
