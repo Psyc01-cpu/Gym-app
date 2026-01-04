@@ -54,16 +54,23 @@ def login(data: dict = Body(...)):
     username = data.get("username")
     password = data.get("password")
 
+    if not username or not password:
+        raise HTTPException(
+            status_code=400,
+            detail="Champs manquants"
+        )
+
     if username not in USERS:
-        return JSONResponse(
+        raise HTTPException(
             status_code=401,
-            content={"success": False, "message": "Utilisateur inconnu"}
+            detail="Utilisateur inconnu"
         )
 
     if USERS[username] != password:
-        return JSONResponse(
+        raise HTTPException(
             status_code=401,
-            content={"success": False, "message": "Mot de passe incorrect"}
+            detail="Mot de passe incorrect"
         )
 
     return {"success": True}
+
