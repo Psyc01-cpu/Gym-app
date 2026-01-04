@@ -19,3 +19,20 @@ def home(request: Request):
         "index.html",
         {"request": request}
     )
+
+from fastapi import Form
+from fastapi.responses import JSONResponse
+
+USERS = {
+    "dan": "admin123",
+    "papy": "user123"
+}
+
+@app.post("/login")
+def login(username: str = Form(...), password: str = Form(...)):
+    if username in USERS and USERS[username] == password:
+        return {"status": "ok", "user": username}
+    return JSONResponse(
+        status_code=401,
+        content={"status": "error", "message": "Mot de passe incorrect"}
+    )
