@@ -1,1 +1,23 @@
+body {
+  background: #0b0f19;
+  color: #f5c518;
+  font-family: Arial, sans-serif;
+  text-align: center;
+  padding-top: 60px;
+}
 
+.profile-btn {
+  background: #111;
+  color: #f5c518;
+  border: 1px solid #f5c518;
+  padding: 15px 30px;
+  margin: 10px;
+  font-size: 18px;
+  cursor: pointer;
+  border-radius: 8px;
+}
+
+.profile-btn:hover {
+  background: #f5c518;
+  color: #111;
+}
