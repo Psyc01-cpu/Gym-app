@@ -59,17 +59,8 @@ def check_password(pw: str, pw_hash: str) -> bool:
 def get_users() -> pd.DataFrame:
     df = read_sheet(USERS_SHEET, USERS_COLS)
 
-    st.write("🔎 DEBUG — données brutes users :")
-    st.dataframe(df)
-
-    st.write("🔎 DEBUG — types des colonnes :")
-    st.write(df.dtypes)
-
     df["is_active"] = df["is_active"].apply(is_user_active)
     df["username"] = df["username"].astype(str).str.strip().str.lower()
-
-    st.write("🔎 DEBUG — après normalisation is_active :")
-    st.dataframe(df[["username", "is_active"]])
 
     return df
 
@@ -204,30 +195,30 @@ if not is_logged_in():
 
     tab_login, tab_signup = st.tabs(["Se connecter", "Créer un compte"])
 
-with tab_login:
-    users = get_active_users()
+    with tab_login:
+        users = get_active_users()
 
-    if users.empty:
-        st.warning("Aucun compte actif.")
-    else:
-        usernames = users["username"].tolist()
+        if users.empty:
+            st.warning("Aucun compte actif.")
+        else:
+            usernames = users["username"].tolist()
 
-        selected_user = st.selectbox(
-            "Choisis ton profil",
-            usernames
-        )
+            selected_user = st.selectbox(
+                "Choisis ton profil",
+                usernames
+            )
 
-        with st.form("login_form"):
-            password = st.text_input("Mot de passe", type="password")
-            submit = st.form_submit_button("Connexion")
+            with st.form("login_form"):
+                password = st.text_input("Mot de passe", type="password")
+                submit = st.form_submit_button("Connexion")
 
-        if submit:
-            ok, msg = login_user(selected_user, password)
-            if ok:
-                st.success(msg)
-                st.rerun()
-            else:
-                st.error(msg)
+            if submit:
+                ok, msg = login_user(selected_user, password)
+                if ok:
+                    st.success(msg)
+                    st.rerun()
+                else:
+                    st.error(msg)
 
     with tab_signup:
         st.info("Crée ton compte. Ton mot de passe n’est jamais stocké en clair.")
