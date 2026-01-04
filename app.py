@@ -7,11 +7,13 @@ from streamlit_gsheets import GSheetsConnection
 
 def is_user_active(value):
     if value is None:
-        return False
+        return True
     if isinstance(value, bool):
         return value
 
     s = str(value).strip().lower()
+    if s == "":
+        return True
     return s in {"true", "vrai", "1", "yes", "oui", "y", "t"}
 
 # ---------------- CONFIG ----------------
