@@ -1,20 +1,22 @@
-from fastapi import Body, HTTPException
-from fastapi import FastAPI
-from fastapi import FastAPI, Request
+from fastapi import FastAPI, Request, Body, HTTPException
 from fastapi.responses import HTMLResponse
 from fastapi.staticfiles import StaticFiles
 from fastapi.templating import Jinja2Templates
-from fastapi.requests import Request
 
 app = FastAPI()
 
-# Lien vers les fichiers statiques (CSS / JS)
+# ---------- CONFIG ----------
 app.mount("/static", StaticFiles(directory="static"), name="static")
-
-# Lien vers les templates HTML
 templates = Jinja2Templates(directory="templates")
 
-# Page principale
+# FAKE USERS (TEMPORAIRE)
+USERS = {
+    "dan": "admin123",
+    "papy": "user123"
+}
+
+# ---------- ROUTES HTML ----------
+
 @app.get("/", response_class=HTMLResponse)
 def home(request: Request):
     return templates.TemplateResponse(
@@ -27,35 +29,9 @@ def dashboard(request: Request, user: str):
     return templates.TemplateResponse(
         "dashboard.html",
         {"request": request, "user": user}
-
-from fastapi import Form
-from fastapi.responses import JSONResponse
-
-USERS = {
-    "dan": "admin123",
-    "papy": "user123"
-}
-
-@app.post("/login")
-def login(username: str = Form(...), password: str = Form(...)):
-    if username in USERS and USERS[username] == password:
-        return {"status": "ok", "user": username}
-    return JSONResponse(
-        status_code=401,
-        content={"status": "error", "message": "Mot de passe incorrect"}
     )
 
-from fastapi import FastAPI
-from fastapi.responses import JSONResponse
-from fastapi import Body
-
-app = FastAPI()
-
-# FAKE USERS (temporaire)
-USERS = {
-    "dan": "1234",
-    "papy": "abcd"
-}
+# ---------- API LOGIN ----------
 
 @app.post("/api/login")
 def login(data: dict = Body(...)):
@@ -63,22 +39,12 @@ def login(data: dict = Body(...)):
     password = data.get("password")
 
     if not username or not password:
-        raise HTTPException(
-            status_code=400,
-            detail="Champs manquants"
-        )
+        raise HTTPException(status_code=400, detail="Champs manquants")
 
     if username not in USERS:
-        raise HTTPException(
-            status_code=401,
-            detail="Utilisateur inconnu"
-        )
+        raise HTTPException(status_code=401, detail="Utilisateur inconnu")
 
     if USERS[username] != password:
-        raise HTTPException(
-            status_code=401,
-            detail="Mot de passe incorrect"
-        )
+        raise HTTPException(status_code=401, detail="Mot de passe incorrect")
 
     return {"success": True}
-
