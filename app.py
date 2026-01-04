@@ -8,13 +8,11 @@ from streamlit_gsheets import GSheetsConnection
 def is_user_active(value):
     if value is None:
         return False
-
     if isinstance(value, bool):
         return value
 
-    value_str = str(value).strip().lower()
-
-    return value_str in ["true", "vrai", "1", "yes", "y"]
+    s = str(value).strip().lower()
+    return s in {"true", "vrai", "1", "yes", "oui", "y", "t"}
 
 # ---------------- CONFIG ----------------
 st.set_page_config(page_title="Projet Gotham", page_icon="🦇", layout="centered")
@@ -65,8 +63,7 @@ def check_password(pw: str, pw_hash: str) -> bool:
 def get_users() -> pd.DataFrame:
     df = read_sheet(USERS_SHEET, USERS_COLS)
     # nettoyage
-    df["username"] = df["username"].astype(str).str.strip().str.lower()
-    df["is_active"] = df["is_active"].apply(is_user_active)
+   df["is_active"] = df["is_active"].apply(is_user_active)
     return df
 
 
@@ -103,6 +100,7 @@ def create_user(username: str, password: str) -> tuple[bool, str]:
 def login_user(username: str, password: str) -> tuple[bool, str]:
     username = username.strip().lower()
     users = get_users()
+    st.write(users[["username", "role", "is_active"]])
 
     row = users[users["username"] == username]
     if row.empty:
