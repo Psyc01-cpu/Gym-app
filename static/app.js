@@ -1,63 +1,39 @@
 document.addEventListener("DOMContentLoaded", () => {
-
-  const modal = document.getElementById("modal-overlay");
-  const modalTitle = document.getElementById("modal-title");
+  const overlay = document.getElementById("modal-overlay");
   const closeBtn = document.getElementById("close-btn");
-  const loginBtn = document.getElementById("login-btn");
-  const viewBtn = document.getElementById("view-btn");
-  const passwordInput = document.getElementById("password");
-  const profileButtons = document.querySelectorAll(".profile-btn");
+  const profileBtns = document.querySelectorAll(".profile-btn");
 
-  let currentUser = null;
+  let selectedUser = null;
 
-  // 🔒 AU CHARGEMENT → MODALE FERMÉE
-  modal.classList.add("hidden");
+  function openModal(user) {
+    selectedUser = user;
+    document.getElementById("modal-title").textContent =
+      "Connexion – " + user;
+    overlay.classList.remove("hidden");
+    console.log("Modal ouverte pour :", user);
+  }
 
-  // 👤 CLIC SUR UN PROFIL
-  profileButtons.forEach(btn => {
+  function closeModal() {
+    overlay.classList.add("hidden");
+    console.log("Modal fermée");
+  }
+
+  // Clic sur profils
+  profileBtns.forEach((btn) => {
     btn.addEventListener("click", () => {
-      currentUser = btn.dataset.user;
-      modalTitle.textContent = `Profil : ${currentUser}`;
-      passwordInput.value = "";
-      modal.classList.remove("hidden");
-      console.log("Profil sélectionné :", currentUser);
+      const user = btn.dataset.user;
+      console.log("Profil sélectionné :", user);
+      openModal(user);
     });
   });
 
-  // ❌ FERMER (BOUTON)
-  closeBtn.addEventListener("click", (e) => {
-    e.stopPropagation(); // 🔥 IMPORTANT
-    modal.classList.add("hidden");
-    currentUser = null;
-    console.log("Modale fermée");
-  });
+  // Bouton fermer
+  closeBtn.addEventListener("click", closeModal);
 
-  // ❌ FERMER (CLIC EN DEHORS)
-  modal.addEventListener("click", () => {
-    modal.classList.add("hidden");
-    currentUser = null;
-    console.log("Modale fermée (overlay)");
-  });
-
-  // ⛔ EMPÊCHE LA MODALE DE SE FERMER QUAND ON CLIQUE DEDANS
-  document.querySelector(".modal").addEventListener("click", (e) => {
-    e.stopPropagation();
-  });
-
-  // 🔑 CONNEXION (pour test)
-  loginBtn.addEventListener("click", () => {
-    if (!currentUser) {
-      alert("Aucun profil sélectionné");
-      return;
+  // Clic sur le fond noir
+  overlay.addEventListener("click", (e) => {
+    if (e.target === overlay) {
+      closeModal();
     }
-
-    if (!passwordInput.value.trim()) {
-      alert("Mot de passe manquant");
-      return;
-    }
-
-    alert(`Connecté en tant que ${currentUser}`);
-    modal.classList.add("hidden");
   });
-
 });
