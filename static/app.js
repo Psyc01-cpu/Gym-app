@@ -1,6 +1,5 @@
 document.addEventListener("DOMContentLoaded", () => {
 
-  // ===== RÉFÉRENCES DOM =====
   const modal = document.getElementById("modal-overlay");
   const modalTitle = document.getElementById("modal-title");
   const closeBtn = document.getElementById("close-btn");
@@ -8,26 +7,28 @@ document.addEventListener("DOMContentLoaded", () => {
   const viewBtn = document.getElementById("view-btn");
   const passwordInput = document.getElementById("password");
 
+  const profileButtons = document.querySelectorAll(".profile-btn");
+
   let currentUser = null;
 
-  // ===== DEBUG =====
-  console.log("JS chargé");
+  // 🔍 DEBUG
   console.log({
     modal,
     modalTitle,
     closeBtn,
     loginBtn,
     viewBtn,
-    passwordInput
+    passwordInput,
+    profileButtons
   });
 
-  // ===== SÉCURITÉ : MODALE TOUJOURS FERMÉE AU DÉPART =====
+  // 🔒 AU DÉPART : MODALE FERMÉE
   modal.classList.add("hidden");
 
-  // ===== OUVERTURE MODALE (clic sur dan / papy) =====
-  document.querySelectorAll(".profile-btn").forEach(btn => {
+  // 👤 CLIC SUR DAN / PAPY
+  profileButtons.forEach(btn => {
     btn.addEventListener("click", () => {
-      currentUser = btn.dataset.user;
+      currentUser = btn.dataset.user; // data-user="dan" ou "papy"
       modalTitle.textContent = `Profil : ${currentUser}`;
       passwordInput.value = "";
       modal.classList.remove("hidden");
@@ -36,62 +37,42 @@ document.addEventListener("DOMContentLoaded", () => {
     });
   });
 
-  // ===== FERMER MODALE =====
+  // ❌ FERMER LA MODALE
   closeBtn.addEventListener("click", () => {
     modal.classList.add("hidden");
     currentUser = null;
     console.log("Modale fermée");
   });
 
-  // ===== CONNEXION =====
-  loginBtn.addEventListener("click", async () => {
-
-    // 🔒 Sécurité profil
+  // 🔑 CONNEXION
+  loginBtn.addEventListener("click", () => {
     if (!currentUser) {
-      alert("Choisis d'abord un profil (dan ou papy)");
+      alert("Aucun profil sélectionné");
       return;
     }
 
-    const password = passwordInput.value;
-
-    // 🔒 Sécurité mot de passe
+    const password = passwordInput.value.trim();
     if (!password) {
-      alert("Entre un mot de passe");
+      alert("Mot de passe manquant");
       return;
     }
 
-    console.log("CLICK LOGIN", currentUser, password);
+    console.log(`Tentative de connexion → ${currentUser} / ${password}`);
 
-    try {
-      const response = await fetch("/api/login", {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json"
-        },
-        body: JSON.stringify({
-          username: currentUser,
-          password: password
-        })
-      });
-
-      const data = await response.json();
-
-      if (response.ok) {
-        console.log("Connexion OK");
-        window.location.href = `/dashboard?user=${currentUser}`;
-      } else {
-        alert(data.detail || "Erreur de connexion");
-      }
-
-    } catch (err) {
-      console.error(err);
-      alert("Erreur serveur");
-    }
+    // ⚠️ ici tu brancheras plus tard ton vrai backend
+    alert(`Connecté en tant que ${currentUser}`);
+    modal.classList.add("hidden");
   });
 
-  // ===== VOIR PROFIL (placeholder) =====
+  // 👁 VOIR LE PROFIL
   viewBtn.addEventListener("click", () => {
-    alert("Profil à venir");
+    if (!currentUser) {
+      alert("Aucun profil sélectionné");
+      return;
+    }
+
+    console.log("Voir profil :", currentUser);
+    window.location.href = `/profil/${currentUser}`;
   });
 
 });
