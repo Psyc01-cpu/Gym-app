@@ -29,7 +29,7 @@ document.addEventListener("DOMContentLoaded", () => {
   profileButtons.forEach(btn => {
     btn.addEventListener("click", () => {
       currentUser = btn.dataset.user; // data-user="dan" ou "papy"
-      modalTitle.textContent = `Profhhhil : ${currentUser}`;
+      modalTitle.textContent = `Profil : ${currentUser}`;
       passwordInput.value = "";
       modal.classList.remove("hidden");
 
