@@ -67,13 +67,23 @@
 
     <!-- Mot de passe -->
     <div class="password-field">
-      <input
-        type="password"
-        id="new-password"
-        placeholder="Mot de passe"
-      />
-      <span id="toggle-password" class="toggle-eye">👁</span>
-    </div>
+  <input type="password" id="new-password" placeholder="Mot de passe" />
+  <button type="button" id="toggle-password" class="eye-btn" aria-label="Afficher le mot de passe">
+    <!-- Icône oeil (SVG) -->
+    <svg id="eye-open" viewBox="0 0 24 24" class="eye-icon">
+      <path d="M2 12s3.5-7 10-7 10 7 10 7-3.5 7-10 7-10-7-10-7z" fill="none" stroke="currentColor" stroke-width="1.7"/>
+      <circle cx="12" cy="12" r="3" fill="none" stroke="currentColor" stroke-width="1.7"/>
+    </svg>
+
+    <!-- Icône oeil barré (SVG) -->
+    <svg id="eye-closed" viewBox="0 0 24 24" class="eye-icon hidden">
+      <path d="M3 3l18 18" fill="none" stroke="currentColor" stroke-width="1.7"/>
+      <path d="M2 12s3.5-7 10-7c2.1 0 3.9.6 5.4 1.5M22 12s-3.5 7-10 7c-2.1 0-3.9-.6-5.4-1.5" fill="none" stroke="currentColor" stroke-width="1.7"/>
+      <path d="M9.9 9.9a3 3 0 0 0 4.2 4.2" fill="none" stroke="currentColor" stroke-width="1.7"/>
+    </svg>
+  </button>
+</div>
+
 
     <!-- Confirmation -->
     <input
