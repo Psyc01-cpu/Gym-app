@@ -1,3 +1,15 @@
+function showToast(message, type = "success") {
+  const toast = document.getElementById("toast");
+  if (!toast) return;
+
+  toast.textContent = message;
+  toast.className = `toast show ${type}`;
+
+  setTimeout(() => {
+    toast.classList.remove("show");
+  }, 2500);
+}
+
 document.addEventListener("DOMContentLoaded", () => {
   const overlay = document.getElementById("modal-overlay");
   const modalTitle = document.getElementById("modal-title");
@@ -121,12 +133,12 @@ document.addEventListener("DOMContentLoaded", () => {
       const gender = document.querySelector("input[name='gender']:checked")?.value;
 
       if (!username || !age || !height || !password || !confirmPassword || !gender) {
-        alert("Tous les champs sont obligatoires");
+        showToast("Tous les champs sont obligatoires");
         return;
       }
 
       if (password !== confirmPassword) {
-        alert("Les mots de passe ne correspondent pas");
+        showToast("Les mots de passe ne correspondent pas");
         return;
       }
 
@@ -145,17 +157,17 @@ document.addEventListener("DOMContentLoaded", () => {
 
         if (!res.ok) {
           const err = await res.json();
-          alert(err.detail || "Erreur création profil");
+          showToast(err.detail || "Erreur création profil");
           return;
         }
 
-        alert("Profil créé avec succès");
+        showToast("Profil créé avec succès");
 
         createOverlay.classList.add("hidden");
         loadProfiles();
 
       } catch (err) {
-        alert("Erreur réseau");
+        showToast("Erreur réseau");
         console.error(err);
       }
     });
@@ -170,7 +182,7 @@ document.addEventListener("DOMContentLoaded", () => {
       const password = passwordInput.value;
 
       if (!selectedUser || !password) {
-        alert("Mot de passe requis");
+        showToast("Mot de passe requis");
         return;
       }
 
@@ -185,14 +197,14 @@ document.addEventListener("DOMContentLoaded", () => {
         });
 
         if (!res.ok) {
-          alert("Identifiants incorrects");
+          showToast("Identifiants incorrects");
           return;
         }
 
         window.location.href = `/dashboard?user=${selectedUser}`;
 
       } catch (err) {
-        alert("Erreur réseau");
+        showToast("Erreur réseau");
         console.error(err);
       }
     });
