@@ -102,3 +102,20 @@ body {
   pointer-events: none; /* empêche les clics dessus */
 }
 
+.profiles-actions {
+  margin-top: 30px;
+}
+
+#create-profile-btn {
+  background: transparent;
+  border: 1px dashed #f5c518;
+  color: #f5c518;
+  padding: 12px 25px;
+  border-radius: 10px;
+  cursor: pointer;
+}
+
+#create-profile-btn:hover {
+  background: #f5c518;
+  color: #111;
+}
