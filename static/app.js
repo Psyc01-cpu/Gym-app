@@ -1,53 +1,117 @@
 document.addEventListener("DOMContentLoaded", () => {
   const overlay = document.getElementById("modal-overlay");
   const closeBtn = document.getElementById("close-btn");
-  const profileBtns = document.querySelectorAll(".profile-btn");
+  const modalTitle = document.getElementById("modal-title");
+  const passwordInput = document.getElementById("password");
 
-  if (!overlay || !closeBtn) {
-    console.error("Modal introuvable dans le DOM");
+  const loginBtn = document.getElementById("login-btn");
+  const viewBtn = document.getElementById("view-btn");
+  const createProfileBtn = document.getElementById("create-profile-btn");
+
+  const profilesContainer = document.querySelector(".profiles");
+
+  if (!overlay || !closeBtn || !profilesContainer) {
+    console.error("Éléments DOM manquants");
     return;
   }
 
   let selectedUser = null;
 
+  /* -------------------------
+     MODALE
+  -------------------------- */
+
   function openModal(user) {
     selectedUser = user;
-    document.getElementById("modal-title").textContent =
-      "Connexion – " + user;
+    modalTitle.textContent = "Profil – " + user;
+    passwordInput.value = "";
     overlay.classList.remove("hidden");
     console.log("Modal ouverte pour :", user);
   }
 
   function closeModal() {
     overlay.classList.add("hidden");
+    selectedUser = null;
     console.log("Modal fermée");
   }
 
-  // Clic sur profils
-  profileBtns.forEach((btn) => {
-    btn.addEventListener("click", () => {
-      const user = btn.dataset.user;
-      openModal(user);
+  /* -------------------------
+     CHARGEMENT DES PROFILS
+  -------------------------- */
+
+  async function loadProfiles() {
+    try {
+      const res = await fetch("/api/users");
+      const users = await res.json();
+
+      profilesContainer.innerHTML = "";
+
+      users.forEach((user) => {
+        const btn = document.createElement("button");
+        btn.className = "profile-btn";
+        btn.dataset.user = user;
+        btn.textContent = user;
+        profilesContainer.appendChild(btn);
+      });
+
+    } catch (err) {
+      console.error("Erreur chargement profils", err);
+    }
+  }
+
+  loadProfiles();
+
+  /* -------------------------
+     CLIC SUR PROFIL (délégation)
+  -------------------------- */
+
+  document.addEventListener("click", (e) => {
+    const btn = e.target.closest(".profile-btn");
+    if (!btn) return;
+
+    const user = btn.dataset.user;
+    openModal(user);
+  });
+
+  /* -------------------------
+     BOUTON ➕ CRÉER PROFIL
+  -------------------------- */
+
+  if (createProfileBtn) {
+    createProfileBtn.addEventListener("click", async () => {
+      const username = prompt("Nom du profil :");
+      const password = prompt("Mot de passe :");
+
+      if (!username || !password) return;
+
+      try {
+        const res = await fetch("/api/users", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ username, password })
+        });
+
+        if (!res.ok) {
+          const err = await res.json();
+          alert(err.detail || "Erreur création profil");
+          return;
+        }
+
+        alert("Profil créé avec succès");
+        loadProfiles();
+
+      } catch (err) {
+        alert("Erreur réseau");
+        console.error(err);
+      }
     });
-  });
+  }
 
-  // Bouton fermer
-  closeBtn.addEventListener("click", (e) => {
-    e.stopPropagation();   // évite les effets de bubbling
-    closeModal();
-  });
+  /* -------------------------
+     BOUTON 🔐 CONNEXION
+  -------------------------- */
 
-  // Clic sur le fond noir uniquement
-  overlay.addEventListener("click", (e) => {
-    if (e.target === overlay) {
-      closeModal();
-    }
-  });
+  loginBtn.addEventListener("click", async () => {
+    const password = passwordInput.value;
 
-  // Optionnel : fermeture avec ESC
-  document.addEventListener("keydown", (e) => {
-    if (e.key === "Escape") {
-      closeModal();
-    }
-  });
-});
+    if (!selectedUser || !password) {
