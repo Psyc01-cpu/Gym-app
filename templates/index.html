@@ -64,19 +64,30 @@
     <input id="new-age" type="number" placeholder="Âge" />
     <input id="new-height" type="number" placeholder="Taille (cm)" />
 
-    <input id="new-password" type="password" placeholder="Mot de passe" />
-    <input id="confirm-password" type="password" placeholder="Confirmer mot de passe" />
+    <!-- Mot de passe -->
+    <div class="password-field">
+      <input
+        type="password"
+        id="new-password"
+        placeholder="Mot de passe"
+      />
+      <span id="toggle-password" class="toggle-eye">👁</span>
+    </div>
 
-    <div style="display:flex; gap:8px;">
-  <input type="password" id="create-password" placeholder="Mot de passe">
-  <button type="button" id="toggle-password">👁️</button>
-</div>
+    <!-- Confirmation -->
+    <input
+      id="confirm-password"
+      type="password"
+      placeholder="Confirmer le mot de passe"
+    />
 
     <div class="modal-actions">
       <button id="validate-create-btn">Créer</button>
     </div>
+
   </div>
 </div>
+
 
   
 </body>
