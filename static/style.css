@@ -254,3 +254,43 @@ body {
 .hidden {
   display: none !important;
 }
+
+/* ===============================
+   TOAST NOTIFICATION
+   =============================== */
+
+.toast {
+  position: fixed;
+  top: 20px;
+  right: 20px;
+  background: #111;
+  color: #f5c518;
+  border: 1px solid rgba(245,197,24,0.4);
+  padding: 12px 18px;
+  border-radius: 10px;
+  font-size: 14px;
+  box-shadow: 0 10px 25px rgba(0,0,0,0.4);
+  z-index: 9999;
+  opacity: 0;
+  transform: translateY(-10px);
+  transition: all 0.25s ease;
+  pointer-events: none;
+}
+
+/* Visible */
+.toast.show {
+  opacity: 1;
+  transform: translateY(0);
+}
+
+/* Succès */
+.toast.success {
+  border-color: #2ecc71;
+  color: #2ecc71;
+}
+
+/* Erreur */
+.toast.error {
+  border-color: #e74c3c;
+  color: #e74c3c;
+}
