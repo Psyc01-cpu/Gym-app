@@ -9,6 +9,19 @@ document.addEventListener("DOMContentLoaded", () => {
 
   const profilesContainer = document.querySelector(".profiles");
 
+  const togglePasswordBtn = document.getElementById("toggle-password");
+  const createPasswordInput = document.getElementById("create-password");
+
+  if (togglePasswordBtn && createPasswordInput) {
+  togglePasswordBtn.addEventListener("click", () => {
+    const type = createPasswordInput.getAttribute("type");
+    createPasswordInput.setAttribute(
+      "type",
+      type === "password" ? "text" : "password"
+    );
+  });
+}
+
   // Modale création
   const createOverlay = document.getElementById("create-overlay");
   const validateCreateBtn = document.getElementById("validate-create-btn");
