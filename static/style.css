@@ -119,3 +119,23 @@ body {
   background: #f5c518;
   color: #111;
 }
+
+/* ===============================
+   CREATION PROFIL - SEXE
+   =============================== */
+
+.gender {
+  display: flex;
+  justify-content: center;
+  gap: 25px;
+  margin-bottom: 15px;
+}
+
+.gender label {
+  cursor: pointer;
+  font-size: 16px;
+}
+
+.gender input {
+  margin-right: 6px;
+}
