@@ -3,6 +3,11 @@ document.addEventListener("DOMContentLoaded", () => {
   const closeBtn = document.getElementById("close-btn");
   const profileBtns = document.querySelectorAll(".profile-btn");
 
+  if (!overlay || !closeBtn) {
+    console.error("Modal introuvable dans le DOM");
+    return;
+  }
+
   let selectedUser = null;
 
   function openModal(user) {
@@ -22,17 +27,26 @@ document.addEventListener("DOMContentLoaded", () => {
   profileBtns.forEach((btn) => {
     btn.addEventListener("click", () => {
       const user = btn.dataset.user;
-      console.log("Profil sélectionné :", user);
       openModal(user);
     });
   });
 
   // Bouton fermer
-  closeBtn.addEventListener("click", closeModal);
+  closeBtn.addEventListener("click", (e) => {
+    e.stopPropagation();   // évite les effets de bubbling
+    closeModal();
+  });
 
-  // Clic sur le fond noir
+  // Clic sur le fond noir uniquement
   overlay.addEventListener("click", (e) => {
     if (e.target === overlay) {
+      closeModal();
+    }
+  });
+
+  // Optionnel : fermeture avec ESC
+  document.addEventListener("keydown", (e) => {
+    if (e.key === "Escape") {
       closeModal();
     }
   });
