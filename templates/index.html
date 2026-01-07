@@ -51,15 +51,16 @@
     <input id="new-username" placeholder="Pseudo" />
 
     <div class="gender">
-      <label>
-        <input type="radio" name="gender" value="homme" checked />
-        Homme
-      </label>
-      <label>
-        <input type="radio" name="gender" value="femme" />
-        Femme
-      </label>
-    </div>
+  <label class="gender-option">
+    <input type="radio" name="gender" value="homme" checked />
+    <span>👨 Homme</span>
+  </label>
+
+  <label class="gender-option">
+    <input type="radio" name="gender" value="femme" />
+    <span>👩 Femme</span>
+  </label>
+</div>
 
     <input id="new-age" type="number" placeholder="Âge" />
     <input id="new-height" type="number" placeholder="Taille (cm)" />
