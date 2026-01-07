@@ -111,7 +111,68 @@ document.addEventListener("DOMContentLoaded", () => {
      BOUTON 🔐 CONNEXION
   -------------------------- */
 
-  loginBtn.addEventListener("click", async () => {
-    const password = passwordInput.value;
+  if (loginBtn) {
+    loginBtn.addEventListener("click", async () => {
+      const password = passwordInput.value;
 
-    if (!selectedUser || !password) {
+      if (!selectedUser || !password) {
+        alert("Mot de passe requis");
+        return;
+      }
+
+      try {
+        const res = await fetch("/api/login", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            username: selectedUser,
+            password: password
+          })
+        });
+
+        if (!res.ok) {
+          alert("Identifiants incorrects");
+          return;
+        }
+
+        window.location.href = `/dashboard?user=${selectedUser}`;
+
+      } catch (err) {
+        alert("Erreur réseau");
+        console.error(err);
+      }
+    });
+  }
+
+  /* -------------------------
+     BOUTON 👁️ VOIR PROFIL
+  -------------------------- */
+
+  if (viewBtn) {
+    viewBtn.addEventListener("click", () => {
+      if (!selectedUser) return;
+      window.location.href = `/dashboard?user=${selectedUser}`;
+    });
+  }
+
+  /* -------------------------
+     FERMETURE MODALE
+  -------------------------- */
+
+  closeBtn.addEventListener("click", (e) => {
+    e.stopPropagation();
+    closeModal();
+  });
+
+  overlay.addEventListener("click", (e) => {
+    if (e.target === overlay) {
+      closeModal();
+    }
+  });
+
+  document.addEventListener("keydown", (e) => {
+    if (e.key === "Escape") {
+      closeModal();
+    }
+  });
+});
