@@ -10,7 +10,7 @@ document.addEventListener("DOMContentLoaded", () => {
   const profilesContainer = document.querySelector(".profiles");
 
   const togglePasswordBtn = document.getElementById("toggle-password");
-  const createPasswordInput = document.getElementById("create-password");
+  const createPasswordInput = document.getElementById("new-password");
 
   if (togglePasswordBtn && createPasswordInput) {
   togglePasswordBtn.addEventListener("click", () => {
