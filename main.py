@@ -27,8 +27,8 @@ templates = Jinja2Templates(directory="templates")
 # GOOGLE SHEETS CONFIG
 # -------------------
 
-SPREADSHEET_NAME = "GothamUsers"   # ⚠️ nom exact de ton fichier Google Sheet
-SHEET_NAME = "users"              # ⚠️ nom exact de l’onglet
+SPREADSHEET_NAME = "GothamUsers"   # nom exact du fichier
+SHEET_NAME = "users"              # nom exact de l’onglet
 
 
 def get_google_creds_file():
@@ -55,9 +55,10 @@ def get_sheet():
     Connexion à Google Sheets
     """
     scopes = [
-    "https://www.googleapis.com/auth/spreadsheets",
-    "https://www.googleapis.com/auth/drive"
+        "https://www.googleapis.com/auth/spreadsheets",
+        "https://www.googleapis.com/auth/drive"
     ]
+
     creds_file = get_google_creds_file()
 
     creds = Credentials.from_service_account_file(
@@ -102,7 +103,10 @@ def get_users():
 
         users = []
         for row in rows:
-            if row.get("is_active") is True:
+            is_active = row.get("is_active")
+
+            # Compatible Google Sheets FR / EN / Bool
+            if str(is_active).strip().lower() in ["true", "vrai", "1", "yes"]:
                 users.append(row.get("username"))
 
         return users
@@ -110,6 +114,10 @@ def get_users():
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
 
+
+# -------------------
+# API - LOGIN
+# -------------------
 
 @app.post("/api/login")
 def login(data: dict = Body(...)):
@@ -127,9 +135,11 @@ def login(data: dict = Body(...)):
         rows = sheet.get_all_records()
 
         for row in rows:
+            is_active = row.get("is_active")
+
             if (
                 row.get("username") == username
-                and row.get("is_active") is True
+                and str(is_active).strip().lower() in ["true", "vrai", "1", "yes"]
             ):
                 stored_hash = row.get("password_hash")
 
@@ -154,10 +164,10 @@ def login(data: dict = Body(...)):
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
 
+
 # -------------------
 # API - CREATION USERS
 # -------------------
-
 
 @app.post("/api/users")
 def create_user(data: dict = Body(...)):
@@ -190,48 +200,17 @@ def create_user(data: dict = Body(...)):
         ).decode("utf-8")
 
         new_row = [
-            str(uuid.uuid4()),          # user_id
-            username,                  # username
-            password_hash,             # password_hash
-            role,                      # role
-            True,                      # is_active
+            str(uuid.uuid4()),              # user_id
+            username,                      # username
+            password_hash,                 # password_hash
+            role,                          # role
+            True,                          # is_active
             datetime.utcnow().isoformat()  # created_at
         ]
 
         sheet.append_row(new_row)
 
         return {"success": True}
-
-    except HTTPException:
-        raise
-    except Exception as e:
-        raise HTTPException(status_code=500, detail=str(e))
-
-
-# -------------------
-# API - LOGIN
-# -------------------
-
-@app.post("/api/login")
-def login(data: dict = Body(...)):
-    """
-    Vérifie les identifiants dans Google Sheets
-    """
-    username = data.get("username")
-    password = data.get("password")
-
-    if not username or not password:
-        raise HTTPException(status_code=400, detail="Champs manquants")
-
-    try:
-        sheet = get_sheet()
-        rows = sheet.get_all_records()
-
-        for row in rows:
-            if row["username"] == username and row["password"] == password:
-                return {"success": True}
-
-        raise HTTPException(status_code=401, detail="Identifiants incorrects")
 
     except HTTPException:
         raise
