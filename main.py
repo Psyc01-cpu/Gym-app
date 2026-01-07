@@ -1,3 +1,7 @@
+import bcrypt
+import uuid
+from datetime import datetime
+
 import os
 import json
 import tempfile
@@ -87,20 +91,27 @@ def dashboard(request: Request, user: str):
 @app.get("/api/users")
 def get_users():
     """
-    Retourne la liste des usernames depuis Google Sheets
+    Retourne la liste des usernames actifs depuis Google Sheets
     """
     try:
         sheet = get_sheet()
         rows = sheet.get_all_records()
-        return [row["username"] for row in rows]
+
+        users = []
+        for row in rows:
+            if row.get("is_active") is True:
+                users.append(row.get("username"))
+
+        return users
+
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
 
 
-@app.post("/api/users")
-def create_user(data: dict = Body(...)):
+@app.post("/api/login")
+def login(data: dict = Body(...)):
     """
-    Création d’un nouvel utilisateur dans Google Sheets
+    Vérifie les identifiants avec password_hash (bcrypt)
     """
     username = data.get("username")
     password = data.get("password")
@@ -112,16 +123,80 @@ def create_user(data: dict = Body(...)):
         sheet = get_sheet()
         rows = sheet.get_all_records()
 
+        for row in rows:
+            if (
+                row.get("username") == username
+                and row.get("is_active") is True
+            ):
+                stored_hash = row.get("password_hash")
+
+                if not stored_hash:
+                    break
+
+                if bcrypt.checkpw(
+                    password.encode("utf-8"),
+                    stored_hash.encode("utf-8")
+                ):
+                    return {
+                        "success": True,
+                        "role": row.get("role")
+                    }
+
+                break
+
+        raise HTTPException(status_code=401, detail="Identifiants incorrects")
+
+    except HTTPException:
+        raise
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
+
+# -------------------
+# API - CREATION USERS
+# -------------------
+
+
+@app.post("/api/users")
+def create_user(data: dict = Body(...)):
+    """
+    Création d’un utilisateur dans Google Sheets
+    """
+    username = data.get("username")
+    password = data.get("password")
+    role = data.get("role", "user")
+
+    if not username or not password:
+        raise HTTPException(status_code=400, detail="Champs manquants")
+
+    try:
+        sheet = get_sheet()
+        rows = sheet.get_all_records()
+
         # Vérifier doublon
         for row in rows:
-            if row["username"] == username:
+            if row.get("username") == username:
                 raise HTTPException(
                     status_code=400,
                     detail="Utilisateur déjà existant"
                 )
 
-        # Ajout dans la feuille
-        sheet.append_row([username, password])
+        # Hash du mot de passe
+        password_hash = bcrypt.hashpw(
+            password.encode("utf-8"),
+            bcrypt.gensalt()
+        ).decode("utf-8")
+
+        new_row = [
+            str(uuid.uuid4()),          # user_id
+            username,                  # username
+            password_hash,             # password_hash
+            role,                      # role
+            True,                      # is_active
+            datetime.utcnow().isoformat()  # created_at
+        ]
+
+        sheet.append_row(new_row)
+
         return {"success": True}
 
     except HTTPException:
