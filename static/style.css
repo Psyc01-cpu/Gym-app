@@ -139,3 +139,31 @@ body {
 .gender input {
   margin-right: 6px;
 }
+
+/* ===============================
+   MODALE CREATION PROFIL
+   =============================== */
+
+#create-overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(0,0,0,0.75);
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  z-index: 1100;
+}
+
+#create-overlay.hidden {
+  display: none !important;
+}
+
+.create-modal {
+  background: #0b0f19;
+  border: 1px solid #f5c518;
+  border-radius: 12px;
+  padding: 30px;
+  width: 360px;
+  box-shadow: 0 0 40px rgba(245,197,24,0.3);
+}
+
