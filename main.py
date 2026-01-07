@@ -54,7 +54,10 @@ def get_sheet():
     """
     Connexion à Google Sheets
     """
-    scopes = ["https://www.googleapis.com/auth/spreadsheets"]
+    scopes = [
+    "https://www.googleapis.com/auth/spreadsheets",
+    "https://www.googleapis.com/auth/drive"
+    ]
     creds_file = get_google_creds_file()
 
     creds = Credentials.from_service_account_file(
