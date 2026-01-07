@@ -10,17 +10,25 @@ document.addEventListener("DOMContentLoaded", () => {
   const profilesContainer = document.querySelector(".profiles");
 
   const togglePasswordBtn = document.getElementById("toggle-password");
-  const createPasswordInput = document.getElementById("new-password");
+  const pwdInput = document.getElementById("new-password");
+  const eyeOpen = document.getElementById("eye-open");
+  const eyeClosed = document.getElementById("eye-closed");
 
-  if (togglePasswordBtn && createPasswordInput) {
-  togglePasswordBtn.addEventListener("click", () => {
-    const type = createPasswordInput.getAttribute("type");
-    createPasswordInput.setAttribute(
-      "type",
-      type === "password" ? "text" : "password"
+  if (togglePasswordBtn && pwdInput && eyeOpen && eyeClosed) {
+    togglePasswordBtn.addEventListener("click", () => {
+      const isPassword = pwdInput.type === "password";
+      pwdInput.type = isPassword ? "text" : "password";
+  
+      eyeOpen.classList.toggle("hidden", !isPassword);
+      eyeClosed.classList.toggle("hidden", isPassword);
+  
+      togglePasswordBtn.setAttribute(
+        "aria-label",
+        isPassword ? "Masquer le mot de passe" : "Afficher le mot de passe"
     );
   });
 }
+
 
   // Modale création
   const createOverlay = document.getElementById("create-overlay");
