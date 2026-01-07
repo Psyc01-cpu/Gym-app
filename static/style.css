@@ -167,3 +167,49 @@ body {
   box-shadow: 0 0 40px rgba(245,197,24,0.3);
 }
 
+/* ===============================
+   SEXE - BOUTONS TACTILES
+   =============================== */
+
+.gender {
+  display: flex;
+  gap: 12px;
+  margin-bottom: 15px;
+}
+
+.gender-option {
+  flex: 1;
+  position: relative;
+  cursor: pointer;
+}
+
+.gender-option input {
+  display: none;
+}
+
+.gender-option span {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  padding: 12px 10px;
+  border-radius: 10px;
+  border: 1px solid rgba(245,197,24,0.4);
+  background: #111;
+  color: #f5c518;
+  font-weight: 600;
+  transition: all 0.15s ease;
+  user-select: none;
+}
+
+/* Hover desktop */
+.gender-option:hover span {
+  border-color: #f5c518;
+}
+
+/* Sélectionné */
+.gender-option input:checked + span {
+  background: #f5c518;
+  color: #111;
+  box-shadow: 0 0 0 2px rgba(245,197,24,0.3);
+}
