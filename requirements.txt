@@ -4,3 +4,5 @@ pandas
 bcrypt
 python-multipart
 jinja2
+gspread
+google-auth
