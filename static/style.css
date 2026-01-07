@@ -213,3 +213,44 @@ body {
   color: #111;
   box-shadow: 0 0 0 2px rgba(245,197,24,0.3);
 }
+
+.password-field {
+  position: relative;
+  width: 100%;
+}
+
+.password-field input {
+  width: 100%;
+  padding-right: 46px; /* place pour l’icône */
+}
+
+/* bouton icône dans le champ */
+.eye-btn {
+  position: absolute;
+  right: 10px;
+  top: 50%;
+  transform: translateY(-50%);
+  height: 32px;
+  width: 32px;
+  border: 0;
+  background: transparent;
+  padding: 0;
+  cursor: pointer;
+  color: rgba(255,255,255,0.65); /* style discret gris */
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.eye-btn:hover {
+  color: rgba(255,255,255,0.9);
+}
+
+.eye-icon {
+  width: 20px;
+  height: 20px;
+}
+
+.hidden {
+  display: none !important;
+}
