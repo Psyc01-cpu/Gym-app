@@ -19,25 +19,22 @@
 
 
   <!-- MODALE -->
-  <div id="modal-overlay" class="hidden">
-    <div class="modal">
-      <h2 id="modal-title">Profil</h2>
+<div id="modal-overlay" class="hidden">
+  <div class="modal">
+    <h2 id="modal-title">Profil</h2>
 
-      <input
-        type="password"
-        placeholder="Mot de passe"
-        id="password"
-      />
+    <input
+      type="password"
+      placeholder="Mot de passe"
+      id="password"
+    />
 
-      <div class="modal-actions">
-        <button id="login-btn">Connexion</button>
-        <button id="view-btn">Voir le profil</button>
-        <button id="close-btn">Fermer</button>
-      </div>
-
-      <button id="close-btn" class="close">Fermer</button>
+    <div class="modal-actions">
+      <button id="login-btn">Connexion</button>
+      <button id="view-btn">Voir le profil</button>
     </div>
   </div>
+</div>
 
     <!-- ✅ ICI : VERSION DU SITE -->
   <div id="site-version">
@@ -46,5 +43,36 @@
 
   <!-- JS -->
   <script src="/static/app.js?v=0.3.14" defer></script>
+<!-- MODALE CREATION PROFIL -->
+<div id="create-overlay" class="hidden">
+  <div class="modal">
+    <h2>Créer un profil</h2>
+
+    <input id="new-username" placeholder="Pseudo" />
+
+    <div class="gender">
+      <label>
+        <input type="radio" name="gender" value="homme" checked />
+        Homme
+      </label>
+      <label>
+        <input type="radio" name="gender" value="femme" />
+        Femme
+      </label>
+    </div>
+
+    <input id="new-age" type="number" placeholder="Âge" />
+    <input id="new-height" type="number" placeholder="Taille (cm)" />
+
+    <input id="new-password" type="password" placeholder="Mot de passe" />
+    <input id="confirm-password" type="password" placeholder="Confirmer mot de passe" />
+
+    <div class="modal-actions">
+      <button id="validate-create-btn">Créer</button>
+    </div>
+  </div>
+</div>
+
+  
 </body>
 </html>
