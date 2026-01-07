@@ -150,56 +150,6 @@ def create_user(data: dict = Body(...)):
         raise HTTPException(status_code=500, detail=str(e))
 
 # -------------------
-# API - LOGIN
-# -------------------
-
-@app.post("/api/login")
-def login(data: dict = Body(...)):
-    """
-    Vérifie les identifiants avec password_hash (bcrypt)
-    """
-    username = data.get("username")
-    password = data.get("password")
-
-    if not username or not password:
-        raise HTTPException(status_code=400, detail="Champs manquants")
-
-    try:
-        sheet = get_sheet()
-        rows = sheet.get_all_records()
-
-        for row in rows:
-            is_active = row.get("is_active")
-
-            if (
-                row.get("username") == username
-                and str(is_active).strip().lower() in ["true", "vrai", "1", "yes"]
-            ):
-                stored_hash = row.get("password_hash")
-
-                if not stored_hash:
-                    break
-
-                if bcrypt.checkpw(
-                    password.encode("utf-8"),
-                    stored_hash.encode("utf-8")
-                ):
-                    return {
-                        "success": True,
-                        "role": row.get("role")
-                    }
-
-                break
-
-        raise HTTPException(status_code=401, detail="Identifiants incorrects")
-
-    except HTTPException:
-        raise
-    except Exception as e:
-        raise HTTPException(status_code=500, detail=str(e))
-
-
-# -------------------
 # API - CREATION USERS
 # -------------------
 
