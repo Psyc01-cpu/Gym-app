@@ -1,6 +1,5 @@
 document.addEventListener("DOMContentLoaded", () => {
   const overlay = document.getElementById("modal-overlay");
-  const closeBtn = document.getElementById("close-btn");
   const modalTitle = document.getElementById("modal-title");
   const passwordInput = document.getElementById("password");
 
@@ -10,7 +9,11 @@ document.addEventListener("DOMContentLoaded", () => {
 
   const profilesContainer = document.querySelector(".profiles");
 
-  if (!overlay || !closeBtn || !profilesContainer) {
+  // Modale création
+  const createOverlay = document.getElementById("create-overlay");
+  const validateCreateBtn = document.getElementById("validate-create-btn");
+
+  if (!overlay || !profilesContainer || !createOverlay) {
     console.error("Éléments DOM manquants");
     return;
   }
@@ -18,7 +21,7 @@ document.addEventListener("DOMContentLoaded", () => {
   let selectedUser = null;
 
   /* -------------------------
-     MODALE
+     MODALE PROFIL
   -------------------------- */
 
   function openModal(user) {
@@ -26,13 +29,11 @@ document.addEventListener("DOMContentLoaded", () => {
     modalTitle.textContent = "Profil – " + user;
     passwordInput.value = "";
     overlay.classList.remove("hidden");
-    console.log("Modal ouverte pour :", user);
   }
 
   function closeModal() {
     overlay.classList.add("hidden");
     selectedUser = null;
-    console.log("Modal fermée");
   }
 
   /* -------------------------
@@ -42,7 +43,10 @@ document.addEventListener("DOMContentLoaded", () => {
   async function loadProfiles() {
     try {
       const res = await fetch("/api/users");
+      if (!res.ok) return;
+
       const users = await res.json();
+      if (!Array.isArray(users)) return;
 
       profilesContainer.innerHTML = "";
 
@@ -62,33 +66,60 @@ document.addEventListener("DOMContentLoaded", () => {
   loadProfiles();
 
   /* -------------------------
-     CLIC SUR PROFIL (délégation)
+     CLIC SUR PROFIL
   -------------------------- */
 
   document.addEventListener("click", (e) => {
     const btn = e.target.closest(".profile-btn");
     if (!btn) return;
 
-    const user = btn.dataset.user;
-    openModal(user);
+    openModal(btn.dataset.user);
   });
 
   /* -------------------------
-     BOUTON ➕ CRÉER PROFIL
+     BOUTON ➕ OUVRIR MODALE CRÉATION
   -------------------------- */
 
   if (createProfileBtn) {
-    createProfileBtn.addEventListener("click", async () => {
-      const username = prompt("Nom du profil :");
-      const password = prompt("Mot de passe :");
+    createProfileBtn.addEventListener("click", () => {
+      createOverlay.classList.remove("hidden");
+    });
+  }
 
-      if (!username || !password) return;
+  /* -------------------------
+     VALIDATION CRÉATION PROFIL
+  -------------------------- */
+
+  if (validateCreateBtn) {
+    validateCreateBtn.addEventListener("click", async () => {
+      const username = document.getElementById("new-username").value.trim();
+      const age = document.getElementById("new-age").value;
+      const height = document.getElementById("new-height").value;
+      const password = document.getElementById("new-password").value;
+      const confirmPassword = document.getElementById("confirm-password").value;
+      const gender = document.querySelector("input[name='gender']:checked")?.value;
+
+      if (!username || !age || !height || !password || !confirmPassword || !gender) {
+        alert("Tous les champs sont obligatoires");
+        return;
+      }
+
+      if (password !== confirmPassword) {
+        alert("Les mots de passe ne correspondent pas");
+        return;
+      }
 
       try {
         const res = await fetch("/api/users", {
           method: "POST",
           headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ username, password })
+          body: JSON.stringify({
+            username,
+            password,
+            gender,
+            age,
+            height
+          })
         });
 
         if (!res.ok) {
@@ -98,6 +129,8 @@ document.addEventListener("DOMContentLoaded", () => {
         }
 
         alert("Profil créé avec succès");
+
+        createOverlay.classList.add("hidden");
         loadProfiles();
 
       } catch (err) {
@@ -156,23 +189,28 @@ document.addEventListener("DOMContentLoaded", () => {
   }
 
   /* -------------------------
-     FERMETURE MODALE
+     FERMETURE DES MODALES
   -------------------------- */
 
-  closeBtn.addEventListener("click", (e) => {
-    e.stopPropagation();
-    closeModal();
-  });
-
+  // Fermeture modale profil (clic extérieur)
   overlay.addEventListener("click", (e) => {
     if (e.target === overlay) {
       closeModal();
     }
   });
 
+  // Fermeture modale création (clic extérieur)
+  createOverlay.addEventListener("click", (e) => {
+    if (e.target === createOverlay) {
+      createOverlay.classList.add("hidden");
+    }
+  });
+
+  // ESC ferme tout
   document.addEventListener("keydown", (e) => {
     if (e.key === "Escape") {
       closeModal();
+      createOverlay.classList.add("hidden");
     }
   });
 });
