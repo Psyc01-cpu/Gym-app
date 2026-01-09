@@ -298,3 +298,10 @@ body {
   border-color: #e74c3c;
   color: #e74c3c;
 }
+
+#stars-canvas {
+  position: fixed;
+  inset: 0;
+  z-index: -1;
+  background: radial-gradient(circle at top, #0b0f19 0%, #000 70%);
+}
