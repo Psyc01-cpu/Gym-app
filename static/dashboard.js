@@ -5,21 +5,34 @@ document.addEventListener("DOMContentLoaded", () => {
   const menuItems = document.querySelectorAll(".menu-item");
   const pageContent = document.getElementById("page-content");
 
-  if (!menuBtn || !menuOverlay || !pageContent) {
+  if (!pageContent) {
     console.warn("Dashboard UI non initialisée");
     return;
   }
 
+  // ----------------------------
+  // USER depuis URL
+  // ----------------------------
+
+  const params = new URLSearchParams(window.location.search);
+  const currentUser = params.get("user");
+
+  // ----------------------------
+  // MENU
+  // ----------------------------
+
   function openMenu() {
-    menuOverlay.classList.remove("hidden");
+    if (menuOverlay) menuOverlay.classList.remove("hidden");
   }
 
   function closeMenu() {
-    menuOverlay.classList.add("hidden");
+    if (menuOverlay) menuOverlay.classList.add("hidden");
   }
 
-  menuBtn.addEventListener("click", openMenu);
-  menuOverlay.addEventListener("click", closeMenu);
+  if (menuBtn && menuOverlay) {
+    menuBtn.addEventListener("click", openMenu);
+    menuOverlay.addEventListener("click", closeMenu);
+  }
 
   menuItems.forEach(item => {
     item.addEventListener("click", () => {
@@ -28,6 +41,50 @@ document.addEventListener("DOMContentLoaded", () => {
       closeMenu();
     });
   });
+
+  // ----------------------------
+  // API — Exercice le moins travaillé
+  // ----------------------------
+
+  async function loadLeastExercise() {
+    if (!currentUser) return;
+
+    try {
+      const res = await fetch(`/api/least-exercise?user=${currentUser}`);
+      if (!res.ok) return;
+
+      const data = await res.json();
+      const label = document.getElementById("least-exercise-name");
+
+      if (!label) return;
+
+      if (!data.exercise) {
+        label.textContent = "Aucun exercice";
+      } else {
+        label.textContent = data.exercise;
+      }
+
+    } catch (err) {
+      console.error("Erreur chargement exercice faible", err);
+    }
+  }
+
+  // ----------------------------
+  // OUVERTURE MODALE EXERCICE (placeholder)
+  // ----------------------------
+
+  function bindLeastExerciseClick() {
+    const btn = document.getElementById("least-exercise-btn");
+    if (!btn) return;
+
+    btn.addEventListener("click", () => {
+      alert("Fiche exercice à venir (modale bientôt)");
+    });
+  }
+
+  // ----------------------------
+  // PAGES
+  // ----------------------------
 
   function loadPage(page) {
 
@@ -59,7 +116,22 @@ document.addEventListener("DOMContentLoaded", () => {
             <div class="value">28</div>
           </div>
         </div>
+
+        <!-- EXERCICE À PRIORISER -->
+        <div class="priority-card" id="least-exercise-btn">
+          <h3>🎯 Exercice à prioriser</h3>
+          <div class="exercise-name" id="least-exercise-name">
+            Chargement...
+          </div>
+          <small>Clique pour ouvrir la fiche</small>
+        </div>
       `;
+
+      // Charger l'exercice faible
+      loadLeastExercise();
+
+      // Brancher le clic
+      bindLeastExerciseClick();
     }
 
     if (page === "profile") {
@@ -84,7 +156,10 @@ document.addEventListener("DOMContentLoaded", () => {
     }
   }
 
-  // Page par défaut
+  // ----------------------------
+  // PAGE PAR DÉFAUT
+  // ----------------------------
+
   loadPage("training");
 
 });
