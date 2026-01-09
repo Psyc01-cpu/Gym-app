@@ -20,7 +20,9 @@ document.addEventListener("DOMContentLoaded", () => {
   const createProfileBtn = document.getElementById("create-profile-btn");
 
   const profilesContainer = document.querySelector(".profiles");
+  const loginForm = document.getElementById("login-form");
 
+  // Password toggle (création)
   const togglePasswordBtn = document.getElementById("toggle-password");
   const pwdInput = document.getElementById("new-password");
   const eyeOpen = document.getElementById("eye-open");
@@ -30,17 +32,16 @@ document.addEventListener("DOMContentLoaded", () => {
     togglePasswordBtn.addEventListener("click", () => {
       const isPassword = pwdInput.type === "password";
       pwdInput.type = isPassword ? "text" : "password";
-  
+
       eyeOpen.classList.toggle("hidden", !isPassword);
       eyeClosed.classList.toggle("hidden", isPassword);
-  
+
       togglePasswordBtn.setAttribute(
         "aria-label",
         isPassword ? "Masquer le mot de passe" : "Afficher le mot de passe"
-    );
-  });
-}
-
+      );
+    });
+  }
 
   // Modale création
   const createOverlay = document.getElementById("create-overlay");
@@ -62,6 +63,9 @@ document.addEventListener("DOMContentLoaded", () => {
     modalTitle.textContent = "Profil – " + user;
     passwordInput.value = "";
     overlay.classList.remove("hidden");
+
+    // autofocus mobile
+    setTimeout(() => passwordInput.focus(), 150);
   }
 
   function closeModal() {
@@ -105,7 +109,6 @@ document.addEventListener("DOMContentLoaded", () => {
   document.addEventListener("click", (e) => {
     const btn = e.target.closest(".profile-btn");
     if (!btn) return;
-
     openModal(btn.dataset.user);
   });
 
@@ -133,12 +136,12 @@ document.addEventListener("DOMContentLoaded", () => {
       const gender = document.querySelector("input[name='gender']:checked")?.value;
 
       if (!username || !age || !height || !password || !confirmPassword || !gender) {
-        showToast("Tous les champs sont obligatoires");
+        showToast("Tous les champs sont obligatoires", "error");
         return;
       }
 
       if (password !== confirmPassword) {
-        showToast("Les mots de passe ne correspondent pas");
+        showToast("Les mots de passe ne correspondent pas", "error");
         return;
       }
 
@@ -157,61 +160,72 @@ document.addEventListener("DOMContentLoaded", () => {
 
         if (!res.ok) {
           const err = await res.json();
-          showToast(err.detail || "Erreur création profil");
+          showToast(err.detail || "Erreur création profil", "error");
           return;
         }
 
-        showToast("Profil créé avec succès");
+        showToast("Profil créé", "success");
 
         createOverlay.classList.add("hidden");
         loadProfiles();
 
       } catch (err) {
-        showToast("Erreur réseau");
+        showToast("Erreur réseau", "error");
         console.error(err);
       }
     });
   }
 
   /* -------------------------
-     BOUTON 🔐 CONNEXION
+     🔐 CONNEXION (FORMULAIRE → touche OK)
   -------------------------- */
 
-  if (loginBtn) {
-    loginBtn.addEventListener("click", async () => {
-      const password = passwordInput.value;
+  async function doLogin() {
+    const password = passwordInput.value;
 
-      if (!selectedUser || !password) {
-        showToast("Mot de passe requis");
+    if (!selectedUser || !password) {
+      showToast("Mot de passe requis", "error");
+      return;
+    }
+
+    try {
+      const res = await fetch("/api/login", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          username: selectedUser,
+          password: password
+        })
+      });
+
+      if (!res.ok) {
+        showToast("Identifiants incorrects", "error");
         return;
       }
 
-      try {
-        const res = await fetch("/api/login", {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({
-            username: selectedUser,
-            password: password
-          })
-        });
+      window.location.href = `/dashboard?user=${selectedUser}`;
 
-        if (!res.ok) {
-          showToast("Identifiants incorrects");
-          return;
-        }
+    } catch (err) {
+      showToast("Erreur réseau", "error");
+      console.error(err);
+    }
+  }
 
-        window.location.href = `/dashboard?user=${selectedUser}`;
+  // ✅ Bouton Connexion
+  if (loginBtn) {
+    loginBtn.addEventListener("click", doLogin);
+  }
 
-      } catch (err) {
-        showToast("Erreur réseau");
-        console.error(err);
-      }
+  // ✅ Touche OK / Entrée du clavier mobile
+  if (loginForm) {
+    loginForm.addEventListener("submit", (e) => {
+      e.preventDefault();
+      doLogin();
     });
   }
 
   /* -------------------------
-     BOUTON 👁️ VOIR PROFIL
+     👁️ VOIR PROFIL
   -------------------------- */
 
   if (viewBtn) {
@@ -225,21 +239,16 @@ document.addEventListener("DOMContentLoaded", () => {
      FERMETURE DES MODALES
   -------------------------- */
 
-  // Fermeture modale profil (clic extérieur)
   overlay.addEventListener("click", (e) => {
-    if (e.target === overlay) {
-      closeModal();
-    }
+    if (e.target === overlay) closeModal();
   });
 
-  // Fermeture modale création (clic extérieur)
   createOverlay.addEventListener("click", (e) => {
     if (e.target === createOverlay) {
       createOverlay.classList.add("hidden");
     }
   });
 
-  // ESC ferme tout
   document.addEventListener("keydown", (e) => {
     if (e.key === "Escape") {
       closeModal();
@@ -247,6 +256,7 @@ document.addEventListener("DOMContentLoaded", () => {
     }
   });
 });
+
 
 // =======================
 // BACKGROUND STARS EFFECT
