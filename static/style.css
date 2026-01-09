@@ -45,10 +45,12 @@ body {
   border: 1px solid #f5c518;
   border-radius: 12px;
   padding: 30px;
-  width: 320px;
+  width: 100%;
+  max-width: 420px;      /* largeur propre */
   box-shadow: 0 0 40px rgba(245,197,24,0.3);
   position: relative;
   z-index: 1001;
+  box-sizing: border-box;
 }
 
 .modal h2 {
@@ -61,6 +63,7 @@ body {
   margin-bottom: 15px;
   border-radius: 6px;
   border: none;
+  box-sizing: border-box;   /* ✅ empêche tout débordement */
 }
 
 .modal-actions {
@@ -221,7 +224,8 @@ body {
 
 .password-field input {
   width: 100%;
-  padding-right: 46px; /* place pour l’icône */
+  padding-right: 46px; /* espace pour l’icône */
+  box-sizing: border-box;
 }
 
 /* bouton icône dans le champ */
