@@ -2,34 +2,70 @@
 <html lang="fr">
 <head>
   <meta charset="UTF-8">
-  <title>Gotham Training</title>
+  <title>Batcave</title>
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <link rel="stylesheet" href="/static/style.css">
 </head>
+<body class="app">
 
-<body class="mobile-app">
+<header class="top-bar">
+  <div class="logo">🦇 Batcave</div>
+  <div class="tier">Bronze I</div>
+</header>
 
-  <!-- Fond animé -->
-  <div class="stars"></div>
+<main class="dashboard">
 
-  <!-- CONTENU PRINCIPAL -->
-  <main id="page-content" class="page-content"></main>
-
-  <!-- BOUTON FLOTTANT -->
-  <button id="menu-btn" class="menu-btn">☰</button>
-
-  <!-- MENU OVERLAY -->
-  <div id="menu-overlay" class="menu-overlay hidden">
-    <div class="menu-grid">
-      <div class="menu-item" data-page="training">🏋️<span>Entraînement</span></div>
-      <div class="menu-item" data-page="stats">📊<span>Stats</span></div>
-      <div class="menu-item" data-page="ranking">🏆<span>Classement</span></div>
-      <div class="menu-item" data-page="profile">⚙️<span>Profil</span></div>
+  <section class="stats-grid">
+    <div class="card">
+      <span>💪 Volume</span>
+      <strong>12 450 kg</strong>
     </div>
-  </div>
 
-  <!-- JS DASHBOARD -->
-  <script src="/static/dashboard.js"></script>
+    <div class="card">
+      <span>🏆 Score</span>
+      <strong>1 240 pts</strong>
+    </div>
+
+    <div class="card">
+      <span>🔥 Série</span>
+      <strong>6 jours</strong>
+    </div>
+
+    <div class="card">
+      <span>📅 Séances</span>
+      <strong>28</strong>
+    </div>
+  </section>
+
+</main>
+
+<!-- NAV BAR MOBILE -->
+<nav class="bottom-nav">
+  <button class="nav-item active">
+    <span>📊</span>
+    <small>Dashboard</small>
+  </button>
+
+  <button class="nav-item">
+    <span>💪</span>
+    <small>Exercice</small>
+  </button>
+
+  <button class="nav-item">
+    <span>💬</span>
+    <small>Chat</small>
+  </button>
+
+  <button class="nav-item">
+    <span>📈</span>
+    <small>Suivi</small>
+  </button>
+
+  <button class="nav-item">
+    <span>🍎</span>
+    <small>Nutrition</small>
+  </button>
+</nav>
 
 </body>
 </html>
