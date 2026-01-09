@@ -1,3 +1,22 @@
+console.log("Dashboard JS chargé");
+
+// ==========================
+// AFFICHAGE DU PSEUDO UTILISATEUR
+// ==========================
+
+const params = new URLSearchParams(window.location.search);
+const username = params.get("user");
+
+const usernameDisplay = document.getElementById("username-display");
+
+if (username && usernameDisplay) {
+  usernameDisplay.textContent = username;
+  console.log("Utilisateur affiché :", username);
+} else {
+  console.warn("Pseudo utilisateur introuvable dans l'URL ou le DOM");
+}
+
+
 document.addEventListener("DOMContentLoaded", () => {
   const params = new URLSearchParams(window.location.search);
   const username = params.get("user");
