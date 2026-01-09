@@ -4,68 +4,89 @@
   <meta charset="UTF-8">
   <title>Batcave</title>
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+  <!-- CSS -->
   <link rel="stylesheet" href="/static/style.css">
+
+  <!-- Lucide Icons -->
+  <script src="https://unpkg.com/lucide@latest"></script>
 </head>
+
 <body class="app">
 
+<!-- TOP BAR -->
 <header class="top-bar">
   <div class="logo">🦇 Batcave</div>
   <div class="tier">Bronze I</div>
 </header>
 
+<!-- DASHBOARD -->
 <main class="dashboard">
 
   <section class="stats-grid">
+
     <div class="card">
-      <span>💪 Volume</span>
+      <i data-lucide="dumbbell"></i>
+      <span>Volume</span>
       <strong>12 450 kg</strong>
     </div>
 
     <div class="card">
-      <span>🏆 Score</span>
+      <i data-lucide="trophy"></i>
+      <span>Score</span>
       <strong>1 240 pts</strong>
     </div>
 
     <div class="card">
-      <span>🔥 Série</span>
+      <i data-lucide="flame"></i>
+      <span>Série</span>
       <strong>6 jours</strong>
     </div>
 
     <div class="card">
-      <span>📅 Séances</span>
+      <i data-lucide="calendar"></i>
+      <span>Séances</span>
       <strong>28</strong>
     </div>
+
   </section>
 
 </main>
 
 <!-- NAV BAR MOBILE -->
 <nav class="bottom-nav">
+
   <button class="nav-item active">
-    <span>📊</span>
+    <i data-lucide="bar-chart-3"></i>
     <small>Dashboard</small>
   </button>
 
   <button class="nav-item">
-    <span>💪</span>
+    <i data-lucide="dumbbell"></i>
     <small>Exercice</small>
   </button>
 
   <button class="nav-item">
-    <span>💬</span>
+    <i data-lucide="message-circle"></i>
     <small>Chat</small>
   </button>
 
   <button class="nav-item">
-    <span>📈</span>
+    <i data-lucide="trending-up"></i>
     <small>Suivi</small>
   </button>
 
   <button class="nav-item">
-    <span>🍎</span>
+    <i data-lucide="apple"></i>
     <small>Nutrition</small>
   </button>
+
 </nav>
+
+<!-- Init icons -->
+<script>
+  lucide.createIcons();
+</script>
 
 </body>
 </html>
