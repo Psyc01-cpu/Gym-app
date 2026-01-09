@@ -467,3 +467,19 @@ button:active {
   transform: scale(0.92);
 }
 
+.logout-btn {
+  position: absolute;
+  right: 12px;
+  top: 12px;
+  background: #d32f2f;
+  border: none;
+  color: white;
+  padding: 6px 14px;
+  border-radius: 20px;
+  font-size: 13px;
+  cursor: pointer;
+  box-shadow: 0 0 12px rgba(255,0,0,0.3);
+}
+.logout-btn:hover {
+  background: #ff5252;
+}
