@@ -20,23 +20,33 @@
 </div>
 
 
-  <!-- MODALE -->
+<!-- MODALE -->
 <div id="modal-overlay" class="hidden">
   <div class="modal">
+
     <h2 id="modal-title">Profil</h2>
 
-    <input
-      type="password"
-      placeholder="Mot de passe"
-      id="password"
-    />
+    <!-- ✅ FORMULAIRE -->
+    <form id="login-form">
 
-    <div class="modal-actions">
-      <button id="login-btn">Connexion</button>
-      <button id="view-btn">Voir le profil</button>
-    </div>
+      <input
+        type="password"
+        placeholder="Mot de passe"
+        id="password"
+        required
+      />
+
+      <div class="modal-actions">
+        <!-- ⚠️ submit important -->
+        <button id="login-btn" type="submit">Connexion</button>
+        <button id="view-btn" type="button">Voir le profil</button>
+      </div>
+
+    </form>
+
   </div>
 </div>
+
 
     <!-- ✅ ICI : VERSION DU SITE -->
   <div id="site-version">
