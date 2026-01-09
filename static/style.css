@@ -484,158 +484,139 @@ button:active {
   background: #ff5252;
 }
 
-<!DOCTYPE html>
-<html lang="fr">
-<head>
-  <meta charset="UTF-8">
-  <title>Batcave</title>
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+/* ======================
+   OBJECTIF DU JOUR
+====================== */
 
-  <!-- CSS -->
-  <link rel="stylesheet" href="/static/style.css">
+.objective-card {
+  background: linear-gradient(145deg, #0d0d0d, #151515);
+  border-radius: 18px;
+  padding: 18px;
+  margin-bottom: 18px;
+  box-shadow: inset 0 0 0 1px rgba(245,197,24,0.15),
+              0 8px 25px rgba(0,0,0,0.5);
+}
 
-  <!-- Lucide Icons -->
-  <script src="https://unpkg.com/lucide@latest"></script>
-</head>
+.objective-card h2 {
+  font-size: 16px;
+  margin-bottom: 12px;
+  text-align: left;
+}
 
-<body class="app">
+.objective-wrapper {
+  display: flex;
+  gap: 16px;
+  align-items: center;
+}
 
-<!-- TOP BAR -->
-<header class="top-bar">
-  <div class="logo">🦇 Batcave</div>
-  <div class="tier">Bronze I</div>
+/* Cercle */
+.progress-ring {
+  position: relative;
+  width: 140px;
+  height: 140px;
+}
 
-  <button class="logout-btn" onclick="window.location.href='/'">
-    Déconnexion
-  </button>
-</header>
+.ring-bg {
+  fill: none;
+  stroke: rgba(255,255,255,0.08);
+  stroke-width: 12;
+}
 
-<!-- DASHBOARD -->
-<main class="dashboard">
+.ring-progress {
+  fill: none;
+  stroke: #f5c518;
+  stroke-width: 12;
+  stroke-linecap: round;
+  stroke-dasharray: 377;
+  stroke-dashoffset: 125; /* 2/3 rempli */
+  transform: rotate(-90deg);
+  transform-origin: 50% 50%;
+  filter: drop-shadow(0 0 8px rgba(245,197,24,0.6));
+}
 
-  <!-- OBJECTIF DU JOUR -->
-  <section class="objective-card">
-    <h2>🎯 Objectif du jour</h2>
+.progress-text {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  font-size: 18px;
+}
 
-    <div class="objective-wrapper">
-      <!-- Cercle -->
-      <div class="progress-ring">
-        <svg width="140" height="140">
-          <circle cx="70" cy="70" r="60" class="ring-bg"/>
-          <circle cx="70" cy="70" r="60" class="ring-progress"/>
-        </svg>
-        <div class="progress-text">
-          <strong>2 / 3</strong>
-          <small>séances</small>
-        </div>
-      </div>
+.progress-text small {
+  font-size: 12px;
+  opacity: 0.7;
+}
 
-      <!-- Stats rapides -->
-      <div class="objective-stats">
-        <div class="mini-stat">
-          <span>📦 Volume semaine</span>
-          <strong>8 200 kg</strong>
-        </div>
+/* Stats à droite */
+.objective-stats {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
 
-        <div class="mini-stat">
-          <span>💪 Exercices</span>
-          <strong>14</strong>
-        </div>
+.mini-stat {
+  background: rgba(255,255,255,0.03);
+  border-radius: 12px;
+  padding: 10px 12px;
+  font-size: 13px;
+}
 
-        <div class="mini-stat">
-          <span>🏆 Record du mois</span>
-          <strong>2 450 kg</strong>
-        </div>
-      </div>
-    </div>
-  </section>
+.mini-stat span {
+  opacity: 0.7;
+  font-size: 12px;
+}
 
-  <!-- STATS PRINCIPALES -->
-  <section class="stats-grid">
+.mini-stat strong {
+  display: block;
+  margin-top: 2px;
+}
 
-    <div class="card">
-      <i data-lucide="dumbbell"></i>
-      <span>Volume total</span>
-      <strong>12 450 kg</strong>
-    </div>
+/* ======================
+   ACTIONS RAPIDES
+====================== */
 
-    <div class="card">
-      <i data-lucide="trophy"></i>
-      <span>Score</span>
-      <strong>1 240 pts</strong>
-    </div>
+.quick-actions {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 12px;
+  margin-top: 18px;
+}
 
-    <div class="card">
-      <i data-lucide="flame"></i>
-      <span>Série</span>
-      <strong>6 jours</strong>
-    </div>
+.action-card {
+  background: linear-gradient(145deg, #0d0d0d, #1a1a1a);
+  border-radius: 16px;
+  padding: 14px 10px;
+  border: none;
+  color: #f5c518;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 6px;
+  font-size: 12px;
+  cursor: pointer;
+  box-shadow: inset 0 0 0 1px rgba(245,197,24,0.12),
+              0 6px 18px rgba(0,0,0,0.6);
+  transition: all 0.2s ease;
+}
 
-    <div class="card">
-      <i data-lucide="calendar"></i>
-      <span>Séances</span>
-      <strong>28</strong>
-    </div>
+.action-card i {
+  width: 22px;
+  height: 22px;
+}
 
-  </section>
+.action-card small {
+  font-size: 10px;
+  opacity: 0.7;
+}
 
-  <!-- ACTIONS RAPIDES -->
-  <section class="quick-actions">
+.action-card:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 10px 30px rgba(245,197,24,0.25);
+}
 
-    <button class="action-card">
-      <i data-lucide="plus-circle"></i>
-      <span>Nouvel exercice</span>
-    </button>
-
-    <button class="action-card">
-      <i data-lucide="activity"></i>
-      <span>Entrer performances</span>
-    </button>
-
-    <button class="action-card">
-      <i data-lucide="target"></i>
-      <span>Ratio épaules / taille</span>
-      <small>Objectif : 1.60</small>
-    </button>
-
-  </section>
-
-</main>
-
-<!-- NAV BAR MOBILE -->
-<nav class="bottom-nav">
-
-  <button class="nav-item active">
-    <i data-lucide="bar-chart-3"></i>
-    <small>Dashboard</small>
-  </button>
-
-  <button class="nav-item">
-    <i data-lucide="dumbbell"></i>
-    <small>Exercice</small>
-  </button>
-
-  <button class="nav-item">
-    <i data-lucide="message-circle"></i>
-    <small>Chat</small>
-  </button>
-
-  <button class="nav-item">
-    <i data-lucide="trending-up"></i>
-    <small>Suivi</small>
-  </button>
-
-  <button class="nav-item">
-    <i data-lucide="apple"></i>
-    <small>Nutrition</small>
-  </button>
-
-</nav>
-
-<!-- Init icons -->
-<script>
-  lucide.createIcons();
-</script>
-
-</body>
-</html>
+.action-card:active {
+  transform: scale(0.95);
+}
