@@ -18,19 +18,58 @@
 <header class="top-bar">
   <div class="logo">🦇 Batcave</div>
   <div class="tier">Bronze I</div>
+
   <button class="logout-btn" onclick="window.location.href='/'">
-  Déconnexion
-</button>
+    Déconnexion
+  </button>
 </header>
 
 <!-- DASHBOARD -->
 <main class="dashboard">
 
+  <!-- OBJECTIF DU JOUR -->
+  <section class="objective-card">
+    <h2>🎯 Objectif du jour</h2>
+
+    <div class="objective-wrapper">
+      <!-- Cercle -->
+      <div class="progress-ring">
+        <svg width="140" height="140">
+          <circle cx="70" cy="70" r="60" class="ring-bg"/>
+          <circle cx="70" cy="70" r="60" class="ring-progress"/>
+        </svg>
+        <div class="progress-text">
+          <strong>2 / 3</strong>
+          <small>séances</small>
+        </div>
+      </div>
+
+      <!-- Stats rapides -->
+      <div class="objective-stats">
+        <div class="mini-stat">
+          <span>📦 Volume semaine</span>
+          <strong>8 200 kg</strong>
+        </div>
+
+        <div class="mini-stat">
+          <span>💪 Exercices</span>
+          <strong>14</strong>
+        </div>
+
+        <div class="mini-stat">
+          <span>🏆 Record du mois</span>
+          <strong>2 450 kg</strong>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- STATS PRINCIPALES -->
   <section class="stats-grid">
 
     <div class="card">
       <i data-lucide="dumbbell"></i>
-      <span>Volume</span>
+      <span>Volume total</span>
       <strong>12 450 kg</strong>
     </div>
 
@@ -41,55 +80,3 @@
     </div>
 
     <div class="card">
-      <i data-lucide="flame"></i>
-      <span>Série</span>
-      <strong>6 jours</strong>
-    </div>
-
-    <div class="card">
-      <i data-lucide="calendar"></i>
-      <span>Séances</span>
-      <strong>28</strong>
-    </div>
-
-  </section>
-
-</main>
-
-<!-- NAV BAR MOBILE -->
-<nav class="bottom-nav">
-
-  <button class="nav-item active">
-    <i data-lucide="bar-chart-3"></i>
-    <small>Dashboard</small>
-  </button>
-
-  <button class="nav-item">
-    <i data-lucide="dumbbell"></i>
-    <small>Exercice</small>
-  </button>
-
-  <button class="nav-item">
-    <i data-lucide="message-circle"></i>
-    <small>Chat</small>
-  </button>
-
-  <button class="nav-item">
-    <i data-lucide="trending-up"></i>
-    <small>Suivi</small>
-  </button>
-
-  <button class="nav-item">
-    <i data-lucide="apple"></i>
-    <small>Nutrition</small>
-  </button>
-
-</nav>
-
-<!-- Init icons -->
-<script>
-  lucide.createIcons();
-</script>
-
-</body>
-</html>
