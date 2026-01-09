@@ -2,20 +2,34 @@
 <html lang="fr">
 <head>
   <meta charset="UTF-8">
-  <title>Dashboard</title>
+  <title>Gotham Training</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <link rel="stylesheet" href="/static/style.css">
 </head>
-<body>
 
-  <h1>🦇 Dashboard Gotham</h1>
+<body class="mobile-app">
 
-  <p>Bienvenue <strong>{{ user }}</strong></p>
+  <!-- Fond animé -->
+  <div class="stars"></div>
 
-  <div class="dashboard">
-    <button onclick="alert('À venir')">📈 Progression</button>
-    <button onclick="alert('À venir')">➕ Nouvelle séance</button>
-    <button onclick="alert('À venir')">📄 Historique</button>
+  <!-- CONTENU PRINCIPAL -->
+  <main id="page-content" class="page-content"></main>
+
+  <!-- BOUTON FLOTTANT -->
+  <button id="menu-btn" class="menu-btn">☰</button>
+
+  <!-- MENU OVERLAY -->
+  <div id="menu-overlay" class="menu-overlay hidden">
+    <div class="menu-grid">
+      <div class="menu-item" data-page="training">🏋️<span>Entraînement</span></div>
+      <div class="menu-item" data-page="stats">📊<span>Stats</span></div>
+      <div class="menu-item" data-page="ranking">🏆<span>Classement</span></div>
+      <div class="menu-item" data-page="profile">⚙️<span>Profil</span></div>
+    </div>
   </div>
+
+  <!-- JS DASHBOARD -->
+  <script src="/static/dashboard.js"></script>
 
 </body>
 </html>
