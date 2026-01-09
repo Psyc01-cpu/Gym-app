@@ -355,3 +355,36 @@ def login(data: dict = Body(...)):
         raise
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
+
+@app.get("/api/least-exercise")
+def get_least_exercise(user: str):
+    """
+    Retourne l'exercice le moins travaillé pour un utilisateur
+    """
+    try:
+        sheet = client.open("GothamUsers").worksheet("exercises")
+        rows = sheet.get_all_records()
+
+        # Filtrer uniquement les exercices du user
+        user_rows = [r for r in rows if r.get("user") == user]
+
+        if not user_rows:
+            return {"exercise": None}
+
+        # Cumuler les volumes par exercice
+        stats = {}
+        for row in user_rows:
+            ex = row.get("exercise")
+            vol = float(row.get("volume") or 0)
+            stats[ex] = stats.get(ex, 0) + vol
+
+        # Trouver l'exercice avec le plus petit volume
+        least_exercise = min(stats, key=stats.get)
+
+        return {
+            "exercise": least_exercise,
+            "volume": stats[least_exercise]
+        }
+
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
