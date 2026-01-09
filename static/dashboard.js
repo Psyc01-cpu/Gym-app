@@ -1,3 +1,22 @@
+// =======================
+// USER FROM URL
+// =======================
+
+function getUserFromUrl() {
+  const params = new URLSearchParams(window.location.search);
+  return params.get("user");
+}
+
+document.addEventListener("DOMContentLoaded", () => {
+  const username = getUserFromUrl();
+  const usernameEl = document.getElementById("username-display");
+
+  if (username && usernameEl) {
+    usernameEl.textContent = ` — ${username}`;
+  }
+});
+
+
 document.addEventListener("DOMContentLoaded", () => {
 
   const menuBtn = document.getElementById("menu-btn");
