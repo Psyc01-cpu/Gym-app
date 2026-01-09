@@ -305,3 +305,48 @@ body {
   z-index: -1;
   background: radial-gradient(circle at top, #0b0f19 0%, #000 70%);
 }
+
+.profile-btn {
+  background: linear-gradient(145deg, #0d1324, #02040a);
+  border: 1px solid rgba(245,197,24,0.4);
+  color: #f5c518;
+  padding: 18px 34px;
+  margin: 12px;
+  font-size: 18px;
+  border-radius: 14px;
+  cursor: pointer;
+  transition: all 0.25s ease;
+  box-shadow: 0 0 15px rgba(245,197,24,0.15);
+  position: relative;
+  overflow: hidden;
+}
+
+.profile-btn:hover {
+  transform: translateY(-4px) scale(1.03);
+  box-shadow: 0 0 35px rgba(245,197,24,0.5);
+  background: linear-gradient(145deg, #f5c518, #ffda55);
+  color: #111;
+}
+
+button {
+  transition: transform 0.15s ease, box-shadow 0.15s ease;
+}
+
+button:active {
+  transform: scale(0.96);
+}
+
+.modal {
+  animation: pop 0.25s ease;
+}
+
+@keyframes pop {
+  from {
+    opacity: 0;
+    transform: scale(0.9) translateY(10px);
+  }
+  to {
+    opacity: 1;
+    transform: scale(1) translateY(0);
+  }
+}
