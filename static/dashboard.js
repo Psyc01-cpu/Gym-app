@@ -1,3 +1,17 @@
+document.addEventListener("DOMContentLoaded", () => {
+  const params = new URLSearchParams(window.location.search);
+  const username = params.get("user");
+
+  console.log("USER URL =", username); // 👈 debug
+
+  const usernameEl = document.getElementById("username-display");
+
+  if (username && usernameEl) {
+    usernameEl.textContent = ` — ${username}`;
+  }
+});
+
+
 // =======================
 // USER FROM URL
 // =======================
