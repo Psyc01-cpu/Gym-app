@@ -17,6 +17,13 @@ document.addEventListener("DOMContentLoaded", () => {
   const params = new URLSearchParams(window.location.search);
   const currentUser = params.get("user");
 
+  const usernameLabel = document.getElementById("username-label");
+
+if (usernameLabel && currentUser) {
+  usernameLabel.textContent = currentUser;
+}
+
+
   // ----------------------------
   // MENU
   // ----------------------------
