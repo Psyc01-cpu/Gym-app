@@ -620,3 +620,34 @@ button:active {
 .action-card:active {
   transform: scale(0.95);
 }
+
+/* ======================
+   TEXTE BLANC (hors titres)
+====================== */
+
+.app,
+.dashboard,
+.card span,
+.card strong,
+.value,
+small,
+.nav-item,
+.priority-card,
+.mini-stat span,
+.mini-stat strong,
+.username {
+  color: #ffffff;
+}
+
+/* Titres restent dorés */
+h1, h2, h3 {
+  color: #f5c518;
+}
+
+/* Username style */
+.username {
+  font-weight: 600;
+  font-size: 14px;
+  opacity: 0.9;
+}
+
