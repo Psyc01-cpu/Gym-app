@@ -52,7 +52,7 @@ document.addEventListener("DOMContentLoaded", () => {
     return;
   }
 
-  let selectedUser = null;
+  let selectedUser = null;   // 👈 objet utilisateur complet
 
   /* -------------------------
      MODALE PROFIL
@@ -60,7 +60,7 @@ document.addEventListener("DOMContentLoaded", () => {
 
   function openModal(user) {
     selectedUser = user;
-    modalTitle.textContent = "Profil – " + user;
+    modalTitle.textContent = "Profil – " + user.username;
     passwordInput.value = "";
     overlay.classList.remove("hidden");
 
@@ -90,8 +90,13 @@ document.addEventListener("DOMContentLoaded", () => {
       users.forEach((user) => {
         const btn = document.createElement("button");
         btn.className = "profile-btn";
-        btn.dataset.user = user;
-        btn.textContent = user;
+
+        // ✅ On stocke l'objet complet
+        btn.dataset.user = JSON.stringify(user);
+
+        // ✅ On affiche uniquement le pseudo
+        btn.textContent = user.username;
+
         profilesContainer.appendChild(btn);
       });
 
@@ -109,7 +114,9 @@ document.addEventListener("DOMContentLoaded", () => {
   document.addEventListener("click", (e) => {
     const btn = e.target.closest(".profile-btn");
     if (!btn) return;
-    openModal(btn.dataset.user);
+
+    const user = JSON.parse(btn.dataset.user);   // 👈 récupération objet
+    openModal(user);
   });
 
   /* -------------------------
@@ -177,7 +184,7 @@ document.addEventListener("DOMContentLoaded", () => {
   }
 
   /* -------------------------
-     🔐 CONNEXION (FORMULAIRE → touche OK)
+     🔐 CONNEXION
   -------------------------- */
 
   async function doLogin() {
@@ -193,7 +200,7 @@ document.addEventListener("DOMContentLoaded", () => {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
-          username: selectedUser,
+          username: selectedUser.username,
           password: password
         })
       });
@@ -203,7 +210,8 @@ document.addEventListener("DOMContentLoaded", () => {
         return;
       }
 
-      window.location.href = `/dashboard?user=${selectedUser}`;
+      // ✅ on passe le pseudo dans l’URL
+      window.location.href = `/dashboard?user=${selectedUser.username}`;
 
     } catch (err) {
       showToast("Erreur réseau", "error");
@@ -211,12 +219,10 @@ document.addEventListener("DOMContentLoaded", () => {
     }
   }
 
-  // ✅ Bouton Connexion
   if (loginBtn) {
     loginBtn.addEventListener("click", doLogin);
   }
 
-  // ✅ Touche OK / Entrée du clavier mobile
   if (loginForm) {
     loginForm.addEventListener("submit", (e) => {
       e.preventDefault();
@@ -231,7 +237,7 @@ document.addEventListener("DOMContentLoaded", () => {
   if (viewBtn) {
     viewBtn.addEventListener("click", () => {
       if (!selectedUser) return;
-      window.location.href = `/dashboard?user=${selectedUser}`;
+      window.location.href = `/dashboard?user=${selectedUser.username}`;
     });
   }
 
