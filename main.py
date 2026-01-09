@@ -27,8 +27,10 @@ templates = Jinja2Templates(directory="templates")
 # GOOGLE SHEETS CONFIG
 # -------------------
 
-SPREADSHEET_NAME = "GothamUsers"   # nom exact du fichier
-SHEET_NAME = "users"              # nom exact de l’onglet
+SPREADSHEET_NAME = "GothamUsers"   
+SHEET_NAME = "users"              
+WORKOUTS_SHEET = "workouts"
+STATS_SHEET = "stats"
 
 
 def get_google_creds_file():
@@ -69,6 +71,137 @@ def get_sheet():
     client = gspread.authorize(creds)
     sheet = client.open(SPREADSHEET_NAME).worksheet(SHEET_NAME)
     return sheet
+
+def get_workouts_sheet():
+    scopes = [
+        "https://www.googleapis.com/auth/spreadsheets",
+        "https://www.googleapis.com/auth/drive"
+    ]
+    creds_file = get_google_creds_file()
+    creds = Credentials.from_service_account_file(creds_file, scopes=scopes)
+    client = gspread.authorize(creds)
+    return client.open(SPREADSHEET_NAME).worksheet(WORKOUTS_SHEET)
+
+
+def get_stats_sheet():
+    scopes = [
+        "https://www.googleapis.com/auth/spreadsheets",
+        "https://www.googleapis.com/auth/drive"
+    ]
+    creds_file = get_google_creds_file()
+    creds = Credentials.from_service_account_file(creds_file, scopes=scopes)
+    client = gspread.authorize(creds)
+    return client.open(SPREADSHEET_NAME).worksheet(STATS_SHEET)
+
+
+def compute_tier(volume: int) -> str:
+    if volume < 1000:
+        return "Bronze"
+    elif volume < 5000:
+        return "Silver"
+    elif volume < 15000:
+        return "Gold"
+    else:
+        return "Diamond"
+
+@app.post("/api/workouts")
+def add_workout(data: dict = Body(...)):
+    """
+    Enregistre un poids soulevé et met à jour les stats
+    """
+    user_id = data.get("user_id")
+    username = data.get("username")
+    exercise = data.get("exercise", "")
+    weight = data.get("weight")
+
+    if not user_id or not username or not weight:
+        raise HTTPException(status_code=400, detail="Champs manquants")
+
+    try:
+        weight = int(weight)
+    except:
+        raise HTTPException(status_code=400, detail="Poids invalide")
+
+    try:
+        workouts_sheet = get_workouts_sheet()
+        stats_sheet = get_stats_sheet()
+
+        # ➕ Ajouter la perf
+        workouts_sheet.append_row([
+            str(uuid.uuid4()),
+            user_id,
+            username,
+            exercise,
+            weight,
+            datetime.utcnow().isoformat()
+        ])
+
+        # 🔢 Recalcul du volume total
+        rows = workouts_sheet.get_all_records()
+        total_volume = sum(
+            int(r.get("weight", 0))
+            for r in rows
+            if r.get("user_id") == user_id
+        )
+
+        points = total_volume
+        tier = compute_tier(total_volume)
+
+        # 📊 Mise à jour stats
+        stats_rows = stats_sheet.get_all_records()
+        updated = False
+
+        for idx, row in enumerate(stats_rows, start=2):
+            if row.get("user_id") == user_id:
+                stats_sheet.update(f"C{idx}", total_volume)
+                stats_sheet.update(f"D{idx}", points)
+                stats_sheet.update(f"E{idx}", tier)
+                stats_sheet.update(f"G{idx}", datetime.utcnow().isoformat())
+                updated = True
+                break
+
+        if not updated:
+            stats_sheet.append_row([
+                user_id,
+                username,
+                total_volume,
+                points,
+                tier,
+                "",  # rank sera recalculé
+                datetime.utcnow().isoformat()
+            ])
+
+        return {
+            "success": True,
+            "total_volume": total_volume,
+            "points": points,
+            "tier": tier
+        }
+
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
+
+@app.get("/api/stats")
+def get_stats():
+    """
+    Retourne les stats classées par points
+    """
+    try:
+        stats_sheet = get_stats_sheet()
+        rows = stats_sheet.get_all_records()
+
+        rows.sort(key=lambda r: int(r.get("points", 0)), reverse=True)
+
+        result = []
+        for idx, row in enumerate(rows, start=1):
+            row["rank"] = idx
+            result.append(row)
+
+        return result
+
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
+
 
 
 # -------------------
