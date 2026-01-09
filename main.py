@@ -228,23 +228,42 @@ def dashboard(request: Request, user: str):
 @app.get("/api/users")
 def get_users():
     """
-    Retourne la liste des usernames actifs depuis Google Sheets
+    Retourne la liste des utilisateurs avec stats
     """
     try:
         sheet = get_sheet()
         rows = sheet.get_all_records()
 
         users = []
+
         for row in rows:
             is_active = str(row.get("is_active")).lower()
+            if is_active not in ["true", "vrai", "1", "yes"]:
+                continue
 
-            if is_active in ["true", "vrai", "1", "yes"]:
-                users.append(row.get("username"))
+            volume = float(row.get("volume_total") or 0)
+            score = int(row.get("score") or 0)
+            tier = row.get("tier") or "Bronze I"
+            rank = int(row.get("rank") or 0)
+
+            users.append({
+                "username": row.get("username"),
+                "tier": tier,
+                "score": score,
+                "rank": rank,
+                "volume": int(volume)
+            })
+
+        # Classement automatique par score décroissant
+        users.sort(key=lambda u: u["score"], reverse=True)
+        for i, u in enumerate(users):
+            u["rank"] = i + 1
 
         return users
 
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
+
 
 
 # -------------------
