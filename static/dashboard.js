@@ -17,6 +17,41 @@ document.addEventListener("DOMContentLoaded", () => {
   }
 
   // ==========================
+  // PAGES
+  // ==========================
+
+  const dashboardPage = document.getElementById("dashboard-page");
+  const exercisesPage = document.getElementById("exercises-page");
+
+  const navDashboard = document.getElementById("nav-dashboard");
+  const navExercises = document.getElementById("nav-exercises");
+
+  function showDashboard() {
+    if (dashboardPage) dashboardPage.classList.remove("hidden");
+    if (exercisesPage) exercisesPage.classList.add("hidden");
+
+    navDashboard?.classList.add("active");
+    navExercises?.classList.remove("active");
+  }
+
+  function showExercises() {
+    if (dashboardPage) dashboardPage.classList.add("hidden");
+    if (exercisesPage) exercisesPage.classList.remove("hidden");
+
+    navDashboard?.classList.remove("active");
+    navExercises?.classList.add("active");
+
+    // Charger les exercices quand on ouvre la page
+    loadExercises();
+  }
+
+  navDashboard?.addEventListener("click", showDashboard);
+  navExercises?.addEventListener("click", showExercises);
+
+  // Page affichée par défaut
+  showDashboard();
+
+  // ==========================
   // API — EXERCICE LE MOINS TRAVAILLÉ
   // ==========================
 
@@ -128,5 +163,4 @@ document.addEventListener("DOMContentLoaded", () => {
   loadLeastExercise();
   bindLeastExerciseClick();
 
-  // ⚠️ loadExercises() sera appelé quand tu cliqueras sur l’onglet Exercices
 });
