@@ -14,7 +14,9 @@
 
 <body class="app">
 
+<!-- ===================== -->
 <!-- TOP BAR -->
+<!-- ===================== -->
 <header class="top-bar">
   <div class="logo">
     🦇 Batcave  
@@ -28,16 +30,16 @@
   </button>
 </header>
 
-
+<!-- ===================== -->
 <!-- DASHBOARD -->
-<main class="dashboard">
+<!-- ===================== -->
+<main class="dashboard" id="dashboard-page">
 
   <!-- OBJECTIF DU JOUR -->
   <section class="objective-card">
     <h2>🎯 Objectif du jour</h2>
 
     <div class="objective-wrapper">
-      <!-- Cercle -->
       <div class="progress-ring">
         <svg width="140" height="140">
           <circle cx="70" cy="70" r="60" class="ring-bg"/>
@@ -49,7 +51,6 @@
         </div>
       </div>
 
-      <!-- Stats rapides -->
       <div class="objective-stats">
         <div class="mini-stat">
           <span>📦 Volume semaine</span>
@@ -112,7 +113,6 @@
       <small>Exercice à prioriser</small>
     </button>
 
-
     <button class="action-card">
       <i data-lucide="target"></i>
       <span>Ratio épaules / taille</span>
@@ -123,17 +123,32 @@
 
 </main>
 
+<!-- ===================== -->
+<!-- PAGE EXERCICES -->
+<!-- ===================== -->
+<section class="exercises-page hidden" id="exercises-page">
+
+  <h2>💪 Exercices</h2>
+
+  <div class="exercises-grid" id="exercises-grid">
+    <!-- Cartes injectées en JS -->
+  </div>
+
+</section>
+
+<!-- ===================== -->
 <!-- NAV BAR MOBILE -->
+<!-- ===================== -->
 <nav class="bottom-nav">
 
-  <button class="nav-item active">
+  <button class="nav-item active" id="nav-dashboard">
     <i data-lucide="bar-chart-3"></i>
     <small>Dashboard</small>
   </button>
 
-  <button class="nav-item">
+  <button class="nav-item" id="nav-exercises">
     <i data-lucide="dumbbell"></i>
-    <small>Exercice</small>
+    <small>Exercices</small>
   </button>
 
   <button class="nav-item">
@@ -153,31 +168,15 @@
 
 </nav>
 
-<!-- Init icons -->
+<!-- ===================== -->
+<!-- SCRIPTS -->
+<!-- ===================== -->
+
 <script>
   lucide.createIcons();
 </script>
 
-</body>
-</html>
-
-<!-- Dashboard logic -->
 <script src="/static/dashboard.js" defer></script>
-
-<!-- ===================== -->
-<!-- PAGE EXERCICES -->
-<!-- ===================== -->
-
-<section class="exercises-page hidden" id="exercises-page">
-
-  <h2>💪 Exercices</h2>
-
-  <div class="exercises-grid" id="exercises-grid">
-    <!-- Cartes injectées en JS -->
-  </div>
-
-</section>
-
 
 </body>
 </html>
