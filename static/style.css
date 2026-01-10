@@ -675,3 +675,50 @@ h1, h2, h3 {
   opacity: 0.9;
   transform: translateY(1px); /* micro-alignement optique */
 }
+
+/* ===================== */
+/* EXERCICES */
+/* ===================== */
+
+.exercises-page {
+  margin-top: 20px;
+}
+
+.exercises-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(240px, 1fr));
+  gap: 16px;
+}
+
+.exercise-card {
+  background: linear-gradient(180deg, #0e0e0e, #111);
+  border: 1px solid rgba(255, 215, 0, 0.25);
+  border-radius: 14px;
+  padding: 14px;
+  cursor: pointer;
+  transition: transform 0.2s ease, box-shadow 0.2s ease;
+}
+
+.exercise-card:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 0 12px rgba(255, 215, 0, 0.25);
+}
+
+.exercise-title {
+  font-weight: 600;
+  font-size: 16px;
+  color: #ffd700;
+  margin-bottom: 8px;
+}
+
+.exercise-stat {
+  font-size: 13px;
+  color: #eee;
+  margin-bottom: 4px;
+}
+
+.exercise-highlight {
+  color: #ffd700;
+  font-weight: 600;
+}
+
