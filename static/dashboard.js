@@ -19,6 +19,63 @@ document.addEventListener("DOMContentLoaded", () => {
   }
 
   // ==========================
+  // NOUVEL EXERCICE (MODALE)
+  // ==========================
+  
+  const newExerciseBtn = document.getElementById("new-exercise-btn");
+  const modal = document.getElementById("exercise-modal");
+  const closeModalBtn = document.getElementById("close-exercise-modal");
+  const createExerciseBtn = document.getElementById("create-exercise-btn");
+  
+  newExerciseBtn?.addEventListener("click", () => {
+    modal?.classList.remove("hidden");
+  });
+  
+  closeModalBtn?.addEventListener("click", () => {
+    modal?.classList.add("hidden");
+  });
+  
+  createExerciseBtn?.addEventListener("click", async () => {
+    const name = document.getElementById("exercise-name").value.trim();
+    const zone = document.getElementById("exercise-zone").value;
+    const video = document.getElementById("exercise-video").value.trim();
+  
+    if (!name || !zone) {
+      alert("Nom et zone obligatoires");
+      return;
+    }
+  
+    try {
+      const res = await fetch("/api/exercises/create", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          user_id: currentUser,
+          name: name,
+          zone: zone,
+          video_url: video
+        })
+      });
+  
+      if (!res.ok) throw new Error("API error");
+  
+      // ✅ Success
+      modal.classList.add("hidden");
+      alert("Exercice créé avec succès ✅");
+  
+      // Reset form
+      document.getElementById("exercise-name").value = "";
+      document.getElementById("exercise-zone").value = "";
+      document.getElementById("exercise-video").value = "";
+  
+    } catch (err) {
+      console.error(err);
+      alert("Erreur lors de la création");
+    }
+  });
+
+  
+  // ==========================
   // PAGES (NAVIGATION)
   // ==========================
 
