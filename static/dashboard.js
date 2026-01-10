@@ -110,47 +110,6 @@ document.addEventListener("DOMContentLoaded", () => {
   // Page affichée par défaut
   showDashboard();
 
-    // ==========================
-  // AJOUT EXERCICE (MODALE)
-  // ==========================
-
-  const addExerciseBtn = document.getElementById("add-exercise-btn");
-  const exerciseModal = document.getElementById("exercise-modal");
-  const saveExerciseBtn = document.getElementById("save-exercise-btn");
-  const cancelExerciseBtn = document.getElementById("cancel-exercise-btn");
-
-  const exerciseNameInput = document.getElementById("exercise-name-input");
-  const exerciseWeightInput = document.getElementById("exercise-weight-input");
-
-  // Ouvrir la modale
-  addExerciseBtn?.addEventListener("click", () => {
-    exerciseModal?.classList.remove("hidden");
-    exerciseNameInput.value = "";
-    exerciseWeightInput.value = "";
-  });
-
-  // Fermer la modale
-  cancelExerciseBtn?.addEventListener("click", () => {
-    exerciseModal?.classList.add("hidden");
-  });
-
-  // Sauvegarder exercice (TEMPORAIRE : juste affichage)
-  saveExerciseBtn?.addEventListener("click", () => {
-    const name = exerciseNameInput.value.trim();
-    const weight = exerciseWeightInput.value;
-
-    if (!name || !weight) {
-      alert("Merci de remplir tous les champs");
-      return;
-    }
-
-    alert(`Exercice ajouté : ${name} — ${weight} kg`);
-
-    exerciseModal?.classList.add("hidden");
-
-    // 👉 Plus tard on branchera l’API ici
-  });
-
   
   // ==========================
   // API — EXERCICE LE MOINS TRAVAILLÉ
