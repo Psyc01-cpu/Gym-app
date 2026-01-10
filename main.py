@@ -457,7 +457,7 @@ def create_exercise(data: dict = Body(...)):
     # HEALTH CHECK (KEEP ALIVE)
     # -------------------
     
-    @app.get("/health")
-    def health_check():
-        return {"status": "ok"}
+@app.get("/health")
+def health_check():
+    return {"status": "ok"}
 
