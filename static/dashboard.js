@@ -140,3 +140,45 @@ document.addEventListener("DOMContentLoaded", () => {
   }
 
 });
+
+
+async function loadExercises() {
+  const container = document.getElementById("exercises-list");
+  if (!container || !currentUser) return;
+
+  container.innerHTML = "Chargement...";
+
+  try {
+    const res = await fetch(`/api/exercises?user=${currentUser}`);
+    const exercises = await res.json();
+
+    if (!Array.isArray(exercises) || exercises.length === 0) {
+      container.innerHTML = "Aucun exercice enregistré";
+      return;
+    }
+
+    container.innerHTML = "";
+
+    exercises.forEach(ex => {
+      const card = document.createElement("div");
+      card.className = "exercise-card";
+
+      card.innerHTML = `
+        <strong>${ex.exercise}</strong>
+        <div>Max : ${ex.max} kg</div>
+        <div>Objectif : ${ex.target} kg</div>
+        <small>Dernière séance : ${ex.last_date}</small>
+      `;
+
+      card.addEventListener("click", () => {
+        alert("Fiche exercice : " + ex.exercise);
+      });
+
+      container.appendChild(card);
+    });
+
+  } catch (err) {
+    console.error(err);
+    container.innerHTML = "Erreur de chargement";
+  }
+}
