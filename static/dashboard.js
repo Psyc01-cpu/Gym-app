@@ -59,7 +59,7 @@ document.addEventListener("DOMContentLoaded", () => {
     if (!currentUser) return;
 
     try {
-      const res = await fetch(`/api/least-exercise?user=${currentUser}`);
+      const res = await fetch(`/api/least-exercise?user_id=${currentUser}`);
       if (!res.ok) throw new Error("API error");
 
       const data = await res.json();
