@@ -12,7 +12,6 @@ document.addEventListener("DOMContentLoaded", () => {
   console.log("USER URL =", currentUser);
 
   const usernameEl = document.getElementById("username-display");
-  console.log("SPAN =", usernameEl);
 
   if (currentUser && usernameEl) {
     usernameEl.textContent = currentUser;
@@ -22,7 +21,7 @@ document.addEventListener("DOMContentLoaded", () => {
   }
 
   // ==========================
-  // API — Exercice le moins travaillé
+  // API — EXERCICE LE MOINS TRAVAILLÉ
   // ==========================
 
   async function loadLeastExercise() {
@@ -30,7 +29,7 @@ document.addEventListener("DOMContentLoaded", () => {
 
     try {
       const res = await fetch(`/api/least-exercise?user=${currentUser}`);
-      if (!res.ok) return;
+      if (!res.ok) throw new Error("API error");
 
       const data = await res.json();
       const label = document.getElementById("least-exercise-name");
@@ -48,8 +47,82 @@ document.addEventListener("DOMContentLoaded", () => {
     if (!btn) return;
 
     btn.addEventListener("click", () => {
-      alert("Fiche exercice à venir");
+      alert("Fiche exercice à venir (modale bientôt)");
     });
+  }
+
+  // ==========================
+  // API — LISTE DES EXERCICES
+  // ==========================
+
+  async function loadExercises() {
+    if (!currentUser) return;
+
+    const grid = document.getElementById("exercises-grid");
+    if (!grid) return;
+
+    grid.innerHTML = "Chargement...";
+
+    try {
+      const res = await fetch(`/api/exercises?user=${currentUser}`);
+      if (!res.ok) throw new Error("API error");
+
+      const exercises = await res.json();
+      grid.innerHTML = "";
+
+      if (!exercises.length) {
+        grid.innerHTML = "<p>Aucun exercice enregistré.</p>";
+        return;
+      }
+
+      exercises.forEach(ex => {
+        const card = document.createElement("div");
+        card.className = "exercise-card";
+
+        card.innerHTML = `
+          <div class="exercise-title">${ex.exercise}</div>
+
+          <div class="exercise-stat">
+            🏆 Max : <strong>${ex.max_weight} kg</strong>
+          </div>
+
+          <div class="exercise-stat exercise-highlight">
+            🎯 Entraînement : ${ex.training_weight} kg
+          </div>
+
+          <div class="exercise-stat">
+            📅 Séances : ${ex.sessions}
+          </div>
+
+          <div class="exercise-stat">
+            ⏱️ Dernière : ${ex.last_date || "-"}
+          </div>
+        `;
+
+        card.addEventListener("click", () => {
+          openExerciseModal(ex);
+        });
+
+        grid.appendChild(card);
+      });
+
+    } catch (err) {
+      console.error("Erreur chargement exercices", err);
+      grid.innerHTML = "<p>Erreur de chargement.</p>";
+    }
+  }
+
+  // ==========================
+  // MODALE EXERCICE (PLACEHOLDER)
+  // ==========================
+
+  function openExerciseModal(exercise) {
+    alert(
+      `Exercice : ${exercise.exercise}\n` +
+      `Max : ${exercise.max_weight} kg\n` +
+      `Poids cible (80%) : ${exercise.training_weight} kg\n` +
+      `Séances : ${exercise.sessions}`
+    );
   }
 
   // ==========================
@@ -58,5 +131,12 @@ document.addEventListener("DOMContentLoaded", () => {
 
   loadLeastExercise();
   bindLeastExerciseClick();
+
+  // ⚠️ TEMPORAIRE : affiche directement la page exercices si présente
+  const exercisesPage = document.getElementById("exercises-page");
+  if (exercisesPage) {
+    exercisesPage.classList.remove("hidden");
+    loadExercises();
+  }
 
 });
