@@ -129,13 +129,21 @@
 <!-- ===================== -->
 <section class="exercises-page hidden" id="exercises-page">
 
-  <h2>💪 Exercices</h2>
+  <div class="exercises-header">
+    <h2>💪 Exercices</h2>
+
+    <!-- ✅ Bouton ajout exercice -->
+    <button id="add-exercise-btn" class="action-card">
+      ➕ Ajouter un exercice
+    </button>
+  </div>
 
   <div class="exercises-grid" id="exercises-grid">
     <!-- Cartes injectées en JS -->
   </div>
 
 </section>
+
 
 <!-- ===================== -->
 <!-- NAV BAR MOBILE -->
@@ -178,6 +186,24 @@
 </script>
 
 <script src="/static/dashboard.js" defer></script>
+
+<!-- ===================== -->
+<!-- MODALE AJOUT EXERCICE -->
+<!-- ===================== -->
+<div id="exercise-modal" class="hidden modal-overlay">
+  <div class="modal">
+    <h3>➕ Nouvel exercice</h3>
+
+    <input id="exercise-name-input" placeholder="Nom de l'exercice">
+    <input id="exercise-weight-input" type="number" placeholder="Poids (kg)">
+
+    <div class="modal-actions">
+      <button id="save-exercise-btn">Enregistrer</button>
+      <button id="cancel-exercise-btn">Annuler</button>
+    </div>
+  </div>
+</div>
+
 
 </body>
 </html>
