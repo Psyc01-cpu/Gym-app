@@ -453,6 +453,10 @@ def create_exercise(data: dict = Body(...)):
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
 
+    # -------------------
+    # HEALTH CHECK (KEEP ALIVE)
+    # -------------------
+    
     @app.get("/health")
     def health_check():
         return {"status": "ok"}
