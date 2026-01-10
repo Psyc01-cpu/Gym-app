@@ -9,6 +9,8 @@ document.addEventListener("DOMContentLoaded", () => {
   const params = new URLSearchParams(window.location.search);
   const currentUser = params.get("user");
 
+  console.log("USER URL =", currentUser);
+
   const usernameEl = document.getElementById("username-display");
   if (currentUser && usernameEl) {
     usernameEl.textContent = currentUser;
@@ -17,7 +19,7 @@ document.addEventListener("DOMContentLoaded", () => {
   }
 
   // ==========================
-  // PAGES
+  // PAGES (NAVIGATION)
   // ==========================
 
   const dashboardPage = document.getElementById("dashboard-page");
@@ -27,16 +29,16 @@ document.addEventListener("DOMContentLoaded", () => {
   const navExercises = document.getElementById("nav-exercises");
 
   function showDashboard() {
-    if (dashboardPage) dashboardPage.classList.remove("hidden");
-    if (exercisesPage) exercisesPage.classList.add("hidden");
+    dashboardPage?.classList.remove("hidden");
+    exercisesPage?.classList.add("hidden");
 
     navDashboard?.classList.add("active");
     navExercises?.classList.remove("active");
   }
 
   function showExercises() {
-    if (dashboardPage) dashboardPage.classList.add("hidden");
-    if (exercisesPage) exercisesPage.classList.remove("hidden");
+    dashboardPage?.classList.add("hidden");
+    exercisesPage?.classList.remove("hidden");
 
     navDashboard?.classList.remove("active");
     navExercises?.classList.add("active");
@@ -95,13 +97,14 @@ document.addEventListener("DOMContentLoaded", () => {
     grid.innerHTML = "Chargement...";
 
     try {
-      const res = await fetch(`/api/exercises?user=${currentUser}`);
+      // ✅ PARAMÈTRE CORRECT : user_id
+      const res = await fetch(`/api/exercises?user_id=${currentUser}`);
       if (!res.ok) throw new Error("API error");
 
       const exercises = await res.json();
       grid.innerHTML = "";
 
-      if (!exercises.length) {
+      if (!Array.isArray(exercises) || exercises.length === 0) {
         grid.innerHTML = "<p>Aucun exercice enregistré.</p>";
         return;
       }
@@ -118,7 +121,7 @@ document.addEventListener("DOMContentLoaded", () => {
           </div>
 
           <div class="exercise-stat exercise-highlight">
-            🎯 Entraînement : ${ex.training_weight} kg
+            🎯 Entraînement (80%) : <strong>${ex.training_weight} kg</strong>
           </div>
 
           <div class="exercise-stat">
@@ -152,7 +155,8 @@ document.addEventListener("DOMContentLoaded", () => {
       `Exercice : ${exercise.exercise}\n` +
       `Max : ${exercise.max_weight} kg\n` +
       `Poids cible (80%) : ${exercise.training_weight} kg\n` +
-      `Séances : ${exercise.sessions}`
+      `Séances : ${exercise.sessions}\n` +
+      `Dernière séance : ${exercise.last_date || "-"}`
     );
   }
 
