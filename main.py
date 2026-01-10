@@ -409,3 +409,46 @@ def get_exercises(user_id: str):
 
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
+
+
+from collections import defaultdict
+
+EXERCISES_SHEET = "exercises"
+
+def get_exercises_sheet():
+    scopes = [
+        "https://www.googleapis.com/auth/spreadsheets",
+        "https://www.googleapis.com/auth/drive"
+    ]
+    creds_file = get_google_creds_file()
+    creds = Credentials.from_service_account_file(creds_file, scopes=scopes)
+    client = gspread.authorize(creds)
+    return client.open(SPREADSHEET_NAME).worksheet(EXERCISES_SHEET)
+
+
+@app.post("/api/exercises/create")
+def create_exercise(data: dict = Body(...)):
+    name = data.get("name")
+    zone = data.get("zone")
+    video_url = data.get("video_url", "")
+    user_id = data.get("user_id")
+
+    if not name or not zone or not user_id:
+        raise HTTPException(status_code=400, detail="Champs manquants")
+
+    try:
+        sheet = get_exercises_sheet()
+
+        sheet.append_row([
+            str(uuid.uuid4()),
+            user_id,
+            name,
+            zone,
+            video_url,
+            datetime.utcnow().isoformat()
+        ])
+
+        return {"success": True}
+
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
