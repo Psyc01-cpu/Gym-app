@@ -9,13 +9,9 @@ document.addEventListener("DOMContentLoaded", () => {
   const params = new URLSearchParams(window.location.search);
   const currentUser = params.get("user");
 
-  console.log("USER URL =", currentUser);
-
   const usernameEl = document.getElementById("username-display");
-
   if (currentUser && usernameEl) {
     usernameEl.textContent = currentUser;
-    console.log("Pseudo injecté :", currentUser);
   } else {
     console.warn("Impossible d'afficher le pseudo");
   }
@@ -132,53 +128,5 @@ document.addEventListener("DOMContentLoaded", () => {
   loadLeastExercise();
   bindLeastExerciseClick();
 
-  // ⚠️ TEMPORAIRE : affiche directement la page exercices si présente
-  const exercisesPage = document.getElementById("exercises-page");
-  if (exercisesPage) {
-    exercisesPage.classList.remove("hidden");
-    loadExercises();
-  }
-
+  // ⚠️ loadExercises() sera appelé quand tu cliqueras sur l’onglet Exercices
 });
-
-
-async function loadExercises() {
-  const container = document.getElementById("exercises-list");
-  if (!container || !currentUser) return;
-
-  container.innerHTML = "Chargement...";
-
-  try {
-    const res = await fetch(`/api/exercises?user=${currentUser}`);
-    const exercises = await res.json();
-
-    if (!Array.isArray(exercises) || exercises.length === 0) {
-      container.innerHTML = "Aucun exercice enregistré";
-      return;
-    }
-
-    container.innerHTML = "";
-
-    exercises.forEach(ex => {
-      const card = document.createElement("div");
-      card.className = "exercise-card";
-
-      card.innerHTML = `
-        <strong>${ex.exercise}</strong>
-        <div>Max : ${ex.max} kg</div>
-        <div>Objectif : ${ex.target} kg</div>
-        <small>Dernière séance : ${ex.last_date}</small>
-      `;
-
-      card.addEventListener("click", () => {
-        alert("Fiche exercice : " + ex.exercise);
-      });
-
-      container.appendChild(card);
-    });
-
-  } catch (err) {
-    console.error(err);
-    container.innerHTML = "Erreur de chargement";
-  }
-}
