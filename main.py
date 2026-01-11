@@ -5,6 +5,20 @@ from collections import defaultdict
 import os
 import json
 import tempfile
+import time
+
+# -------------------
+# CACHE SYSTEM
+# -------------------
+
+CACHE = {
+    "users": {"data": None, "ts": 0},
+    "workouts": {"data": None, "ts": 0},
+    "exercises": {"data": None, "ts": 0},
+}
+
+CACHE_TTL = 30  # durée du cache en secondes
+
 
 import gspread
 from google.oauth2.service_account import Credentials
@@ -83,6 +97,17 @@ def get_stats_sheet():
     client = get_client()
     return client.open(SPREADSHEET_NAME).worksheet(STATS_SHEET)
 
+def get_cached(key, loader):
+    now = time.time()
+    entry = CACHE[key]
+
+    # Recharge si vide ou expiré
+    if entry["data"] is None or now - entry["ts"] > CACHE_TTL:
+        print(f"🔄 Refresh cache: {key}")
+        entry["data"] = loader()
+        entry["ts"] = now
+
+    return entry["data"]
 
 # -------------------
 # TIER SYSTEM
@@ -153,11 +178,15 @@ def dashboard(request: Request, user: str):
 @app.get("/api/users")
 def get_users():
     try:
-        users_sheet = get_users_sheet()
-        workouts_sheet = get_workouts_sheet()
-
-        users_rows = users_sheet.get_all_records()
-        workouts_rows = workouts_sheet.get_all_records()
+        users_rows = get_cached(
+            "users",
+            lambda: get_users_sheet().get_all_records()
+        )
+        
+        workouts_rows = get_cached(
+            "workouts",
+            lambda: get_workouts_sheet().get_all_records()
+        )
 
         users = []
 
@@ -321,8 +350,11 @@ def add_workout(data: dict = Body(...)):
 @app.get("/api/least-exercise")
 def get_least_exercise(user_id: str):
     try:
-        sheet = get_workouts_sheet()
-        rows = sheet.get_all_records()
+        rows = get_cached(
+            "workouts",
+            lambda: get_workouts_sheet().get_all_records()
+        )
+
 
         stats = {}
 
