@@ -385,8 +385,11 @@ def get_least_exercise(user_id: str):
 @app.get("/api/exercises")
 def get_exercises(user_id: str):
     try:
-        sheet = get_workouts_sheet()
-        rows = sheet.get_all_records()
+        # ✅ CACHE GOOGLE SHEETS
+        rows = get_cached(
+            "workouts",
+            lambda: get_workouts_sheet().get_all_records()
+        )
 
         user_rows = [
             r for r in rows
@@ -441,7 +444,6 @@ def get_exercises(user_id: str):
 
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
-
 
 from collections import defaultdict
 
