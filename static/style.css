@@ -661,3 +661,16 @@ body.dashboard-page .exercises-grid {
   overflow-y: auto;
   -webkit-overflow-scrolling: touch;
 }
+
+/* EXERCICES — pas de scroll global */
+body.dashboard-page #exercises-page {
+  overflow: hidden !important;
+}
+
+/* Scroll uniquement dans la grille */
+body.dashboard-page .exercises-grid {
+  height: 100%;
+  overflow-y: auto;
+  -webkit-overflow-scrolling: touch;
+}
+
