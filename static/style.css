@@ -1018,3 +1018,29 @@ input, select, textarea, button {
   width: 120px;
   height: 120px;
 }
+/* =========================
+   DASHBOARD — TEXTE BLANC
+   ========================= */
+
+/* Texte principal des cartes */
+.card,
+.card span,
+.card strong {
+  color: #ffffff !important;
+}
+
+/* Boutons "Nouvel exercice" et "Aucun exercice" */
+.action-card {
+  color: #ffffff !important;
+}
+
+/* Icônes restent dorées */
+.card i,
+.action-card i {
+  color: var(--gold) !important;
+}
+
+/* Petits libellés (si présents) */
+.card small {
+  color: rgba(255,255,255,0.75) !important;
+}
