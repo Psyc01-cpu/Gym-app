@@ -570,3 +570,8 @@ body.dashboard-page #exercises-page {
   -webkit-overflow-scrolling: touch;
   padding-bottom: 90px; /* espace pour la bottom-nav */
 }
+
+/* Cache le bouton déconnexion */
+.logout-btn {
+  display: none !important;
+}
