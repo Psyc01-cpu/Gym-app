@@ -958,3 +958,58 @@ input, select, textarea, button {
   grid-template-columns: 1fr 1fr;        /* ✅ 2 boutons */
   gap: 10px;
 }
+
+/* =========================
+   OBJECTIF — ALIGNEMENT CERCLE
+   ========================= */
+
+.objective-card {
+  overflow: hidden;               /* empêche tout débordement */
+}
+
+.objective-wrapper {
+  display: flex;
+  align-items: center;            /* alignement vertical parfait */
+  gap: 24px;
+}
+
+/* Conteneur du cercle */
+.progress-ring {
+  position: relative;
+  width: 140px;
+  height: 140px;
+  flex-shrink: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+/* SVG prend exactement la taille du conteneur */
+.progress-ring svg {
+  width: 100%;
+  height: 100%;
+  display: block;
+}
+
+/* Texte centré parfaitement dans le cercle */
+.progress-text {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-direction: column;
+  font-weight: 800;
+  color: #ffffff;                /* texte bien blanc */
+  pointer-events: none;
+}
+
+.progress-text strong {
+  font-size: 28px;
+  line-height: 1;
+}
+
+.progress-text small {
+  font-size: 12px;
+  opacity: 0.8;
+}
