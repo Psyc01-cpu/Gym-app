@@ -872,3 +872,53 @@ input, select, textarea, button {
     grid-template-columns: 1fr !important;
   }
 }
+/* ===== CERCLE : texte AU CENTRE ===== */
+.progress-ring {
+  position: relative !important;
+}
+
+.progress-text {
+  position: absolute !important;
+  inset: 0 !important;
+  display: flex !important;
+  flex-direction: column !important;
+  align-items: center !important;
+  justify-content: center !important;
+  text-align: center !important;
+}
+
+.progress-text strong {
+  font-size: 22px !important;
+  font-weight: 900 !important;
+  color: #ffffff !important;      /* blanc comme avant */
+  line-height: 1 !important;
+}
+
+.progress-text small {
+  display: none !important;       /* on enlève "séances" sous le 2/3 */
+}
+/* ===== OBJECTIF : textes blancs ===== */
+.objective-stats .mini-stat span,
+.objective-stats .mini-stat strong {
+  color: #ffffff !important;
+}
+
+.objective-stats .mini-stat span {
+  opacity: 0.85 !important;
+}
+/* ===== NAV BAR : blanc par défaut, jaune actif ===== */
+.bottom-nav .nav-item {
+  color: rgba(255,255,255,0.65) !important;
+}
+
+.bottom-nav .nav-item svg {
+  stroke: rgba(255,255,255,0.65) !important;
+}
+
+.bottom-nav .nav-item.active {
+  color: #f5c518 !important;
+}
+
+.bottom-nav .nav-item.active svg {
+  stroke: #f5c518 !important;
+}
