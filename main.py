@@ -1,11 +1,20 @@
-import bcrypt
-import uuid
-from datetime import datetime
-from collections import defaultdict
 import os
 import json
-import tempfile
 import time
+import uuid
+import tempfile
+from datetime import datetime
+from collections import defaultdict
+
+import bcrypt
+import gspread
+from google.oauth2.service_account import Credentials
+
+from fastapi import FastAPI, Request, Body, HTTPException
+from fastapi.responses import HTMLResponse
+from fastapi.staticfiles import StaticFiles
+from fastapi.templating import Jinja2Templates
+
 
 # -------------------
 # CACHE SYSTEM
@@ -15,18 +24,29 @@ CACHE = {
     "users": {"data": None, "ts": 0},
     "workouts": {"data": None, "ts": 0},
     "exercises": {"data": None, "ts": 0},
+    "performances": {"data": None, "ts": 0},
 }
 
 CACHE_TTL = 30  # durée du cache en secondes
 
 
-import gspread
-from google.oauth2.service_account import Credentials
+def get_cached(key, loader):
+    now = time.time()
+    entry = CACHE[key]
 
-from fastapi import FastAPI, Request, Body, HTTPException
-from fastapi.responses import HTMLResponse
-from fastapi.staticfiles import StaticFiles
-from fastapi.templating import Jinja2Templates
+    # Recharge si vide ou expiré
+    if entry["data"] is None or now - entry["ts"] > CACHE_TTL:
+        print(f"🔄 Refresh cache: {key}")
+        entry["data"] = loader()
+        entry["ts"] = now
+
+    return entry["data"]
+
+
+def invalidate_cache(key: str):
+    if key in CACHE:
+        CACHE[key]["data"] = None
+        CACHE[key]["ts"] = 0
 
 
 # -------------------
@@ -46,6 +66,8 @@ templates = Jinja2Templates(directory="templates")
 SPREADSHEET_NAME = "GothamUsers"
 USERS_SHEET = "users"
 WORKOUTS_SHEET = "workouts"
+EXERCISES_SHEET = "exercises"
+PERFORMANCES_SHEET = "performances"
 STATS_SHEET = "stats"
 
 
@@ -93,21 +115,20 @@ def get_workouts_sheet():
     return client.open(SPREADSHEET_NAME).worksheet(WORKOUTS_SHEET)
 
 
+def get_exercises_sheet():
+    client = get_client()
+    return client.open(SPREADSHEET_NAME).worksheet(EXERCISES_SHEET)
+
+
+def get_performances_sheet():
+    client = get_client()
+    return client.open(SPREADSHEET_NAME).worksheet(PERFORMANCES_SHEET)
+
+
 def get_stats_sheet():
     client = get_client()
     return client.open(SPREADSHEET_NAME).worksheet(STATS_SHEET)
 
-def get_cached(key, loader):
-    now = time.time()
-    entry = CACHE[key]
-
-    # Recharge si vide ou expiré
-    if entry["data"] is None or now - entry["ts"] > CACHE_TTL:
-        print(f"🔄 Refresh cache: {key}")
-        entry["data"] = loader()
-        entry["ts"] = now
-
-    return entry["data"]
 
 # -------------------
 # TIER SYSTEM
@@ -182,7 +203,7 @@ def get_users():
             "users",
             lambda: get_users_sheet().get_all_records()
         )
-        
+
         workouts_rows = get_cached(
             "workouts",
             lambda: get_workouts_sheet().get_all_records()
@@ -200,7 +221,7 @@ def get_users():
             volume = 0
 
             for w in workouts_rows:
-                if w.get("user_id") == user_id:
+                if str(w.get("user_id")) == str(user_id):
                     try:
                         volume += float(w.get("weight", 0))
                     except:
@@ -265,6 +286,8 @@ def create_user(data: dict = Body(...)):
             datetime.utcnow().isoformat()
         ])
 
+        invalidate_cache("users")
+
         return {"success": True}
 
     except HTTPException:
@@ -308,7 +331,7 @@ def login(data: dict = Body(...)):
 
 
 # -------------------
-# API - WORKOUTS
+# API - WORKOUTS (legacy)
 # -------------------
 
 @app.post("/api/workouts")
@@ -337,6 +360,8 @@ def add_workout(data: dict = Body(...)):
             datetime.utcnow().isoformat()
         ])
 
+        invalidate_cache("workouts")
+
         return {"success": True}
 
     except Exception as e:
@@ -344,7 +369,7 @@ def add_workout(data: dict = Body(...)):
 
 
 # -------------------
-# API - LEAST EXERCISE
+# API - LEAST EXERCISE (legacy basé sur workouts)
 # -------------------
 
 @app.get("/api/least-exercise")
@@ -355,13 +380,15 @@ def get_least_exercise(user_id: str):
             lambda: get_workouts_sheet().get_all_records()
         )
 
-
         stats = {}
 
         for row in rows:
             if str(row.get("user_id")) == str(user_id):
                 ex = row.get("exercise")
-                weight = float(row.get("weight") or 0)
+                try:
+                    weight = float(row.get("weight") or 0)
+                except:
+                    weight = 0
                 stats[ex] = stats.get(ex, 0) + weight
 
         if not stats:
@@ -379,85 +406,103 @@ def get_least_exercise(user_id: str):
 
 
 # -------------------
-# API - EXERCISES LIST
+# API - EXERCISES (catalogue + stats via performances)
 # -------------------
 
 @app.get("/api/exercises")
 def get_exercises(user_id: str):
+    """
+    Retourne la liste des exercices de l'utilisateur + stats calculées depuis performances.
+    """
     try:
-        # ✅ CACHE GOOGLE SHEETS
-        rows = get_cached(
-            "workouts",
-            lambda: get_workouts_sheet().get_all_records()
+        exercises_rows = get_cached(
+            "exercises",
+            lambda: get_exercises_sheet().get_all_records()
         )
 
-        user_rows = [
-            r for r in rows
-            if str(r.get("user_id")) == str(user_id)
+        perf_rows = get_cached(
+            "performances",
+            lambda: get_performances_sheet().get_all_records()
+        )
+
+        # Filtre exercices du user (catalogue)
+        user_exercises = [
+            ex for ex in exercises_rows
+            if str(ex.get("user_id")) == str(user_id)
         ]
 
-        if not user_rows:
-            return []
+        # Map exercise_id -> {name, zone, video_url}
+        ex_map = {}
+        for ex in user_exercises:
+            ex_id = str(ex.get("exercise_id"))
+            if ex_id:
+                ex_map[ex_id] = {
+                    "name": ex.get("name") or "Exercice",
+                    "zone": ex.get("zone") or "",
+                    "video_url": ex.get("video_url") or "",
+                }
 
-        exercises = defaultdict(list)
+        # Filtre perfs user
+        user_perfs = [
+            p for p in perf_rows
+            if str(p.get("user_id")) == str(user_id)
+        ]
 
-        for row in user_rows:
-            exercise = row.get("exercise")
-            if exercise:
-                exercises[exercise].append(row)
+        # Groupe performances par exercise_id
+        grouped = defaultdict(list)
+        for p in user_perfs:
+            ex_id = str(p.get("exercise_id"))
+            if ex_id:
+                grouped[ex_id].append(p)
 
         result = []
 
-        for exercise, rows in exercises.items():
+        # Important : on veut afficher au minimum tous les exercices créés,
+        # même s'il n'y a pas encore de performances.
+        for ex_id, meta in ex_map.items():
+            rows = grouped.get(ex_id, [])
+
             weights = []
             dates = []
 
             for r in rows:
+                w = r.get("weight")
                 try:
-                    weights.append(float(r.get("weight", 0)))
+                    if w != "" and w is not None:
+                        weights.append(float(w))
                 except:
                     pass
 
+                d = r.get("date")
                 try:
-                    if r.get("date"):
-                        dates.append(datetime.fromisoformat(r.get("date")))
+                    if d:
+                        dates.append(datetime.fromisoformat(d))
                 except:
                     pass
 
-            if not weights:
-                continue
-
-            max_weight = max(weights)
-            training_weight = round(max_weight * 0.8, 1)
-            sessions = len(weights)
+            sessions = len(rows)
             last_date = max(dates).strftime("%Y-%m-%d") if dates else None
+            max_weight = max(weights) if weights else 0
+            training_weight = round(max_weight * 0.8, 1) if max_weight else 0
 
             result.append({
-                "exercise": exercise,
+                "exercise_id": ex_id,
+                "exercise": meta["name"],
+                "zone": meta["zone"],
+                "video_url": meta["video_url"],
                 "max_weight": max_weight,
                 "training_weight": training_weight,
                 "sessions": sessions,
                 "last_date": last_date
             })
 
+        # Tri : derniers entraînés d'abord, sinon en bas
+        result.sort(key=lambda x: (x["last_date"] or ""), reverse=True)
+
         return result
 
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
-
-from collections import defaultdict
-
-EXERCISES_SHEET = "exercises"
-
-def get_exercises_sheet():
-    scopes = [
-        "https://www.googleapis.com/auth/spreadsheets",
-        "https://www.googleapis.com/auth/drive"
-    ]
-    creds_file = get_google_creds_file()
-    creds = Credentials.from_service_account_file(creds_file, scopes=scopes)
-    client = gspread.authorize(creds)
-    return client.open(SPREADSHEET_NAME).worksheet(EXERCISES_SHEET)
 
 
 @app.post("/api/exercises/create")
@@ -474,7 +519,7 @@ def create_exercise(data: dict = Body(...)):
         sheet = get_exercises_sheet()
 
         sheet.append_row([
-            str(uuid.uuid4()),
+            str(uuid.uuid4()),          # exercise_id
             user_id,
             name,
             zone,
@@ -482,17 +527,77 @@ def create_exercise(data: dict = Body(...)):
             datetime.utcnow().isoformat()
         ])
 
+        invalidate_cache("exercises")
+
         return {"success": True}
 
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
 
-    # -------------------
-    # HEALTH CHECK (KEEP ALIVE)
-    # -------------------
-    
+
+# -------------------
+# API - PERFORMANCES
+# -------------------
+
+@app.post("/api/performances/create")
+def create_performance(data: dict = Body(...)):
+    """
+    Ajoute une performance liée à un exercice (exercise_id).
+    """
+    user_id = data.get("user_id")
+    exercise_id = data.get("exercise_id")
+    date = data.get("date")  # ISO string ex: 2026-01-12T10:00:00
+    weight = data.get("weight", "")
+    reps = data.get("reps")
+    ressenti = data.get("ressenti")
+    notes = data.get("notes", "")
+
+    if not user_id or not exercise_id or not date or reps is None or ressenti is None:
+        raise HTTPException(status_code=400, detail="Champs manquants")
+
+    try:
+        # coercitions
+        try:
+            reps = int(reps)
+        except:
+            raise HTTPException(status_code=400, detail="reps invalide")
+
+        if weight != "" and weight is not None:
+            try:
+                weight = float(weight)
+            except:
+                raise HTTPException(status_code=400, detail="weight invalide")
+        else:
+            weight = ""
+
+        sheet = get_performances_sheet()
+
+        sheet.append_row([
+            str(uuid.uuid4()),          # perf_id
+            user_id,
+            exercise_id,
+            date,
+            weight,
+            reps,
+            ressenti,
+            notes,
+            datetime.utcnow().isoformat()
+        ])
+
+        invalidate_cache("performances")
+
+        return {"success": True}
+
+    except HTTPException:
+        raise
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
+
+
+# -------------------
+# HEALTH CHECK (KEEP ALIVE)
+# -------------------
+
 @app.api_route("/health", methods=["GET", "HEAD"])
 def health_check():
     return {"status": "ok"}
-
-
