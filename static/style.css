@@ -1013,3 +1013,8 @@ input, select, textarea, button {
   font-size: 12px;
   opacity: 0.8;
 }
+
+.progress-ring {
+  width: 120px;
+  height: 120px;
+}
