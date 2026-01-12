@@ -601,3 +601,63 @@ body.dashboard-page #exercises-page {
   width: 18px !important;
   height: 18px !important;
 }
+
+/* Objectif / ratio plus compact */
+.objective-card {
+  padding: 12px !important;
+  margin-bottom: 10px !important;
+}
+
+.objective-wrapper {
+  gap: 10px !important;
+}
+
+.progress-ring {
+  width: 110px !important;
+  height: 110px !important;
+}
+
+.progress-text {
+  font-size: 14px !important;
+}
+
+.mini-stat {
+  padding: 8px !important;
+  font-size: 11px !important;
+}
+
+/* Objectif / ratio plus compact */
+.objective-card {
+  padding: 12px !important;
+  margin-bottom: 10px !important;
+}
+
+.objective-wrapper {
+  gap: 10px !important;
+}
+
+.progress-ring {
+  width: 110px !important;
+  height: 110px !important;
+}
+
+.progress-text {
+  font-size: 14px !important;
+}
+
+.mini-stat {
+  padding: 8px !important;
+  font-size: 11px !important;
+}
+
+/* EXERCICES — pas de scroll global */
+body.dashboard-page #exercises-page {
+  overflow: hidden !important;
+}
+
+/* Scroll uniquement dans la grille */
+body.dashboard-page .exercises-grid {
+  height: 100%;
+  overflow-y: auto;
+  -webkit-overflow-scrolling: touch;
+}
