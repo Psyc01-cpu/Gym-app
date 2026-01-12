@@ -757,3 +757,12 @@ body.dashboard-page .card svg,
 body.dashboard-page .nav-item svg {
   stroke: #f5c518 !important;
 }
+
+/* Empêche le double-tap zoom et certaines gestures */
+html, body {
+  touch-action: manipulation;
+}
+
+input, select, textarea, button {
+  font-size: 16px;
+}
