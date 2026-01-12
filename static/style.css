@@ -766,3 +766,51 @@ html, body {
 input, select, textarea, button {
   font-size: 16px;
 }
+
+/* ===============================
+   OBJECTIF — ALIGNEMENT PRO
+   Cercle à gauche / textes à droite
+   =============================== */
+
+.objective-wrapper {
+  display: grid !important;
+  grid-template-columns: 140px 1fr;   /* cercle | textes */
+  align-items: center;
+  gap: 18px;
+}
+
+/* Bloc cercle */
+.progress-ring {
+  justify-self: start;
+  align-self: center;
+}
+
+/* Texte à droite */
+.objective-stats {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  text-align: left;
+}
+
+/* Chaque ligne bien alignée */
+.mini-stat {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+/* Texte principal */
+.mini-stat strong {
+  text-align: right;
+  min-width: 90px;
+}
+
+.mini-stat span {
+  flex: 1;
+  text-align: left;
+}
+
+.mini-stat strong {
+  flex: 0 0 auto;
+}
