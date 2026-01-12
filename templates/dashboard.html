@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <title>Batcave</title>
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
 
   <!-- CSS -->
   <link rel="stylesheet" href="/static/style.css">
@@ -12,22 +12,20 @@
   <script src="https://unpkg.com/lucide@latest"></script>
 </head>
 
-<body class="app">
+<body class="app dashboard-page">
 
 <!-- ===================== -->
 <!-- TOP BAR -->
 <!-- ===================== -->
 <header class="top-bar">
   <div class="logo">
-    🦇 Batcave  
+    🦇 Batcave
     <span id="username-display" class="username"></span>
   </div>
 
   <div class="tier">Bronze I</div>
 
-  <button class="logout-btn" onclick="window.location.href='/'">
-    Déconnexion
-  </button>
+  <!-- ❌ Bouton déconnexion supprimé -->
 </header>
 
 <!-- ===================== -->
@@ -102,7 +100,6 @@
   <!-- ACTIONS RAPIDES -->
   <section class="quick-actions">
 
-    <!-- ✅ ID AJOUTÉ -->
     <button class="action-card" id="new-exercise-btn">
       <i data-lucide="plus-circle"></i>
       <span>Nouvel exercice</span>
@@ -132,7 +129,7 @@
   <div class="exercises-header">
     <h2>💪 Exercices</h2>
 
-    <!-- ✅ Bouton ajout exercice -->
+    <!-- (optionnel) si tu veux, tu peux aussi supprimer ce bouton -->
     <button id="add-exercise-btn" class="action-card">
       ➕ Ajouter un exercice
     </button>
@@ -143,7 +140,6 @@
   </div>
 
 </section>
-
 
 <!-- ===================== -->
 <!-- NAV BAR MOBILE -->
@@ -178,31 +174,32 @@
 </nav>
 
 <!-- ===================== -->
-<!-- SCRIPTS -->
+<!-- MODALE NOUVEL EXERCICE (CENTRÉE + ZONES EN BOUTONS) -->
 <!-- ===================== -->
+<div id="exercise-modal" class="hidden">
 
-<script>
-  lucide.createIcons();
-</script>
-
-<script src="/static/dashboard.js" defer></script>
-
-<!-- ===================== -->
-<!-- MODALE NOUVEL EXERCICE -->
-<!-- ===================== -->
-<div class="modal hidden" id="exercise-modal">
-
-  <div class="modal-card">
-
+  <div class="modal">
     <h3>Créer un exercice</h3>
 
     <input id="exercise-name" placeholder="Nom de l'exercice" />
 
-    <select id="exercise-zone">
-      <option value="">Zone du corps</option>
-      <option value="haut">Haut du corps</option>
-      <option value="bas">Bas du corps</option>
-    </select>
+    <!-- ✅ Zone du corps en boutons -->
+    <div class="zone-picker" id="exercise-zone-picker">
+      <label class="zone-option">
+        <input type="radio" name="zone" value="haut" checked />
+        <span>Haut</span>
+      </label>
+
+      <label class="zone-option">
+        <input type="radio" name="zone" value="bas" />
+        <span>Bas</span>
+      </label>
+
+      <label class="zone-option">
+        <input type="radio" name="zone" value="core" />
+        <span>Core</span>
+      </label>
+    </div>
 
     <input id="exercise-video" placeholder="Lien vidéo (optionnel)" />
 
@@ -210,10 +207,18 @@
       <button id="create-exercise-btn">Créer</button>
       <button id="close-exercise-modal">Annuler</button>
     </div>
-
   </div>
+
 </div>
 
-  
+<!-- ===================== -->
+<!-- SCRIPTS -->
+<!-- ===================== -->
+<script>
+  lucide.createIcons();
+</script>
+
+<script src="/static/dashboard.js" defer></script>
+
 </body>
 </html>
