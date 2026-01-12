@@ -609,7 +609,10 @@ body.dashboard-page #exercises-page {
 }
 
 .objective-wrapper {
-  gap: 10px !important;
+  display: flex;
+  align-items: center;        /* centre verticalement */
+  gap: 16px;
+  overflow: hidden;           /* empêche le débordement */
 }
 
 .progress-ring {
@@ -618,7 +621,15 @@ body.dashboard-page #exercises-page {
 }
 
 .progress-text {
-  font-size: 14px !important;
+  position: absolute;
+  inset: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 20px;
+  font-weight: 700;
+  color: #ffffff;   /* blanc */
+  pointer-events: none;
 }
 
 .mini-stat {
@@ -678,6 +689,8 @@ body.dashboard-page .exercises-grid {
 
 /* 🔧 FORCE AFFICHAGE CERCLE OBJECTIF */
 .progress-ring svg {
+  width: 100%;
+  height: 100%;
   display: block;
 }
 
@@ -1041,3 +1054,14 @@ input, select, textarea, button {
 .card small {
   color: rgba(255,255,255,0.75) !important;
 }
+
+.progress-ring {
+  position: relative;
+  width: 120px;
+  height: 120px;
+  flex-shrink: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
