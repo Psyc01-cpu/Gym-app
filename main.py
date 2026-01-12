@@ -31,6 +31,9 @@ CACHE_TTL = 30  # durée du cache en secondes
 
 def get_cached(key, loader):
     now = time.time()
+    if key not in CACHE:
+        raise KeyError(key)
+
     entry = CACHE[key]
 
     # Recharge si vide ou expiré
@@ -53,7 +56,6 @@ def invalidate_cache(key: str):
 # -------------------
 
 app = FastAPI()
-
 app.mount("/static", StaticFiles(directory="static"), name="static")
 templates = Jinja2Templates(directory="templates")
 
@@ -64,7 +66,6 @@ templates = Jinja2Templates(directory="templates")
 
 SPREADSHEET_NAME = "GothamUsers"
 USERS_SHEET = "users"
-WORKOUTS_SHEET = "workouts"
 EXERCISES_SHEET = "exercises"
 PERFORMANCES_SHEET = "performances"
 STATS_SHEET = "stats"
@@ -80,7 +81,6 @@ def get_google_creds_file():
     depuis la variable d’environnement GOOGLE_CREDS_JSON
     """
     creds_json = os.environ.get("GOOGLE_CREDS_JSON")
-
     if not creds_json:
         raise RuntimeError("GOOGLE_CREDS_JSON non défini")
 
@@ -98,7 +98,6 @@ def get_client():
         "https://www.googleapis.com/auth/spreadsheets",
         "https://www.googleapis.com/auth/drive"
     ]
-
     creds_file = get_google_creds_file()
     creds = Credentials.from_service_account_file(creds_file, scopes=scopes)
     return gspread.authorize(creds)
@@ -107,11 +106,6 @@ def get_client():
 def get_users_sheet():
     client = get_client()
     return client.open(SPREADSHEET_NAME).worksheet(USERS_SHEET)
-
-
-def get_workouts_sheet():
-    client = get_client()
-    return client.open(SPREADSHEET_NAME).worksheet(WORKOUTS_SHEET)
 
 
 def get_exercises_sheet():
@@ -185,10 +179,7 @@ def home(request: Request):
 
 @app.get("/dashboard", response_class=HTMLResponse)
 def dashboard(request: Request, user: str):
-    return templates.TemplateResponse(
-        "dashboard.html",
-        {"request": request, "user": user}
-    )
+    return templates.TemplateResponse("dashboard.html", {"request": request, "user": user})
 
 
 # -------------------
@@ -198,15 +189,8 @@ def dashboard(request: Request, user: str):
 @app.get("/api/users")
 def get_users():
     try:
-        users_rows = get_cached(
-            "users",
-            lambda: get_users_sheet().get_all_records()
-        )
-
-        workouts_rows = get_cached(
-            "workouts",
-            lambda: get_workouts_sheet().get_all_records()
-        )
+        users_rows = get_cached("users", lambda: get_users_sheet().get_all_records())
+        perf_rows = get_cached("performances", lambda: get_performances_sheet().get_all_records())
 
         users = []
 
@@ -217,22 +201,23 @@ def get_users():
             user_id = user.get("user_id")
             username = user.get("username")
 
-            volume = 0
-
-            for w in workouts_rows:
-                if str(w.get("user_id")) == str(user_id):
+            volume = 0.0
+            for p in perf_rows:
+                if str(p.get("user_id")) == str(user_id):
                     try:
-                        volume += float(w.get("weight", 0))
+                        w = p.get("weight")
+                        volume += float(w) if w not in ["", None] else 0.0
                     except:
                         pass
 
-            tier = compute_tier(int(volume))
-            score = int(volume / 10)
+            volume_int = int(volume)
+            tier = compute_tier(volume_int)
+            score = int(volume_int / 10)
 
             users.append({
                 "user_id": user_id,
                 "username": username,
-                "volume": int(volume),
+                "volume": volume_int,
                 "score": score,
                 "tier": tier
             })
@@ -268,10 +253,7 @@ def create_user(data: dict = Body(...)):
             if row.get("username") == username:
                 raise HTTPException(status_code=400, detail="Utilisateur déjà existant")
 
-        password_hash = bcrypt.hashpw(
-            password.encode("utf-8"),
-            bcrypt.gensalt()
-        ).decode("utf-8")
+        password_hash = bcrypt.hashpw(password.encode("utf-8"), bcrypt.gensalt()).decode("utf-8")
 
         sheet.append_row([
             str(uuid.uuid4()),
@@ -286,7 +268,6 @@ def create_user(data: dict = Body(...)):
         ])
 
         invalidate_cache("users")
-
         return {"success": True}
 
     except HTTPException:
@@ -314,11 +295,7 @@ def login(data: dict = Body(...)):
         for row in rows:
             if row.get("username") == username and str(row.get("is_active")).upper() == "TRUE":
                 stored_hash = row.get("password_hash")
-
-                if bcrypt.checkpw(
-                    password.encode("utf-8"),
-                    stored_hash.encode("utf-8")
-                ):
+                if bcrypt.checkpw(password.encode("utf-8"), stored_hash.encode("utf-8")):
                     return {"success": True}
 
         raise HTTPException(status_code=401, detail="Identifiants incorrects")
@@ -330,75 +307,47 @@ def login(data: dict = Body(...)):
 
 
 # -------------------
-# API - WORKOUTS (legacy)
-# -------------------
-
-@app.post("/api/workouts")
-def add_workout(data: dict = Body(...)):
-    user_id = data.get("user_id")
-    username = data.get("username")
-    exercise = data.get("exercise")
-    weight = data.get("weight")
-
-    if not user_id or not username or not exercise or not weight:
-        raise HTTPException(status_code=400, detail="Champs manquants")
-
-    try:
-        weight = float(weight)
-    except:
-        raise HTTPException(status_code=400, detail="Poids invalide")
-
-    try:
-        sheet = get_workouts_sheet()
-
-        sheet.append_row([
-            str(uuid.uuid4()),
-            user_id,
-            exercise,
-            weight,
-            datetime.utcnow().isoformat()
-        ])
-
-        invalidate_cache("workouts")
-
-        return {"success": True}
-
-    except Exception as e:
-        raise HTTPException(status_code=500, detail=str(e))
-
-
-# -------------------
-# API - LEAST EXERCISE (legacy basé sur workouts)
+# API - LEAST EXERCISE (basé sur performances)
 # -------------------
 
 @app.get("/api/least-exercise")
 def get_least_exercise(user_id: str):
+    """
+    Renvoie l'exercice le moins travaillé (volume le plus faible),
+    basé sur performances + catalogue exercises.
+    """
     try:
-        rows = get_cached(
-            "workouts",
-            lambda: get_workouts_sheet().get_all_records()
-        )
+        exercises_rows = get_cached("exercises", lambda: get_exercises_sheet().get_all_records())
+        perf_rows = get_cached("performances", lambda: get_performances_sheet().get_all_records())
 
-        stats = {}
+        # Exercices du user
+        user_exercises = [e for e in exercises_rows if str(e.get("user_id")) == str(user_id)]
+        if not user_exercises:
+            return {"exercise": None, "volume": 0}
 
-        for row in rows:
-            if str(row.get("user_id")) == str(user_id):
-                ex = row.get("exercise")
+        # init volumes à 0 pour tous
+        volumes = {}
+        ex_name_by_id = {}
+        for e in user_exercises:
+            ex_id = str(e.get("exercise_id"))
+            if ex_id:
+                volumes[ex_id] = 0.0
+                ex_name_by_id[ex_id] = e.get("name") or "Exercice"
+
+        # cumule poids
+        for p in perf_rows:
+            if str(p.get("user_id")) != str(user_id):
+                continue
+            ex_id = str(p.get("exercise_id"))
+            if ex_id in volumes:
                 try:
-                    weight = float(row.get("weight") or 0)
+                    w = p.get("weight")
+                    volumes[ex_id] += float(w) if w not in ["", None] else 0.0
                 except:
-                    weight = 0
-                stats[ex] = stats.get(ex, 0) + weight
+                    pass
 
-        if not stats:
-            return {"exercise": None}
-
-        least_exercise = min(stats, key=stats.get)
-
-        return {
-            "exercise": least_exercise,
-            "volume": int(stats[least_exercise])
-        }
+        least_ex_id = min(volumes, key=volumes.get)
+        return {"exercise": ex_name_by_id.get(least_ex_id), "volume": int(volumes[least_ex_id])}
 
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
@@ -410,27 +359,13 @@ def get_least_exercise(user_id: str):
 
 @app.get("/api/exercises")
 def get_exercises(user_id: str):
-    """
-    Retourne la liste des exercices de l'utilisateur + stats calculées depuis performances.
-    """
     try:
-        exercises_rows = get_cached(
-            "exercises",
-            lambda: get_exercises_sheet().get_all_records()
-        )
+        exercises_rows = get_cached("exercises", lambda: get_exercises_sheet().get_all_records())
+        perf_rows = get_cached("performances", lambda: get_performances_sheet().get_all_records())
 
-        perf_rows = get_cached(
-            "performances",
-            lambda: get_performances_sheet().get_all_records()
-        )
+        # Catalogue user
+        user_exercises = [ex for ex in exercises_rows if str(ex.get("user_id")) == str(user_id)]
 
-        # Filtre exercices du user (catalogue)
-        user_exercises = [
-            ex for ex in exercises_rows
-            if str(ex.get("user_id")) == str(user_id)
-        ]
-
-        # Map exercise_id -> {name, zone, video_url}
         ex_map = {}
         for ex in user_exercises:
             ex_id = str(ex.get("exercise_id"))
@@ -441,23 +376,17 @@ def get_exercises(user_id: str):
                     "video_url": ex.get("video_url") or "",
                 }
 
-        # Filtre perfs user
-        user_perfs = [
-            p for p in perf_rows
-            if str(p.get("user_id")) == str(user_id)
-        ]
-
-        # Groupe performances par exercise_id
+        # Perfs user groupées
         grouped = defaultdict(list)
-        for p in user_perfs:
+        for p in perf_rows:
+            if str(p.get("user_id")) != str(user_id):
+                continue
             ex_id = str(p.get("exercise_id"))
             if ex_id:
                 grouped[ex_id].append(p)
 
         result = []
 
-        # Important : on veut afficher au minimum tous les exercices créés,
-        # même s'il n'y a pas encore de performances.
         for ex_id, meta in ex_map.items():
             rows = grouped.get(ex_id, [])
 
@@ -467,7 +396,7 @@ def get_exercises(user_id: str):
             for r in rows:
                 w = r.get("weight")
                 try:
-                    if w != "" and w is not None:
+                    if w not in ["", None]:
                         weights.append(float(w))
                 except:
                     pass
@@ -495,9 +424,7 @@ def get_exercises(user_id: str):
                 "last_date": last_date
             })
 
-        # Tri : derniers entraînés d'abord, sinon en bas
         result.sort(key=lambda x: (x["last_date"] or ""), reverse=True)
-
         return result
 
     except Exception as e:
@@ -527,7 +454,6 @@ def create_exercise(data: dict = Body(...)):
         ])
 
         invalidate_cache("exercises")
-
         return {"success": True}
 
     except Exception as e:
@@ -540,13 +466,10 @@ def create_exercise(data: dict = Body(...)):
 
 @app.post("/api/performances/create")
 def create_performance(data: dict = Body(...)):
-    """
-    Ajoute une performance liée à un exercice (exercise_id).
-    """
     user_id = data.get("user_id")
     exercise_id = data.get("exercise_id")
-    date = data.get("date")  # ISO string ex: 2026-01-12T10:00:00
-    weight = data.get("weight", "")
+    date = data.get("date")            # ISO string
+    weight = data.get("weight", "")    # optionnel
     reps = data.get("reps")
     ressenti = data.get("ressenti")
     notes = data.get("notes", "")
@@ -555,13 +478,12 @@ def create_performance(data: dict = Body(...)):
         raise HTTPException(status_code=400, detail="Champs manquants")
 
     try:
-        # coercitions
         try:
             reps = int(reps)
         except:
             raise HTTPException(status_code=400, detail="reps invalide")
 
-        if weight != "" and weight is not None:
+        if weight not in ["", None]:
             try:
                 weight = float(weight)
             except:
@@ -584,7 +506,6 @@ def create_performance(data: dict = Body(...)):
         ])
 
         invalidate_cache("performances")
-
         return {"success": True}
 
     except HTTPException:
@@ -594,7 +515,7 @@ def create_performance(data: dict = Body(...)):
 
 
 # -------------------
-# HEALTH CHECK (KEEP ALIVE)
+# HEALTH CHECK
 # -------------------
 
 @app.api_route("/health", methods=["GET", "HEAD"])
