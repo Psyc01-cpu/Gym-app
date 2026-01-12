@@ -711,3 +711,25 @@ body.dashboard-page .exercises-grid {
   color: #111;
   box-shadow: 0 0 0 2px rgba(245,197,24,0.3);
 }
+
+/* 🔧 FORCE AFFICHAGE CERCLE OBJECTIF */
+.progress-ring svg {
+  display: block;
+}
+
+.ring-bg {
+  fill: none !important;
+  stroke: rgba(255,255,255,0.10) !important;
+  stroke-width: 12 !important;
+}
+
+.ring-progress {
+  fill: none !important;
+  stroke: #f5c518 !important;
+  stroke-width: 12 !important;
+  stroke-linecap: round !important;
+  stroke-dasharray: 377 !important;
+  stroke-dashoffset: 125 !important; /* 2/3 rempli */
+  transform: rotate(-90deg) !important;
+  transform-origin: 50% 50% !important;
+}
