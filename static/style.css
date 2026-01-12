@@ -814,3 +814,61 @@ input, select, textarea, button {
 .mini-stat strong {
   flex: 0 0 auto;
 }
+/* ===============================
+   QUICK ACTIONS — 2 BARRES CÔTE À CÔTE (compact)
+   =============================== */
+
+.quick-actions {
+  display: grid !important;
+  grid-template-columns: 1fr 1fr !important;  /* 2 boutons */
+  gap: 12px !important;
+}
+
+/* Style “barre” (comme ta capture) */
+.quick-actions .action-card {
+  height: 62px !important;                  /* faible hauteur */
+  padding: 10px 14px !important;
+  border-radius: 18px !important;
+
+  display: flex !important;
+  flex-direction: row !important;
+  align-items: center !important;
+  justify-content: center !important;
+  gap: 10px !important;
+
+  background: rgba(0,0,0,0.35) !important;
+  border: 1px solid rgba(245,197,24,0.18) !important;
+  box-shadow: inset 0 0 0 1px rgba(245,197,24,0.08),
+              0 10px 30px rgba(0,0,0,0.5) !important;
+
+  color: #f5c518 !important;
+}
+
+/* Titre centré, 1 ligne */
+.quick-actions .action-card span {
+  font-size: 13px !important;
+  font-weight: 800 !important;
+  color: #f5c518 !important;
+  white-space: nowrap !important;
+  overflow: hidden !important;
+  text-overflow: ellipsis !important;
+}
+
+/* On supprime le “small” pour gagner de la place */
+.quick-actions .action-card small {
+  display: none !important;
+}
+
+/* Icônes lucide */
+.quick-actions .action-card svg {
+  width: 20px !important;
+  height: 20px !important;
+  stroke: #f5c518 !important;
+}
+
+/* Responsive : si écran trop étroit, repasse en 1 colonne */
+@media (max-width: 360px) {
+  .quick-actions {
+    grid-template-columns: 1fr !important;
+  }
+}
