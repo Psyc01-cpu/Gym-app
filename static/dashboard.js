@@ -5,22 +5,16 @@ document.addEventListener("DOMContentLoaded", () => {
   // USER FROM URL
   // ==========================
   const params = new URLSearchParams(window.location.search);
-
-  // ✅ On garde les 2 :
-  // - user = affichage pseudo
-  // - user_id = appels API
-  const username = params.get("user");
-  const userId = params.get("user_id");
+  const username = params.get("user");     // affichage
+  const userId = params.get("user_id");    // appels API
 
   console.log("USER URL (username) =", username);
   console.log("USER URL (user_id) =", userId);
 
   const usernameEl = document.getElementById("username-display");
-  if (username && usernameEl) {
-    usernameEl.textContent = username;
-  } else if (usernameEl) {
-    usernameEl.textContent = "Profil";
-    console.warn("Impossible d'afficher le pseudo (param ?user manquant)");
+  if (usernameEl) {
+    usernameEl.textContent = username || "Profil";
+    if (!username) console.warn("Impossible d'afficher le pseudo (param ?user manquant)");
   }
 
   if (!userId) {
@@ -28,45 +22,64 @@ document.addEventListener("DOMContentLoaded", () => {
   }
 
   // ==========================
-  // NOUVEL EXERCICE (MODALE)
+  // MODALE (NOUVEL EXERCICE)
   // ==========================
-  const newExerciseBtn = document.getElementById("new-exercise-btn");
   const modal = document.getElementById("exercise-modal");
   const closeModalBtn = document.getElementById("close-exercise-modal");
   const createExerciseBtn = document.getElementById("create-exercise-btn");
 
-  newExerciseBtn?.addEventListener("click", () => {
-    modal?.classList.remove("hidden");
-  
-    // ✅ Focus automatique sur le champ Nom (mobile friendly)
+  const newExerciseBtn = document.getElementById("new-exercise-btn"); // dashboard
+  const addExerciseBtn = document.getElementById("add-exercise-btn"); // page exercices (header)
+
+  function openCreateExerciseModal() {
+    if (!modal) return;
+    modal.classList.remove("hidden");
+
+    // focus mobile
     setTimeout(() => {
       document.getElementById("exercise-name")?.focus();
     }, 150);
+  }
+
+  function closeCreateExerciseModal() {
+    if (!modal) return;
+    modal.classList.add("hidden");
+  }
+
+  // Ouvre la modale depuis dashboard
+  newExerciseBtn?.addEventListener("click", openCreateExerciseModal);
+
+  // Ouvre la modale depuis page Exercices
+  addExerciseBtn?.addEventListener("click", openCreateExerciseModal);
+
+  closeModalBtn?.addEventListener("click", closeCreateExerciseModal);
+
+  // Fermer si clic sur l'overlay (si tu veux)
+  modal?.addEventListener("click", (e) => {
+    if (e.target === modal) closeCreateExerciseModal();
   });
 
-  closeModalBtn?.addEventListener("click", () => {
-    modal?.classList.add("hidden");
-  });
-
+  // ==========================
+  // CREATE EXERCISE
+  // ==========================
   createExerciseBtn?.addEventListener("click", async () => {
     const name = document.getElementById("exercise-name")?.value.trim();
-  
-    // ✅ Zone depuis les boutons radio
-    const zone =
-      document.querySelector("input[name='zone']:checked")?.value || "";
-  
+
+    // Zone depuis radio buttons (haut/bas)
+    const zone = document.querySelector("input[name='zone']:checked")?.value || "";
+
     const video = document.getElementById("exercise-video")?.value.trim();
-  
+
     if (!name || !zone) {
       alert("Nom et zone obligatoires");
       return;
     }
-  
+
     if (!userId) {
-      alert("Erreur: user_id manquant dans l'URL. Reconnecte-toi depuis la page login.");
+      alert("Erreur: user_id manquant dans l'URL. Reconnectez-vous depuis la page login.");
       return;
     }
-  
+
     try {
       const res = await fetch("/api/exercises/create", {
         method: "POST",
@@ -78,32 +91,26 @@ document.addEventListener("DOMContentLoaded", () => {
           video_url: video || "",
         }),
       });
-  
+
       if (!res.ok) throw new Error("API error");
 
-
-      // ✅ Success
-      modal?.classList.add("hidden");
+      closeCreateExerciseModal();
       alert("Exercice créé avec succès ✅");
 
       // Reset form
       const n = document.getElementById("exercise-name");
       const v = document.getElementById("exercise-video");
-      
       if (n) n.value = "";
       if (v) v.value = "";
-      
-      // Reset zone (boutons radio)
-      document.querySelectorAll("input[name='zone']").forEach(radio => {
+
+      // Reset zone radios (aucun coché)
+      document.querySelectorAll("input[name='zone']").forEach((radio) => {
         radio.checked = false;
       });
-      
-      // Optionnel : remettre "haut" sélectionné par défaut
-      const defaultZone = document.querySelector("input[name='zone'][value='haut']");
-      if (defaultZone) defaultZone.checked = true;
 
-      // Rafraîchir la liste si on est sur la page exercices
-      loadExercises();
+      // Recharge la liste (important)
+      await loadExercises();
+
     } catch (err) {
       console.error(err);
       alert("Erreur lors de la création");
@@ -111,41 +118,42 @@ document.addEventListener("DOMContentLoaded", () => {
   });
 
   // ==========================
-  // PAGES (NAVIGATION)
+  // NAVIGATION PAGES
   // ==========================
   const dashboardPage = document.getElementById("dashboard-page");
   const exercisesPage = document.getElementById("exercises-page");
-
   const navDashboard = document.getElementById("nav-dashboard");
   const navExercises = document.getElementById("nav-exercises");
+
+  function setActiveNav(activeId) {
+    const items = [navDashboard, navExercises].filter(Boolean);
+    items.forEach((btn) => btn.classList.remove("active"));
+    if (activeId === "dashboard") navDashboard?.classList.add("active");
+    if (activeId === "exercises") navExercises?.classList.add("active");
+  }
 
   function showDashboard() {
     dashboardPage?.classList.remove("hidden");
     exercisesPage?.classList.add("hidden");
-
-    navDashboard?.classList.add("active");
-    navExercises?.classList.remove("active");
+    setActiveNav("dashboard");
   }
 
-  function showExercises() {
+  async function showExercises() {
     dashboardPage?.classList.add("hidden");
     exercisesPage?.classList.remove("hidden");
-
-    navDashboard?.classList.remove("active");
-    navExercises?.classList.add("active");
-
-    // Charger les exercices quand on ouvre la page
-    loadExercises();
+    setActiveNav("exercises");
+    await loadExercises();
   }
 
   navDashboard?.addEventListener("click", showDashboard);
   navExercises?.addEventListener("click", showExercises);
 
-  // Page affichée par défaut
+  // Page par défaut
   showDashboard();
 
   // ==========================
   // API — EXERCICE LE MOINS TRAVAILLÉ
+  // (reste basé sur workouts → OK)
   // ==========================
   async function loadLeastExercise() {
     if (!userId) return;
@@ -169,12 +177,12 @@ document.addEventListener("DOMContentLoaded", () => {
     if (!btn) return;
 
     btn.addEventListener("click", () => {
-      alert("Fiche exercice à venir (modale bientôt)");
+      alert("Fiche exercice à venir (performances bientôt)");
     });
   }
 
   // ==========================
-  // API — LISTE DES EXERCICES
+  // API — LISTE DES EXERCICES (exercises sheet)
   // ==========================
   async function loadExercises() {
     if (!userId) return;
@@ -185,6 +193,7 @@ document.addEventListener("DOMContentLoaded", () => {
     grid.innerHTML = "Chargement...";
 
     try {
+      // IMPORTANT : endpoint doit renvoyer les exercices créés (sheet exercises)
       const res = await fetch(`/api/exercises?user_id=${encodeURIComponent(userId)}`);
       if (!res.ok) throw new Error("API error");
 
@@ -196,53 +205,61 @@ document.addEventListener("DOMContentLoaded", () => {
         return;
       }
 
-      exercises.forEach((ex) => {
+      // Normalisation (au cas où)
+      const normalized = exercises.map((e) => ({
+        exercise_id: e.exercise_id || e.id || "",
+        name: e.name || e.exercise || "",
+        zone: e.zone || "",
+        video_url: e.video_url || e.video || "",
+        created_at: e.created_at || "",
+      }));
+
+      normalized.forEach((ex) => {
         const card = document.createElement("div");
         card.className = "exercise-card";
 
+        const zoneLabel = ex.zone ? ex.zone.toUpperCase() : "-";
+        const videoLabel = ex.video_url ? "🎥 Vidéo" : "";
+
         card.innerHTML = `
-          <div class="exercise-title">${ex.exercise}</div>
-
-          <div class="exercise-stat">
-            🏆 Max : <strong>${ex.max_weight} kg</strong>
-          </div>
-
-          <div class="exercise-stat exercise-highlight">
-            🎯 Entraînement (80%) : <strong>${ex.training_weight} kg</strong>
-          </div>
-
-          <div class="exercise-stat">
-            📅 Séances : ${ex.sessions}
-          </div>
-
-          <div class="exercise-stat">
-            ⏱️ Dernière : ${ex.last_date || "-"}
-          </div>
+          <div class="exercise-title">${escapeHtml(ex.name)}</div>
+          <div class="exercise-stat">🏷️ Zone : <strong>${escapeHtml(zoneLabel)}</strong></div>
+          <div class="exercise-stat">${videoLabel ? videoLabel : ""}</div>
         `;
 
+        // Click : plus tard → ouvrir modale performance
         card.addEventListener("click", () => {
-          openExerciseModal(ex);
+          openExercise(ex);
         });
 
         grid.appendChild(card);
       });
+
     } catch (err) {
       console.error("Erreur chargement exercices", err);
       grid.innerHTML = "<p>Erreur de chargement.</p>";
     }
   }
 
-  // ==========================
-  // MODALE EXERCICE (PLACEHOLDER)
-  // ==========================
-  function openExerciseModal(exercise) {
+  function openExercise(ex) {
+    // Placeholder (prochaine étape : modale performance)
     alert(
-      `Exercice : ${exercise.exercise}\n` +
-        `Max : ${exercise.max_weight} kg\n` +
-        `Poids cible (80%) : ${exercise.training_weight} kg\n` +
-        `Séances : ${exercise.sessions}\n` +
-        `Dernière séance : ${exercise.last_date || "-"}`
+      `Exercice : ${ex.name}\n` +
+      `Zone : ${ex.zone || "-"}\n` +
+      (ex.video_url ? `Vidéo : ${ex.video_url}\n` : "")
     );
+  }
+
+  // ==========================
+  // UTILS
+  // ==========================
+  function escapeHtml(str) {
+    return String(str || "")
+      .replaceAll("&", "&amp;")
+      .replaceAll("<", "&lt;")
+      .replaceAll(">", "&gt;")
+      .replaceAll('"', "&quot;")
+      .replaceAll("'", "&#039;");
   }
 
   // ==========================
