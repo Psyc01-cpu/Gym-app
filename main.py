@@ -22,7 +22,6 @@ from fastapi.templating import Jinja2Templates
 
 CACHE = {
     "users": {"data": None, "ts": 0},
-    "workouts": {"data": None, "ts": 0},
     "exercises": {"data": None, "ts": 0},
     "performances": {"data": None, "ts": 0},
 }
