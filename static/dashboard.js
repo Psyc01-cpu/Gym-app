@@ -1,84 +1,100 @@
 console.log("Dashboard JS chargé");
 
 document.addEventListener("DOMContentLoaded", () => {
-
   // ==========================
   // USER FROM URL
   // ==========================
-
   const params = new URLSearchParams(window.location.search);
-  const currentUser = params.get("user");
 
-  console.log("USER URL =", currentUser);
+  // ✅ On garde les 2 :
+  // - user = affichage pseudo
+  // - user_id = appels API
+  const username = params.get("user");
+  const userId = params.get("user_id");
+
+  console.log("USER URL (username) =", username);
+  console.log("USER URL (user_id) =", userId);
 
   const usernameEl = document.getElementById("username-display");
-  if (currentUser && usernameEl) {
-    usernameEl.textContent = currentUser;
-  } else {
-    console.warn("Impossible d'afficher le pseudo");
+  if (username && usernameEl) {
+    usernameEl.textContent = username;
+  } else if (usernameEl) {
+    usernameEl.textContent = "Profil";
+    console.warn("Impossible d'afficher le pseudo (param ?user manquant)");
+  }
+
+  if (!userId) {
+    console.warn("Paramètre ?user_id manquant : les appels API ne fonctionneront pas.");
   }
 
   // ==========================
   // NOUVEL EXERCICE (MODALE)
   // ==========================
-  
   const newExerciseBtn = document.getElementById("new-exercise-btn");
   const modal = document.getElementById("exercise-modal");
   const closeModalBtn = document.getElementById("close-exercise-modal");
   const createExerciseBtn = document.getElementById("create-exercise-btn");
-  
+
   newExerciseBtn?.addEventListener("click", () => {
     modal?.classList.remove("hidden");
   });
-  
+
   closeModalBtn?.addEventListener("click", () => {
     modal?.classList.add("hidden");
   });
-  
+
   createExerciseBtn?.addEventListener("click", async () => {
-    const name = document.getElementById("exercise-name").value.trim();
-    const zone = document.getElementById("exercise-zone").value;
-    const video = document.getElementById("exercise-video").value.trim();
-  
+    const name = document.getElementById("exercise-name")?.value.trim();
+    const zone = document.getElementById("exercise-zone")?.value;
+    const video = document.getElementById("exercise-video")?.value.trim();
+
     if (!name || !zone) {
       alert("Nom et zone obligatoires");
       return;
     }
-  
+
+    if (!userId) {
+      alert("Erreur: user_id manquant dans l'URL. Reconnecte-toi depuis la page login.");
+      return;
+    }
+
     try {
       const res = await fetch("/api/exercises/create", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
-          user_id: currentUser,
-          name: name,
-          zone: zone,
-          video_url: video
-        })
+          user_id: userId, // ✅ UUID attendu côté backend
+          name,
+          zone,
+          video_url: video || "",
+        }),
       });
-  
+
       if (!res.ok) throw new Error("API error");
-  
+
       // ✅ Success
-      modal.classList.add("hidden");
+      modal?.classList.add("hidden");
       alert("Exercice créé avec succès ✅");
-  
+
       // Reset form
-      document.getElementById("exercise-name").value = "";
-      document.getElementById("exercise-zone").value = "";
-      document.getElementById("exercise-video").value = "";
-  
+      const n = document.getElementById("exercise-name");
+      const z = document.getElementById("exercise-zone");
+      const v = document.getElementById("exercise-video");
+      if (n) n.value = "";
+      if (z) z.value = "";
+      if (v) v.value = "";
+
+      // Rafraîchir la liste si on est sur la page exercices
+      loadExercises();
     } catch (err) {
       console.error(err);
       alert("Erreur lors de la création");
     }
   });
 
-  
   // ==========================
   // PAGES (NAVIGATION)
   // ==========================
-
   const dashboardPage = document.getElementById("dashboard-page");
   const exercisesPage = document.getElementById("exercises-page");
 
@@ -110,16 +126,14 @@ document.addEventListener("DOMContentLoaded", () => {
   // Page affichée par défaut
   showDashboard();
 
-  
   // ==========================
   // API — EXERCICE LE MOINS TRAVAILLÉ
   // ==========================
-
   async function loadLeastExercise() {
-    if (!currentUser) return;
+    if (!userId) return;
 
     try {
-      const res = await fetch(`/api/least-exercise?user_id=${currentUser}`);
+      const res = await fetch(`/api/least-exercise?user_id=${encodeURIComponent(userId)}`);
       if (!res.ok) throw new Error("API error");
 
       const data = await res.json();
@@ -127,7 +141,6 @@ document.addEventListener("DOMContentLoaded", () => {
       if (!label) return;
 
       label.textContent = data.exercise || "Aucun exercice";
-
     } catch (err) {
       console.error("Erreur chargement exercice faible", err);
     }
@@ -145,9 +158,8 @@ document.addEventListener("DOMContentLoaded", () => {
   // ==========================
   // API — LISTE DES EXERCICES
   // ==========================
-
   async function loadExercises() {
-    if (!currentUser) return;
+    if (!userId) return;
 
     const grid = document.getElementById("exercises-grid");
     if (!grid) return;
@@ -155,8 +167,7 @@ document.addEventListener("DOMContentLoaded", () => {
     grid.innerHTML = "Chargement...";
 
     try {
-      // ✅ PARAMÈTRE CORRECT : user_id
-      const res = await fetch(`/api/exercises?user_id=${currentUser}`);
+      const res = await fetch(`/api/exercises?user_id=${encodeURIComponent(userId)}`);
       if (!res.ok) throw new Error("API error");
 
       const exercises = await res.json();
@@ -167,7 +178,7 @@ document.addEventListener("DOMContentLoaded", () => {
         return;
       }
 
-      exercises.forEach(ex => {
+      exercises.forEach((ex) => {
         const card = document.createElement("div");
         card.className = "exercise-card";
 
@@ -197,7 +208,6 @@ document.addEventListener("DOMContentLoaded", () => {
 
         grid.appendChild(card);
       });
-
     } catch (err) {
       console.error("Erreur chargement exercices", err);
       grid.innerHTML = "<p>Erreur de chargement.</p>";
@@ -207,22 +217,19 @@ document.addEventListener("DOMContentLoaded", () => {
   // ==========================
   // MODALE EXERCICE (PLACEHOLDER)
   // ==========================
-
   function openExerciseModal(exercise) {
     alert(
       `Exercice : ${exercise.exercise}\n` +
-      `Max : ${exercise.max_weight} kg\n` +
-      `Poids cible (80%) : ${exercise.training_weight} kg\n` +
-      `Séances : ${exercise.sessions}\n` +
-      `Dernière séance : ${exercise.last_date || "-"}`
+        `Max : ${exercise.max_weight} kg\n` +
+        `Poids cible (80%) : ${exercise.training_weight} kg\n` +
+        `Séances : ${exercise.sessions}\n` +
+        `Dernière séance : ${exercise.last_date || "-"}`
     );
   }
 
   // ==========================
   // INIT
   // ==========================
-
   loadLeastExercise();
   bindLeastExerciseClick();
-
 });
