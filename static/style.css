@@ -922,3 +922,39 @@ input, select, textarea, button {
 .bottom-nav .nav-item.active svg {
   stroke: #f5c518 !important;
 }
+/* ===============================
+   MODALE EXERCICE — EN HAUT + SCROLL INTERNE
+   =============================== */
+#exercise-modal {
+  position: fixed;
+  inset: 0;
+  z-index: 4000;
+  background: rgba(0,0,0,0.72);
+
+  display: flex;
+  justify-content: center;
+  align-items: flex-start;              /* ✅ en haut */
+
+  padding: 14px;
+  padding-top: max(14px, env(safe-area-inset-top));   /* iPhone notch */
+  padding-bottom: calc(14px + env(safe-area-inset-bottom));
+}
+
+#exercise-modal.hidden {
+  display: none !important;
+}
+
+/* La boite de la modale */
+#exercise-modal .modal {
+  width: min(520px, 100%);
+  max-height: calc(100dvh - 28px - env(safe-area-inset-top) - env(safe-area-inset-bottom));
+  overflow: auto;                        /* ✅ scroll interne si besoin */
+  -webkit-overflow-scrolling: touch;
+}
+
+/* Zone picker sur 2 colonnes */
+#exercise-modal .zone-picker {
+  display: grid;
+  grid-template-columns: 1fr 1fr;        /* ✅ 2 boutons */
+  gap: 10px;
+}
