@@ -45,32 +45,37 @@ document.addEventListener("DOMContentLoaded", () => {
 
   createExerciseBtn?.addEventListener("click", async () => {
     const name = document.getElementById("exercise-name")?.value.trim();
-    const zone = document.getElementById("exercise-zone")?.value;
+  
+    // ✅ Zone depuis les boutons radio
+    const zone =
+      document.querySelector("input[name='zone']:checked")?.value || "";
+  
     const video = document.getElementById("exercise-video")?.value.trim();
-
+  
     if (!name || !zone) {
       alert("Nom et zone obligatoires");
       return;
     }
-
+  
     if (!userId) {
       alert("Erreur: user_id manquant dans l'URL. Reconnecte-toi depuis la page login.");
       return;
     }
-
+  
     try {
       const res = await fetch("/api/exercises/create", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
-          user_id: userId, // ✅ UUID attendu côté backend
+          user_id: userId,
           name,
           zone,
           video_url: video || "",
         }),
       });
-
+  
       if (!res.ok) throw new Error("API error");
+
 
       // ✅ Success
       modal?.classList.add("hidden");
