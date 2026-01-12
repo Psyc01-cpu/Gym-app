@@ -37,6 +37,11 @@ document.addEventListener("DOMContentLoaded", () => {
 
   newExerciseBtn?.addEventListener("click", () => {
     modal?.classList.remove("hidden");
+  
+    // ✅ Focus automatique sur le champ Nom (mobile friendly)
+    setTimeout(() => {
+      document.getElementById("exercise-name")?.focus();
+    }, 150);
   });
 
   closeModalBtn?.addEventListener("click", () => {
@@ -83,11 +88,19 @@ document.addEventListener("DOMContentLoaded", () => {
 
       // Reset form
       const n = document.getElementById("exercise-name");
-      const z = document.getElementById("exercise-zone");
       const v = document.getElementById("exercise-video");
+      
       if (n) n.value = "";
-      if (z) z.value = "";
       if (v) v.value = "";
+      
+      // Reset zone (boutons radio)
+      document.querySelectorAll("input[name='zone']").forEach(radio => {
+        radio.checked = false;
+      });
+      
+      // Optionnel : remettre "haut" sélectionné par défaut
+      const defaultZone = document.querySelector("input[name='zone'][value='haut']");
+      if (defaultZone) defaultZone.checked = true;
 
       // Rafraîchir la liste si on est sur la page exercices
       loadExercises();
