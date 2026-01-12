@@ -539,3 +539,34 @@ body.modal-open {
 }
 
 .modal-overlay.hidden { display: none; }
+
+
+/* ===============================
+   DASHBOARD — NO SCROLL GLOBAL (mobile)
+   =============================== */
+body.dashboard-page {
+  padding-top: 0;
+  height: 100vh;
+  height: 100dvh;
+  overflow: hidden; /* bloque le scroll global */
+}
+
+/* Le conteneur principal prend tout l'écran */
+body.dashboard-page .app {
+  height: 100vh;
+  height: 100dvh;
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
+  padding-bottom: 0;
+}
+
+/* Scroll interne uniquement */
+body.dashboard-page #dashboard-page,
+body.dashboard-page #exercises-page {
+  flex: 1 1 auto;
+  min-height: 0;
+  overflow: auto;
+  -webkit-overflow-scrolling: touch;
+  padding-bottom: 90px; /* espace pour la bottom-nav */
+}
