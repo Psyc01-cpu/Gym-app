@@ -1,3 +1,6 @@
+// =======================
+// TOAST
+// =======================
 function showToast(message, type = "success") {
   const toast = document.getElementById("toast");
   if (!toast) return;
@@ -10,6 +13,9 @@ function showToast(message, type = "success") {
   }, 2500);
 }
 
+// =======================
+// APP (LOGIN)
+// =======================
 document.addEventListener("DOMContentLoaded", () => {
   const overlay = document.getElementById("modal-overlay");
   const modalTitle = document.getElementById("modal-title");
@@ -19,23 +25,22 @@ document.addEventListener("DOMContentLoaded", () => {
   const viewBtn = document.getElementById("view-btn");
   const createProfileBtn = document.getElementById("create-profile-btn");
 
-  const profilesContainer = document.querySelector(".profiles");
+  const profilesContainer = document.getElementById("users-list");
   const loginForm = document.getElementById("login-form");
+
+  // Modale création
+  const createOverlay = document.getElementById("create-overlay");
+  const validateCreateBtn = document.getElementById("validate-create-btn");
 
   // Password toggle (création)
   const togglePasswordBtn = document.getElementById("toggle-password");
   const pwdInput = document.getElementById("new-password");
-  const eyeOpen = document.getElementById("eye-open");
-  const eyeClosed = document.getElementById("eye-closed");
 
-  if (togglePasswordBtn && pwdInput && eyeOpen && eyeClosed) {
+  if (togglePasswordBtn && pwdInput) {
     togglePasswordBtn.addEventListener("click", () => {
       const isPassword = pwdInput.type === "password";
       pwdInput.type = isPassword ? "text" : "password";
-
-      eyeOpen.classList.toggle("hidden", !isPassword);
-      eyeClosed.classList.toggle("hidden", isPassword);
-
+      togglePasswordBtn.textContent = isPassword ? "🙈" : "👁";
       togglePasswordBtn.setAttribute(
         "aria-label",
         isPassword ? "Masquer le mot de passe" : "Afficher le mot de passe"
@@ -43,26 +48,22 @@ document.addEventListener("DOMContentLoaded", () => {
     });
   }
 
-  // Modale création
-  const createOverlay = document.getElementById("create-overlay");
-  const validateCreateBtn = document.getElementById("validate-create-btn");
-
   if (!overlay || !profilesContainer || !createOverlay) {
-    console.error("Éléments DOM manquants");
+    console.error("Éléments DOM manquants (overlay / users-list / create-overlay)");
     return;
   }
 
-  let selectedUser = null;   // 👈 objet utilisateur complet
+  let selectedUser = null; // { user_id, username, rank, score, tier, ... }
 
-  /* -------------------------
-     MODALE PROFIL
-  -------------------------- */
-
+  // -------------------------
+  // MODALE PROFIL
+  // -------------------------
   function openModal(user) {
     selectedUser = user;
-    modalTitle.textContent = "Profil – " + user.username;
+    modalTitle.textContent = `Profil – ${user.username}`;
     passwordInput.value = "";
     overlay.classList.remove("hidden");
+    document.body.classList.add("modal-open");
 
     // autofocus mobile
     setTimeout(() => passwordInput.focus(), 150);
@@ -70,76 +71,124 @@ document.addEventListener("DOMContentLoaded", () => {
 
   function closeModal() {
     overlay.classList.add("hidden");
+    document.body.classList.remove("modal-open");
     selectedUser = null;
   }
 
-  /* -------------------------
-     CHARGEMENT DES PROFILS
-  -------------------------- */
+  // -------------------------
+  // MODALE CRÉATION
+  // -------------------------
+  function openCreate() {
+    createOverlay.classList.remove("hidden");
+    document.body.classList.add("modal-open");
+  }
 
+  function closeCreate() {
+    createOverlay.classList.add("hidden");
+    document.body.classList.remove("modal-open");
+  }
+
+  // -------------------------
+  // RENDER PROFILS
+  // -------------------------
+  function escapeHtml(str = "") {
+    return String(str)
+      .replaceAll("&", "&amp;")
+      .replaceAll("<", "&lt;")
+      .replaceAll(">", "&gt;")
+      .replaceAll('"', "&quot;")
+      .replaceAll("'", "&#039;");
+  }
+
+  function buildProfileCard(user) {
+    const rank = user.rank ?? "–";
+    const score = user.score ?? 0;
+    const tier = user.tier ?? "Unranked";
+
+    const btn = document.createElement("button");
+    btn.type = "button";
+    btn.className = "profile-card";
+
+    // Stockage JSON (safe)
+    btn.dataset.user = JSON.stringify(user);
+
+    btn.innerHTML = `
+      <div class="profile-left">
+        <div class="profile-name">${escapeHtml(user.username)}</div>
+        <div class="profile-meta">#${escapeHtml(rank)} • ${escapeHtml(score)} pts</div>
+      </div>
+      <div class="profile-right">
+        <span class="tier-badge">${escapeHtml(tier)}</span>
+      </div>
+    `;
+
+    return btn;
+  }
+
+  // -------------------------
+  // CHARGEMENT DES PROFILS
+  // -------------------------
   async function loadProfiles() {
     try {
       const res = await fetch("/api/users");
-      if (!res.ok) return;
+      if (!res.ok) throw new Error("/api/users not ok");
 
       const users = await res.json();
-      if (!Array.isArray(users)) return;
+      if (!Array.isArray(users)) throw new Error("users not array");
 
       profilesContainer.innerHTML = "";
 
+      if (users.length === 0) {
+        const empty = document.createElement("div");
+        empty.className = "profiles-empty";
+        empty.textContent = "Aucun profil";
+        profilesContainer.appendChild(empty);
+        return;
+      }
+
       users.forEach((user) => {
-        const btn = document.createElement("button");
-        btn.className = "profile-btn";
-
-        // ✅ On stocke l'objet complet
-        btn.dataset.user = JSON.stringify(user);
-
-        // ✅ On affiche uniquement le pseudo
-        btn.textContent = user.username;
-
-        profilesContainer.appendChild(btn);
+        profilesContainer.appendChild(buildProfileCard(user));
       });
-
     } catch (err) {
       console.error("Erreur chargement profils", err);
+      profilesContainer.innerHTML = `<div class="profiles-empty">Erreur de chargement</div>`;
     }
   }
 
   loadProfiles();
 
-  /* -------------------------
-     CLIC SUR PROFIL
-  -------------------------- */
-
-  document.addEventListener("click", (e) => {
-    const btn = e.target.closest(".profile-btn");
+  // -------------------------
+  // CLIC SUR PROFIL
+  // -------------------------
+  profilesContainer.addEventListener("click", (e) => {
+    const btn = e.target.closest(".profile-card");
     if (!btn) return;
 
-    const user = JSON.parse(btn.dataset.user);   // 👈 récupération objet
-    openModal(user);
+    try {
+      const user = JSON.parse(btn.dataset.user);
+      openModal(user);
+    } catch (err) {
+      console.error("Profil invalide", err);
+    }
   });
 
-  /* -------------------------
-     BOUTON ➕ OUVRIR MODALE CRÉATION
-  -------------------------- */
-
+  // -------------------------
+  // ➕ OUVRIR MODALE CRÉATION
+  // -------------------------
   if (createProfileBtn) {
-    createProfileBtn.addEventListener("click", () => {
-      createOverlay.classList.remove("hidden");
-    });
+    createProfileBtn.addEventListener("click", openCreate);
   }
 
-  /* -------------------------
-     VALIDATION CRÉATION PROFIL
-  -------------------------- */
-
+  // -------------------------
+  // VALIDATION CRÉATION PROFIL
+  // -------------------------
   if (validateCreateBtn) {
     validateCreateBtn.addEventListener("click", async () => {
-      const username = document.getElementById("new-username").value.trim();
-      const age = document.getElementById("new-age").value;
-      const height = document.getElementById("new-height").value;
-      const password = document.getElementById("new-password").value;
-      const confirmPassword = document.getElementById("confirm-password").value;
+      const username = document.getElementById("new-username")?.value.trim();
+      const age = document.getElementById("new-age")?.value;
+      const height = document.getElementById("new-height")?.value;
+      const password = document.getElementById("new-password")?.value;
+      const confirmPassword = document.getElementById("confirm-password")?.value;
       const gender = document.querySelector("input[name='gender']:checked")?.value;
 
       if (!username || !age || !height || !password || !confirmPassword || !gender) {
@@ -161,21 +210,19 @@ document.addEventListener("DOMContentLoaded", () => {
             password,
             gender,
             age,
-            height
-          })
+            height,
+          }),
         });
 
         if (!res.ok) {
-          const err = await res.json();
+          const err = await res.json().catch(() => ({}));
           showToast(err.detail || "Erreur création profil", "error");
           return;
         }
 
         showToast("Profil créé", "success");
-
-        createOverlay.classList.add("hidden");
+        closeCreate();
         loadProfiles();
-
       } catch (err) {
         showToast("Erreur réseau", "error");
         console.error(err);
@@ -183,10 +230,9 @@ document.addEventListener("DOMContentLoaded", () => {
     });
   }
 
-  /* -------------------------
-     🔐 CONNEXION
-  -------------------------- */
-
+  // -------------------------
+  // 🔐 CONNEXION
+  // -------------------------
   async function doLogin() {
     const password = passwordInput.value;
 
@@ -196,13 +242,14 @@ document.addEventListener("DOMContentLoaded", () => {
     }
 
     try {
+      // API login attend username + password
       const res = await fetch("/api/login", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
           username: selectedUser.username,
-          password: password
-        })
+          password,
+        }),
       });
 
       if (!res.ok) {
@@ -210,9 +257,13 @@ document.addEventListener("DOMContentLoaded", () => {
         return;
       }
 
-      // ✅ on passe le pseudo dans l’URL
-      window.location.href = `/dashboard?user=${selectedUser.username}`;
+      // ✅ dashboard FastAPI exige ?user=...
+      // ✅ on ajoute user_id pour que dashboard.js puisse appeler /api/*
+      const url =
+        `/dashboard?user=${encodeURIComponent(selectedUser.username)}` +
+        `&user_id=${encodeURIComponent(selectedUser.user_id)}`;
 
+      window.location.href = url;
     } catch (err) {
       showToast("Erreur réseau", "error");
       console.error(err);
@@ -220,7 +271,11 @@ document.addEventListener("DOMContentLoaded", () => {
   }
 
   if (loginBtn) {
-    loginBtn.addEventListener("click", doLogin);
+    // bouton submit déjà géré par le form, mais on garde la compat
+    loginBtn.addEventListener("click", (e) => {
+      e.preventDefault();
+      doLogin();
+    });
   }
 
   if (loginForm) {
@@ -230,88 +285,94 @@ document.addEventListener("DOMContentLoaded", () => {
     });
   }
 
-  /* -------------------------
-     👁️ VOIR PROFIL
-  -------------------------- */
-
+  // -------------------------
+  // 👁️ VOIR PROFIL
+  // -------------------------
   if (viewBtn) {
     viewBtn.addEventListener("click", () => {
       if (!selectedUser) return;
-      window.location.href = `/dashboard?user=${selectedUser.username}`;
+
+      const url =
+        `/dashboard?user=${encodeURIComponent(selectedUser.username)}` +
+        `&user_id=${encodeURIComponent(selectedUser.user_id)}`;
+
+      window.location.href = url;
     });
   }
 
-  /* -------------------------
-     FERMETURE DES MODALES
-  -------------------------- */
-
+  // -------------------------
+  // FERMETURE DES MODALES
+  // -------------------------
   overlay.addEventListener("click", (e) => {
     if (e.target === overlay) closeModal();
   });
 
   createOverlay.addEventListener("click", (e) => {
-    if (e.target === createOverlay) {
-      createOverlay.classList.add("hidden");
-    }
+    if (e.target === createOverlay) closeCreate();
   });
 
   document.addEventListener("keydown", (e) => {
     if (e.key === "Escape") {
-      closeModal();
-      createOverlay.classList.add("hidden");
+      if (!overlay.classList.contains("hidden")) closeModal();
+      if (!createOverlay.classList.contains("hidden")) closeCreate();
     }
   });
 });
 
-
 // =======================
 // BACKGROUND STARS EFFECT
 // =======================
+(function initStars() {
+  const canvas = document.getElementById("stars-canvas");
+  if (!canvas) return;
 
-const canvas = document.getElementById("stars-canvas");
-const ctx = canvas.getContext("2d");
+  const ctx = canvas.getContext("2d");
+  if (!ctx) return;
 
-let stars = [];
-const STAR_COUNT = 120;
+  let stars = [];
+  const STAR_COUNT = 120;
 
-function resizeCanvas() {
-  canvas.width = window.innerWidth;
-  canvas.height = window.innerHeight;
-}
-window.addEventListener("resize", resizeCanvas);
-resizeCanvas();
-
-function createStars() {
-  stars = [];
-  for (let i = 0; i < STAR_COUNT; i++) {
-    stars.push({
-      x: Math.random() * canvas.width,
-      y: Math.random() * canvas.height,
-      r: Math.random() * 1.5 + 0.5,
-      speed: Math.random() * 0.3 + 0.1,
-      alpha: Math.random()
-    });
+  function resizeCanvas() {
+    canvas.width = window.innerWidth;
+    canvas.height = window.innerHeight;
   }
-}
-createStars();
 
-function animateStars() {
-  ctx.clearRect(0, 0, canvas.width, canvas.height);
+  window.addEventListener("resize", resizeCanvas);
+  resizeCanvas();
 
-  stars.forEach(star => {
-    star.y += star.speed;
-    if (star.y > canvas.height) {
-      star.y = 0;
-      star.x = Math.random() * canvas.width;
+  function createStars() {
+    stars = [];
+    for (let i = 0; i < STAR_COUNT; i++) {
+      stars.push({
+        x: Math.random() * canvas.width,
+        y: Math.random() * canvas.height,
+        r: Math.random() * 1.5 + 0.5,
+        speed: Math.random() * 0.3 + 0.1,
+        alpha: Math.random(),
+      });
+    }
+  }
+
+  createStars();
+
+  function animateStars() {
+    ctx.clearRect(0, 0, canvas.width, canvas.height);
+
+    for (const star of stars) {
+      star.y += star.speed;
+      if (star.y > canvas.height) {
+        star.y = 0;
+        star.x = Math.random() * canvas.width;
+      }
+
+      ctx.beginPath();
+      ctx.arc(star.x, star.y, star.r, 0, Math.PI * 2);
+      ctx.fillStyle = `rgba(255,255,255,${star.alpha})`;
+      ctx.fill();
     }
 
-    ctx.beginPath();
-    ctx.arc(star.x, star.y, star.r, 0, Math.PI * 2);
-    ctx.fillStyle = `rgba(255,255,255,${star.alpha})`;
-    ctx.fill();
-  });
+    requestAnimationFrame(animateStars);
+  }
 
-  requestAnimationFrame(animateStars);
-}
-
-animateStars();
+  animateStars();
+})();
