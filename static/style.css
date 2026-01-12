@@ -750,3 +750,123 @@ h1, h2, h3 {
   border-radius: 6px;
   border: none;
 }
+/* =========================
+   MOBILE LOGIN — NO SCROLL
+========================= */
+html, body {
+  height: 100%;
+}
+
+body.login-page {
+  height: 100vh;
+  overflow: hidden; /* pas de scroll */
+}
+
+.login-shell {
+  height: 100vh;
+  display: flex;
+  flex-direction: column;
+}
+
+/* Header */
+.login-header {
+  padding: 18px 16px 8px;
+  text-align: center;
+}
+.login-title {
+  font-size: 28px;
+  font-weight: 800;
+  letter-spacing: 1px;
+  margin: 0;
+}
+.login-subtitle {
+  opacity: 0.85;
+  margin: 6px 0 0;
+  font-size: 14px;
+}
+
+/* Zone liste scrollable à l'intérieur (pas la page) */
+.user-list-wrap {
+  flex: 1;
+  overflow: auto;
+  padding: 12px 12px 90px; /* marge pour bouton en bas */
+  -webkit-overflow-scrolling: touch;
+}
+
+/* Carte utilisateur (1 par ligne) */
+.user-card {
+  width: 100%;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 14px;
+  border-radius: 14px;
+  background: rgba(255,255,255,0.06);
+  border: 1px solid rgba(255,255,255,0.08);
+  margin-bottom: 10px;
+}
+
+.user-rank {
+  min-width: 38px;
+  height: 38px;
+  border-radius: 10px;
+  display: grid;
+  place-items: center;
+  font-weight: 800;
+  background: rgba(255,255,255,0.08);
+}
+
+.user-main {
+  flex: 1;
+  min-width: 0;
+}
+
+.user-name {
+  font-weight: 800;
+  font-size: 16px;
+  margin: 0;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.user-meta {
+  display: flex;
+  gap: 8px;
+  align-items: center;
+  margin-top: 6px;
+  flex-wrap: wrap;
+  opacity: 0.9;
+  font-size: 13px;
+}
+
+.pill {
+  padding: 5px 10px;
+  border-radius: 999px;
+  background: rgba(255,255,255,0.08);
+  border: 1px solid rgba(255,255,255,0.08);
+  font-weight: 700;
+}
+
+.pill-tier {
+  background: rgba(255, 215, 0, 0.10);
+  border-color: rgba(255, 215, 0, 0.22);
+}
+
+/* Footer (bouton action en bas, fixe) */
+.login-footer {
+  position: fixed;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  padding: 12px;
+  background: linear-gradient(to top, rgba(0,0,0,0.85), rgba(0,0,0,0));
+}
+
+.login-footer .hint {
+  text-align: center;
+  opacity: 0.8;
+  font-size: 12px;
+  margin-bottom: 8px;
+}
+
