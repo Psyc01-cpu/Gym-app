@@ -1065,3 +1065,64 @@ input, select, textarea, button {
   justify-content: center;
 }
 
+/* ==========================
+   FIX CERCLE OBJECTIF (progress-ring)
+   ========================== */
+
+/* le wrapper qui contient cercle + stats */
+.objective-wrapper{
+  display: flex;
+  align-items: center;      /* centre verticalement */
+  gap: 18px;
+}
+
+/* IMPORTANT : si une card coupe, on évite le rognage */
+.objective-card{
+  overflow: visible !important;
+}
+
+/* bloc du cercle */
+.progress-ring{
+  width: 150px;
+  height: 150px;
+  flex: 0 0 150px;          /* empêche le shrink qui "écrase" */
+  position: relative;
+  display: grid;
+  place-items: center;
+  overflow: visible;        /* évite le rognage interne */
+}
+
+/* le SVG doit prendre toute la place du carré */
+.progress-ring svg{
+  width: 100%;
+  height: 100%;
+  display: block;
+  overflow: visible;
+}
+
+/* centre le texte (2/3) pile au milieu du cercle */
+.progress-ring .progress-text{
+  position: absolute;
+  inset: 0;
+  display: grid;
+  place-items: center;
+  text-align: center;
+  pointer-events: none;
+}
+
+/* optionnel : si tu as un <small> sous le 2/3 */
+.progress-ring .progress-text strong{
+  display: block;
+  line-height: 1;
+}
+
+.progress-ring .progress-text small{
+  display: block;
+  margin-top: 6px;
+  opacity: 0.85;
+}
+
+/* si tes cercles ont un stroke épais, ça aide à éviter des surprises */
+.progress-ring circle{
+  vector-effect: non-scaling-stroke;
+}
