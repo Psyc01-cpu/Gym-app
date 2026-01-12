@@ -2,118 +2,130 @@
 <html lang="fr">
 <head>
   <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
   <title>Projet Gotham</title>
-
-    <link rel="stylesheet" href="/static/style.css?v=0.3.50">
+  <link rel="stylesheet" href="/static/style.css?v=0.3.51">
 </head>
-<body>
+
+<body class="login-page">
 
   <canvas id="stars-canvas"></canvas>
-  
-  <h1>BATMAN TRAINING</h1>
-  <p>Bienvenue dans la Batcave</p>
 
-<div class="profiles"></div>
+  <!-- ===================== -->
+  <!-- LOGIN SHELL MOBILE -->
+  <!-- ===================== -->
+  <div class="login-shell">
 
-<div class="profiles-actions">
-  <button id="create-profile-btn">➕ Créer un profil</button>
-</div>
+    <header class="login-header">
+      <h1 class="login-title">BATMAN TRAINING</h1>
+      <p class="login-subtitle">Bienvenue dans la Batcave</p>
+    </header>
+
+    <!-- LISTE DES PROFILS (scroll interne) -->
+    <main class="user-list-wrap">
+      <div class="profiles" id="users-list">
+        <!--
+          Les profils seront injectés par app.js.
+          Format recommandé (1 profil = 1 ligne) :
+
+          <button class="profile-card" data-user-id="..." data-username="...">
+            <div class="profile-left">
+              <div class="profile-name">Pseudo</div>
+              <div class="profile-meta">#1 • 1240 pts</div>
+            </div>
+            <div class="profile-right">
+              <span class="tier-badge">Bronze I</span>
+            </div>
+          </button>
+        -->
+      </div>
+    </main>
+
+    <!-- FOOTER FIXE -->
+    <footer class="login-footer">
+      <div class="hint">Sélectionne un profil • puis connecte-toi</div>
+      <div class="profiles-actions">
+        <button id="create-profile-btn">➕ Créer un profil</button>
+      </div>
+    </footer>
+
+  </div>
 
 
-<!-- MODALE -->
-<div id="modal-overlay" class="hidden">
-  <div class="modal">
+  <!-- MODALE LOGIN -->
+  <div id="modal-overlay" class="hidden">
+    <div class="modal">
 
-    <h2 id="modal-title">Profil</h2>
+      <h2 id="modal-title">Profil</h2>
 
-    <!-- ✅ FORMULAIRE -->
-    <form id="login-form">
+      <form id="login-form">
+        <input
+          type="password"
+          placeholder="Mot de passe"
+          id="password"
+          required
+        />
 
-      <input
-        type="password"
-        placeholder="Mot de passe"
-        id="password"
-        required
-      />
+        <div class="modal-actions">
+          <button id="login-btn" type="submit">Connexion</button>
+          <button id="view-btn" type="button">Voir le profil</button>
+        </div>
+      </form>
 
-      <div class="modal-actions">
-        <!-- ⚠️ submit important -->
-        <button id="login-btn" type="submit">Connexion</button>
-        <button id="view-btn" type="button">Voir le profil</button>
+    </div>
+  </div>
+
+
+  <!-- VERSION -->
+  <div id="site-version">Gotham Training — v0.3.51</div>
+
+
+  <!-- MODALE CREATION PROFIL -->
+  <div id="create-overlay" class="hidden">
+    <div class="modal">
+      <h2>Créer un profil</h2>
+
+      <input id="new-username" placeholder="Pseudo" />
+
+      <div class="gender">
+        <label class="gender-option">
+          <input type="radio" name="gender" value="homme" checked />
+          <span>👨 Homme</span>
+        </label>
+
+        <label class="gender-option">
+          <input type="radio" name="gender" value="femme" />
+          <span>👩 Femme</span>
+        </label>
       </div>
 
-    </form>
+      <input id="new-age" type="number" placeholder="Âge" />
+      <input id="new-height" type="number" placeholder="Taille (cm)" />
 
+      <!-- Mot de passe -->
+      <div class="password-field">
+        <input type="password" id="new-password" placeholder="Mot de passe" />
+        <button type="button" id="toggle-password" class="eye-btn">
+          👁
+        </button>
+      </div>
+
+      <input id="confirm-password" type="password" placeholder="Confirmer le mot de passe" />
+
+      <div class="modal-actions">
+        <button id="validate-create-btn">Créer</button>
+      </div>
+
+    </div>
   </div>
-</div>
 
 
-    <!-- ✅ ICI : VERSION DU SITE -->
-  <div id="site-version">
-    Gotham Training — v0.3.50
-  </div>
+  <!-- Notification -->
+  <div id="toast" class="toast hidden"></div>
+
 
   <!-- JS -->
-  <script src="/static/app.js?v=0.3.50" defer></script>
-<!-- MODALE CREATION PROFIL -->
-<div id="create-overlay" class="hidden">
-  <div class="modal">
-    <h2>Créer un profil</h2>
+  <script src="/static/app.js?v=0.3.51" defer></script>
 
-    <input id="new-username" placeholder="Pseudo" />
-
-    <div class="gender">
-  <label class="gender-option">
-    <input type="radio" name="gender" value="homme" checked />
-    <span>👨 Homme</span>
-  </label>
-
-  <label class="gender-option">
-    <input type="radio" name="gender" value="femme" />
-    <span>👩 Femme</span>
-  </label>
-</div>
-
-    <input id="new-age" type="number" placeholder="Âge" />
-    <input id="new-height" type="number" placeholder="Taille (cm)" />
-
-    <!-- Mot de passe -->
-    <div class="password-field">
-  <input type="password" id="new-password" placeholder="Mot de passe" />
-  <button type="button" id="toggle-password" class="eye-btn" aria-label="Afficher le mot de passe">
-    <!-- Icône oeil (SVG) -->
-    <svg id="eye-open" viewBox="0 0 24 24" class="eye-icon">
-      <path d="M2 12s3.5-7 10-7 10 7 10 7-3.5 7-10 7-10-7-10-7z" fill="none" stroke="currentColor" stroke-width="1.7"/>
-      <circle cx="12" cy="12" r="3" fill="none" stroke="currentColor" stroke-width="1.7"/>
-    </svg>
-
-    <!-- Icône oeil barré (SVG) -->
-    <svg id="eye-closed" viewBox="0 0 24 24" class="eye-icon hidden">
-      <path d="M3 3l18 18" fill="none" stroke="currentColor" stroke-width="1.7"/>
-      <path d="M2 12s3.5-7 10-7c2.1 0 3.9.6 5.4 1.5M22 12s-3.5 7-10 7c-2.1 0-3.9-.6-5.4-1.5" fill="none" stroke="currentColor" stroke-width="1.7"/>
-      <path d="M9.9 9.9a3 3 0 0 0 4.2 4.2" fill="none" stroke="currentColor" stroke-width="1.7"/>
-    </svg>
-  </button>
-</div>
-
-
-    <!-- Confirmation -->
-    <input
-      id="confirm-password"
-      type="password"
-      placeholder="Confirmer le mot de passe"
-    />
-
-    <div class="modal-actions">
-      <button id="validate-create-btn">Créer</button>
-    </div>
-
-  </div>
-</div>
-
-<!-- Notification -->
-<div id="toast" class="toast hidden"></div>
-
-  
 </body>
 </html>
