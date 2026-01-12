@@ -733,3 +733,8 @@ body.dashboard-page .exercises-grid {
   transform: rotate(-90deg) !important;
   transform-origin: 50% 50% !important;
 }
+
+/* Compacte un peu le bloc objectif */
+.objective-card {
+  padding-top: 12px !important;
+}
