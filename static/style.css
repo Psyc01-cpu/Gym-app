@@ -667,3 +667,52 @@ body.dashboard-page #exercises-page {
 /* Empêche le double-tap zoom (mobile) */
 html, body { touch-action: manipulation; }
 input, select, textarea, button { font-size: 16px; }
+
+/* ===== PROGRESS RING (1 seul cercle) ===== */
+.progress-ring{
+  --circ: 377;          /* 2π*60 ≈ 377 */
+  --p: 0.6666667;       /* 2/3 */
+  width: 140px;
+  height: 140px;
+  position: relative;
+  display: grid;
+  place-items: center;
+  flex: 0 0 140px;
+}
+
+.progress-ring svg{
+  width: 140px;
+  height: 140px;
+  display: block;
+}
+
+.ring-progress{
+  fill: none;
+  stroke: #f5c518;
+  stroke-width: 12;
+
+  /* IMPORTANT : évite l'effet "décalé" visuel */
+  stroke-linecap: butt;     /* pas de débordement arrondi */
+
+  stroke-dasharray: var(--circ);
+  stroke-dashoffset: calc(var(--circ) * (1 - var(--p)));
+
+  /* pas d’ombre sinon illusion de décalage */
+  filter: none;
+}
+
+.progress-text{
+  position: absolute;
+  inset: 0;
+  display: grid;
+  place-items: center;
+  pointer-events: none;
+}
+
+.progress-text strong{
+  color: #fff;
+  font-size: 28px;
+  font-weight: 900;
+  line-height: 1;
+}
+
