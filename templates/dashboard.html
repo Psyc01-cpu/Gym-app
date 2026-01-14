@@ -29,48 +29,43 @@
   <!-- ❌ Bouton déconnexion supprimé -->
 </header>
 
-<!-- ===================== -->
-<!-- DASHBOARD -->
-<!-- ===================== -->
-<main class="dashboard" id="dashboard-page">
+<!-- OBJECTIF DU JOUR -->
+<section class="objective-card">
+  <div class="objective-wrapper">
 
-  <!-- OBJECTIF DU JOUR -->
-  <section class="objective-card">
-    
     <div class="progress-ring">
-      <svg width="140" height="140" viewBox="0 0 140 140" aria-label="Objectif">
-        <!-- 1 SEUL cercle -->
-        <circle
-          cx="70" cy="70" r="60"
-          class="ring-progress"
-          transform="rotate(-90 70 70)"
-        ></circle>
+      <svg viewBox="0 0 140 140" aria-label="Objectif">
+        <!-- cercle de fond (non rempli) -->
+        <circle cx="70" cy="70" r="60" class="ring-track"></circle>
+
+        <!-- cercle de progression -->
+        <circle cx="70" cy="70" r="60" class="ring-progress"></circle>
       </svg>
-    
+
       <div class="progress-text">
         <strong>2 / 3</strong>
       </div>
     </div>
 
+    <div class="objective-stats">
+      <div class="mini-stat">
+        <span>📦 Volume semaine</span>
+        <strong>8 200 kg</strong>
+      </div>
 
-      <div class="objective-stats">
-        <div class="mini-stat">
-          <span>📦 Volume semaine</span>
-          <strong>8 200 kg</strong>
-        </div>
+      <div class="mini-stat">
+        <span>💪 Exercices</span>
+        <strong>14</strong>
+      </div>
 
-        <div class="mini-stat">
-          <span>💪 Exercices</span>
-          <strong>14</strong>
-        </div>
-
-        <div class="mini-stat">
-          <span>🏆 Record du mois</span>
-          <strong>2 450 kg</strong>
-        </div>
+      <div class="mini-stat">
+        <span>🏆 Record du mois</span>
+        <strong>2 450 kg</strong>
       </div>
     </div>
-  </section>
+
+  </div>
+</section>
 
   <!-- STATS PRINCIPALES -->
   <section class="stats-grid">
