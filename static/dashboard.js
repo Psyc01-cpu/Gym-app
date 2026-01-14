@@ -222,10 +222,30 @@ document.addEventListener("DOMContentLoaded", () => {
         const videoLabel = ex.video_url ? "🎥 Vidéo" : "";
 
         card.innerHTML = `
-          <div class="exercise-title">${escapeHtml(ex.name)}</div>
-          <div class="exercise-stat">🏷️ Zone : <strong>${escapeHtml(zoneLabel)}</strong></div>
-          <div class="exercise-stat">${videoLabel ? videoLabel : ""}</div>
+          <div class="exercise-header">
+            <div class="exercise-title">${escapeHtml(ex.exercise)}</div>
+            <div class="exercise-badge">${escapeHtml(ex.zone || "Zone")}</div>
+          </div>
+        
+          <div class="exercise-info">
+            Nombre d'exos : <strong>${Number(ex.sessions || 0)}</strong>
+          </div>
+        
+          <div class="exercise-info">
+            Max atteint : <strong>${Number(ex.max_weight || 0)} kg</strong>
+          </div>
+        
+          <div class="exercise-info">
+            Poids d'entraînement : <strong>${Number(ex.training_weight || 0)} kg</strong>
+          </div>
+        
+          <div class="exercise-actions">
+            <button class="btn-open">Ouvrir</button>
+            <button class="btn-edit">Modifier</button>
+            <button class="btn-delete">Supprimer</button>
+          </div>
         `;
+
 
         // Click : plus tard → ouvrir modale performance
         card.addEventListener("click", () => {
