@@ -687,30 +687,6 @@ body.dashboard-page .exercises-grid {
   box-shadow: 0 0 0 2px rgba(245,197,24,0.3);
 }
 
-/* 🔧 FORCE AFFICHAGE CERCLE OBJECTIF */
-.progress-ring svg {
-  width: 100%;
-  height: 100%;
-  display: block;
-}
-
-.ring-bg {
-  fill: none !important;
-  stroke: rgba(255,255,255,0.10) !important;
-  stroke-width: 12 !important;
-}
-
-.ring-progress {
-  fill: none !important;
-  stroke: #f5c518 !important;
-  stroke-width: 12 !important;
-  stroke-linecap: round !important;
-  stroke-dasharray: 377 !important;
-  stroke-dashoffset: 125 !important; /* 2/3 rempli */
-  transform: rotate(-90deg) !important;
-  transform-origin: 50% 50% !important;
-}
-
 /* Compacte un peu le bloc objectif */
 .objective-card {
   padding-top: 12px !important;
@@ -733,23 +709,6 @@ body.dashboard-page .mini-stat {
 body.dashboard-page .mini-stat span { color: rgba(255,255,255,0.75) !important; }
 body.dashboard-page .mini-stat strong { color: #fff !important; }
 
-/* Cercle : force l’affichage */
-body.dashboard-page .ring-bg {
-  fill: none !important;
-  stroke: rgba(255,255,255,0.10) !important;
-  stroke-width: 12 !important;
-}
-body.dashboard-page .ring-progress {
-  fill: none !important;
-  stroke: #f5c518 !important;
-  stroke-width: 12 !important;
-  stroke-linecap: round !important;
-  stroke-dasharray: 377 !important;
-  stroke-dashoffset: 125 !important;
-  transform: rotate(-90deg) !important;
-  transform-origin: 50% 50% !important;
-  filter: drop-shadow(0 0 8px rgba(245,197,24,0.6)) !important;
-}
 
 /* Boutons actions rapides : doré (plus blanc) */
 body.dashboard-page .action-card {
@@ -778,24 +737,6 @@ html, body {
 
 input, select, textarea, button {
   font-size: 16px;
-}
-
-/* ===============================
-   OBJECTIF — ALIGNEMENT PRO
-   Cercle à gauche / textes à droite
-   =============================== */
-
-.objective-wrapper {
-  display: grid !important;
-  grid-template-columns: 140px 1fr;   /* cercle | textes */
-  align-items: center;
-  gap: 18px;
-}
-
-/* Bloc cercle */
-.progress-ring {
-  justify-self: start;
-  align-self: center;
 }
 
 /* Texte à droite */
@@ -973,62 +914,6 @@ input, select, textarea, button {
 }
 
 /* =========================
-   OBJECTIF — ALIGNEMENT CERCLE
-   ========================= */
-
-.objective-card {
-  overflow: hidden;               /* empêche tout débordement */
-}
-
-.objective-wrapper {
-  display: flex;
-  align-items: center;            /* alignement vertical parfait */
-  gap: 24px;
-}
-
-/* Conteneur du cercle */
-.progress-ring {
-  position: relative;
-  width: 140px;
-  height: 140px;
-  flex-shrink: 0;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-}
-
-/* SVG prend exactement la taille du conteneur */
-.progress-ring svg {
-  width: 100%;
-  height: 100%;
-  display: block;
-}
-
-/* Texte centré parfaitement dans le cercle */
-.progress-text {
-  position: absolute;
-  inset: 0;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  flex-direction: column;
-  font-weight: 800;
-  color: #ffffff;                /* texte bien blanc */
-  pointer-events: none;
-}
-
-.progress-text strong {
-  font-size: 28px;
-  line-height: 1;
-}
-
-.progress-text small {
-  font-size: 12px;
-  opacity: 0.8;
-}
-
-
-/* =========================
    DASHBOARD — TEXTE BLANC
    ========================= */
 
@@ -1066,42 +951,38 @@ input, select, textarea, button {
 }
 
 /* ==========================
-   FIX CERCLE OBJECTIF (progress-ring)
+   OBJECTIF + CERCLE (UNIQUE)
    ========================== */
 
-/* le wrapper qui contient cercle + stats */
+.objective-card{
+  overflow: visible; /* évite rognage */
+}
+
 .objective-wrapper{
   display: flex;
-  align-items: center;      /* centre verticalement */
+  align-items: center;
   gap: 18px;
 }
 
-/* IMPORTANT : si une card coupe, on évite le rognage */
-.objective-card{
-  overflow: visible !important;
-}
-
-/* bloc du cercle */
+/* cercle */
 .progress-ring{
-  width: 150px;
-  height: 150px;
-  flex: 0 0 150px;          /* empêche le shrink qui "écrase" */
   position: relative;
+  width: 140px;
+  height: 140px;
+  flex: 0 0 140px;        /* empêche l’écrasement */
   display: grid;
   place-items: center;
-  overflow: visible;        /* évite le rognage interne */
-}
-
-/* le SVG doit prendre toute la place du carré */
-.progress-ring svg{
-  width: 100%;
-  height: 100%;
-  display: block;
   overflow: visible;
 }
 
-/* centre le texte (2/3) pile au milieu du cercle */
-.progress-ring .progress-text{
+.progress-ring svg{
+  width: 140px;
+  height: 140px;
+  display: block;
+}
+
+/* texte au centre */
+.progress-text{
   position: absolute;
   inset: 0;
   display: grid;
@@ -1110,19 +991,37 @@ input, select, textarea, button {
   pointer-events: none;
 }
 
-/* optionnel : si tu as un <small> sous le 2/3 */
-.progress-ring .progress-text strong{
+.progress-text strong{
   display: block;
+  font-size: 28px;
+  font-weight: 900;
   line-height: 1;
+  color: #fff;
 }
 
-.progress-ring .progress-text small{
-  display: block;
-  margin-top: 6px;
-  opacity: 0.85;
+.progress-text small{
+  display: none; /* si tu ne veux pas "séances" */
 }
 
-/* si tes cercles ont un stroke épais, ça aide à éviter des surprises */
+/* cercle SVG */
+.ring-bg{
+  fill: none;
+  stroke: rgba(255,255,255,0.10);
+  stroke-width: 12;
+}
+
+.ring-progress{
+  fill: none;
+  stroke: #f5c518;
+  stroke-width: 12;
+  stroke-linecap: round;
+  stroke-dasharray: 377;
+  stroke-dashoffset: 125; /* 2/3 rempli */
+  transform: rotate(-90deg);
+  transform-origin: 50% 50%;
+}
+
+/* évite des comportements chelous sur certains navigateurs */
 .progress-ring circle{
   vector-effect: non-scaling-stroke;
 }
