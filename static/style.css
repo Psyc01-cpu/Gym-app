@@ -668,16 +668,30 @@ body.dashboard-page #exercises-page {
 html, body { touch-action: manipulation; }
 input, select, textarea, button { font-size: 16px; }
 
-/* ===== PROGRESS RING (1 seul cercle) ===== */
+/* ==========================
+   OBJECTIF — LAYOUT HORIZONTAL
+   Cercle à gauche / textes à droite
+   ========================== */
+
+.objective-card{
+  overflow: visible;
+}
+
+.objective-wrapper{
+  display: grid;
+  grid-template-columns: 160px 1fr;   /* cercle | textes */
+  align-items: center;
+  gap: 20px;
+}
+
+/* ===== Cercle ===== */
 .progress-ring{
-  --circ: 377;          /* 2π*60 ≈ 377 */
-  --p: 0.6666667;       /* 2/3 */
   width: 140px;
   height: 140px;
   position: relative;
   display: grid;
   place-items: center;
-  flex: 0 0 140px;
+  flex-shrink: 0;
 }
 
 .progress-ring svg{
@@ -686,21 +700,17 @@ input, select, textarea, button { font-size: 16px; }
   display: block;
 }
 
+/* Cercle de progression */
 .ring-progress{
   fill: none;
   stroke: #f5c518;
   stroke-width: 12;
-
-  /* IMPORTANT : évite l'effet "décalé" visuel */
-  stroke-linecap: butt;     /* pas de débordement arrondi */
-
-  stroke-dasharray: var(--circ);
-  stroke-dashoffset: calc(var(--circ) * (1 - var(--p)));
-
-  /* pas d’ombre sinon illusion de décalage */
-  filter: none;
+  stroke-linecap: butt;     /* évite effet de débordement */
+  stroke-dasharray: 377;
+  stroke-dashoffset: 125;  /* 2/3 rempli */
 }
 
+/* Texte centré */
 .progress-text{
   position: absolute;
   inset: 0;
@@ -710,9 +720,32 @@ input, select, textarea, button { font-size: 16px; }
 }
 
 .progress-text strong{
-  color: #fff;
   font-size: 28px;
   font-weight: 900;
+  color: #ffffff;
   line-height: 1;
 }
 
+/* ===== Bloc textes à droite ===== */
+.objective-stats{
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  text-align: left;
+}
+
+.mini-stat{
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.mini-stat span{
+  color: rgba(255,255,255,0.85);
+  font-size: 13px;
+}
+
+.mini-stat strong{
+  color: #ffffff;
+  font-weight: 700;
+}
