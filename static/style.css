@@ -749,3 +749,95 @@ input, select, textarea, button { font-size: 16px; }
   color: #ffffff;
   font-weight: 700;
 }
+
+/* =========================
+   EXERCICE CARD — DESIGN FINAL
+   ========================= */
+
+.exercise-card{
+  background: radial-gradient(circle at top, #1a1a1a 0%, #0a0a0a 65%);
+  border: 1px solid rgba(245,197,24,0.35);
+  border-radius: 18px;
+  padding: 18px;
+  box-shadow: 0 0 30px rgba(0,0,0,0.6);
+}
+
+/* Header */
+.exercise-header{
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  gap: 12px;
+  margin-bottom: 12px;
+}
+
+.exercise-title{
+  font-size: 18px;
+  font-weight: 900;
+  color: #f5c518;
+  line-height: 1.2;
+}
+
+.exercise-badge{
+  background: #1e66ff;
+  color: #ffffff;
+  font-size: 11px;
+  font-weight: 800;
+  padding: 6px 10px;
+  border-radius: 999px;
+  white-space: nowrap;
+}
+
+/* Infos */
+.exercise-info{
+  font-size: 13px;
+  color: rgba(255,255,255,0.85);
+  margin-bottom: 6px;
+}
+
+.exercise-info strong{
+  color: #ffffff;
+  font-weight: 800;
+}
+
+/* Actions */
+.exercise-actions{
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 10px;
+  margin-top: 16px;
+}
+
+.exercise-actions button{
+  border: none;
+  border-radius: 12px;
+  padding: 10px 6px;
+  font-size: 13px;
+  font-weight: 900;
+  cursor: pointer;
+  transition: transform 0.15s ease, filter 0.15s ease;
+}
+
+.exercise-actions button:active{
+  transform: scale(0.95);
+}
+
+/* Boutons couleurs */
+.exercise-actions .btn-open{
+  background: #f5c518;
+  color: #111;
+}
+
+.exercise-actions .btn-edit{
+  background: #1e66ff;
+  color: #ffffff;
+}
+
+.exercise-actions .btn-delete{
+  background: #e53935;
+  color: #ffffff;
+}
+
+.exercise-actions button:hover{
+  filter: brightness(1.1);
+}
