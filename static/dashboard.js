@@ -288,3 +288,11 @@ document.addEventListener("DOMContentLoaded", () => {
   loadLeastExercise();
   bindLeastExerciseClick();
 });
+
+function escapeHtml(text) {
+  return String(text || "")
+    .replace(/&/g, "&amp;")
+    .replace(/</g, "&lt;")
+    .replace(/>/g, "&gt;")
+    .replace(/"/g, "&quot;");
+}
