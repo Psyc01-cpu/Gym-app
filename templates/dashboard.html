@@ -218,5 +218,35 @@
 
 <script src="/static/dashboard.js" defer></script>
 
+<!-- ===================== -->
+<!-- MODALE EXERCICE (OUVRIR) -->
+<!-- ===================== -->
+<div id="exercise-open-modal" class="hidden" aria-hidden="true">
+  <div class="exopen-backdrop" data-close="true"></div>
+
+  <div class="exopen-modal" role="dialog" aria-modal="true" aria-label="Détail exercice">
+
+    <header class="exopen-header">
+      <h2 id="exopen-title">Exercice</h2>
+      <span id="exopen-zone" class="exopen-zone">Haut du corps</span>
+    </header>
+
+    <button id="exopen-add-performance" class="exopen-add-btn" type="button">
+      Ajouter une performance
+    </button>
+
+    <h3 class="exopen-subtitle">Historique des performances</h3>
+
+    <div id="exopen-list" class="exopen-list">
+      <!-- performances injectées en JS -->
+    </div>
+
+    <button id="exopen-close" class="exopen-close-btn" type="button">
+      Fermer
+    </button>
+  </div>
+</div>
+
+
 </body>
 </html>
