@@ -856,53 +856,63 @@ button.add-exercise-btn {
   font: inherit;
 }
 
-.add-exercise-btn {
-  display: flex;
+button.add-exercise-btn {
+  display: inline-flex;
   align-items: center;
   gap: 14px;
+
   padding: 16px 26px;
   border-radius: 16px;
+
   background: linear-gradient(145deg, #0e0e0e, #1a1a1a);
   border: 1px solid rgba(245, 197, 24, 0.35);
+
   color: #f5c518;
   font-size: 16px;
-  font-weight: 600;
+  font-weight: 700;
+
   cursor: pointer;
-  transition: all 0.25s ease;
-  box-shadow: 
+  transition: transform 0.25s ease, box-shadow 0.25s ease, border-color 0.25s ease;
+  box-shadow:
     inset 0 0 12px rgba(245,197,24,0.05),
     0 0 12px rgba(245,197,24,0.08);
 }
 
-.add-exercise-btn:hover {
+button.add-exercise-btn:hover {
   transform: translateY(-2px) scale(1.02);
+  border-color: rgba(245, 197, 24, 0.6);
   box-shadow:
     0 0 18px rgba(245,197,24,0.35),
-    inset 0 0 16px rgba(245,197,24,0.15);
+    inset 0 0 16px rgba(245,197,24,0.12);
 }
 
-/* Cercle du + */
-.plus-circle {
+button.add-exercise-btn .plus-circle {
   width: 42px;
   height: 42px;
-  border-radius: 50%;
-  background: radial-gradient(circle at 30% 30%, #ffe066, #f5c518);
-  display: flex;
+  border-radius: 999px;
+
+  display: inline-flex;
   align-items: center;
   justify-content: center;
-  font-size: 28px;
-  font-weight: bold;
+
+  background: radial-gradient(circle at 30% 30%, #ffe066, #f5c518);
   color: #000;
+
+  font-size: 28px;
+  font-weight: 900;
+
   box-shadow:
-    0 0 12px rgba(245,197,24,0.6),
-    inset 0 0 6px rgba(255,255,255,0.4);
+    0 0 12px rgba(245,197,24,0.55),
+    inset 0 0 6px rgba(255,255,255,0.35);
+
   transition: transform 0.25s ease;
 }
 
-.add-exercise-btn:hover .plus-circle {
-  transform: rotate(90deg) scale(1.1);
+button.add-exercise-btn:hover .plus-circle {
+  transform: rotate(90deg) scale(1.08);
 }
 
-.add-exercise-btn .label {
-  letter-spacing: 0.3px;
+button.add-exercise-btn .label {
+  letter-spacing: 0.2px;
+  white-space: nowrap;
 }
