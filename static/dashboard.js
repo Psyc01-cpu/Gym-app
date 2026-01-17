@@ -1,3 +1,5 @@
+console.log("DASHBOARD.JS VERSION 999");
+
 console.log("Dashboard JS chargé");
 
 const API_BASE = ""; // laisse vide si tes routes sont du type /api/...
