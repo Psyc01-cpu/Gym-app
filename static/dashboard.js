@@ -27,7 +27,45 @@ function isoToday(){
   return `${yyyy}-${mm}-${dd}`;
 }
 
+async function tryPost(urls, payload){
+  let lastErr = null;
+  for (const url of urls) {
+    try {
+      const res = await fetch(url, {
+        method: "POST",
+        headers: { "Content-Type":"application/json" },
+        body: JSON.stringify(payload),
+      });
+      if (!res.ok) {
+        const txt = await res.text().catch(()=> "");
+        throw new Error(`${url} -> HTTP ${res.status} ${txt}`);
+      }
+      // si ton API renvoie JSON, on essaye
+      try { return await res.json(); } catch { return true; }
+    } catch (e) {
+      lastErr = e;
+    }
+  }
+  throw lastErr || new Error("POST failed");
+}
+
+async function tryGet(urls){
+  let lastErr = null;
+  for (const url of urls) {
+    try {
+      const r = await fetch(url);
+      if (!r.ok) throw new Error(`${url} -> HTTP ${r.status}`);
+      const j = await r.json();
+      return j;
+    } catch (e) {
+      lastErr = e;
+    }
+  }
+  throw lastErr || new Error("GET failed");
+}
+
 document.addEventListener("DOMContentLoaded", () => {
+
   // ==========================
   // USER FROM URL
   // ==========================
@@ -37,13 +75,10 @@ document.addEventListener("DOMContentLoaded", () => {
 
   const usernameEl = qs("#username-display");
   if (usernameEl) usernameEl.textContent = username || "Profil";
-
-  if (!userId) {
-    console.warn("Paramètre ?user_id manquant : les appels API ne fonctionneront pas.");
-  }
+  if (!userId) console.warn("Paramètre ?user_id manquant : les appels API ne fonctionneront pas.");
 
   // ==========================
-  // NAVIGATION PAGES
+  // NAVIGATION
   // ==========================
   const dashboardPage = qs("#dashboard-page");
   const exercisesPage = qs("#exercises-page");
@@ -73,7 +108,7 @@ document.addEventListener("DOMContentLoaded", () => {
   navExercises?.addEventListener("click", showExercises);
 
   // ==========================
-  // MODALE (NOUVEL EXERCICE)
+  // MODALE (CREATE EXERCISE)
   // ==========================
   const createModal = qs("#exercise-modal");
   const closeModalBtn = qs("#close-exercise-modal");
@@ -88,7 +123,6 @@ document.addEventListener("DOMContentLoaded", () => {
     document.body.classList.add("modal-open");
     setTimeout(() => qs("#exercise-name")?.focus(), 120);
   }
-
   function closeCreateExerciseModal() {
     if (!createModal) return;
     createModal.classList.add("hidden");
@@ -108,14 +142,8 @@ document.addEventListener("DOMContentLoaded", () => {
     const zone = qs("input[name='zone']:checked")?.value || "";
     const video = qs("#exercise-video")?.value.trim();
 
-    if (!name || !zone) {
-      alert("Nom et zone obligatoires");
-      return;
-    }
-    if (!userId) {
-      alert("Erreur: user_id manquant dans l'URL. Reconnectez-vous depuis la page login.");
-      return;
-    }
+    if (!name || !zone) return alert("Nom et zone obligatoires");
+    if (!userId) return alert("Erreur: user_id manquant dans l'URL. Reconnectez-vous depuis la page login.");
 
     try {
       const res = await fetch("/api/exercises/create", {
@@ -132,14 +160,10 @@ document.addEventListener("DOMContentLoaded", () => {
       if (!res.ok) throw new Error(`API error: ${res.status}`);
 
       closeCreateExerciseModal();
-
-      // reset form
       const n = qs("#exercise-name");
       const v = qs("#exercise-video");
       if (n) n.value = "";
       if (v) v.value = "";
-
-      // remettre "haut" par défaut si présent
       const haut = qs("input[name='zone'][value='haut']");
       if (haut) haut.checked = true;
 
@@ -151,7 +175,7 @@ document.addEventListener("DOMContentLoaded", () => {
   });
 
   // ==========================
-  // MODALE (OUVRIR EXERCICE)
+  // MODALE (OPEN EXERCISE)
   // ==========================
   const openModalEl   = qs("#exercise-open-modal");
   const openTitleEl   = qs("#exopen-title");
@@ -159,6 +183,19 @@ document.addEventListener("DOMContentLoaded", () => {
   const openListEl    = qs("#exopen-list");
   const openCloseBtn  = qs("#exopen-close");
   const openAddBtn    = qs("#exopen-add-performance");
+
+  // ==========================
+  // MODALE (ADD PERFORMANCE)
+  // ==========================
+  const perfModal     = qs("#perf-modal");
+  const perfForm      = qs("#perf-form");
+  const perfCloseBtn  = qs("#perf-close");
+
+  const perfDate      = qs("#perf-date");
+  const perfWeight    = qs("#perf-weight");
+  const perfReps      = qs("#perf-reps");
+  const perfRpe       = qs("#perf-rpe");
+  const perfNotes     = qs("#perf-notes");
 
   let currentExercise = null;
 
@@ -168,9 +205,7 @@ document.addEventListener("DOMContentLoaded", () => {
     if (openTitleEl) openTitleEl.textContent = ex.name || "Exercice";
     if (openZoneEl) openZoneEl.textContent = (ex.zone === "bas") ? "Bas du corps" : "Haut du corps";
 
-    if (openListEl) {
-      openListEl.innerHTML = `<div style="opacity:.75;color:#fff;padding:10px 0;">Chargement…</div>`;
-    }
+    if (openListEl) openListEl.innerHTML = `<div class="exopen-empty">Chargement…</div>`;
 
     openModalEl?.classList.remove("hidden");
     openModalEl?.setAttribute("aria-hidden", "false");
@@ -191,18 +226,6 @@ document.addEventListener("DOMContentLoaded", () => {
     if (e.target?.dataset?.close === "true") closeExerciseModal();
   });
 
-  // ==========================
-  // MODALE (AJOUT PERFORMANCE)
-  // ==========================
-  const perfModal = qs("#perf-modal");
-  const perfForm  = qs("#perf-form");
-
-  const perfDate   = qs("#perf-date");
-  const perfWeight = qs("#perf-weight");
-  const perfReps   = qs("#perf-reps");
-  const perfRpe    = qs("#perf-rpe");
-  const perfNotes  = qs("#perf-notes");
-
   function openPerfModal(){
     if (!currentExercise) return;
     if (!perfModal) return;
@@ -222,20 +245,26 @@ document.addEventListener("DOMContentLoaded", () => {
 
   function closePerfModal(){
     if (!perfModal) return;
-
     perfModal.classList.add("hidden");
     perfModal.setAttribute("aria-hidden", "true");
 
-    // On garde modal-open si la modale exercice est ouverte
+    // on garde modal-open si la modale exercice est encore ouverte
     if (openModalEl?.classList.contains("hidden")) {
       document.body.classList.remove("modal-open");
     }
   }
 
   openAddBtn?.addEventListener("click", openPerfModal);
-
+  perfCloseBtn?.addEventListener("click", closePerfModal);
   perfModal?.addEventListener("click", (e) => {
     if (e.target?.dataset?.close === "true") closePerfModal();
+  });
+
+  document.addEventListener("keydown", (e) => {
+    if (e.key !== "Escape") return;
+    if (perfModal && !perfModal.classList.contains("hidden")) closePerfModal();
+    else if (openModalEl && !openModalEl.classList.contains("hidden")) closeExerciseModal();
+    else if (createModal && !createModal.classList.contains("hidden")) closeCreateExerciseModal();
   });
 
   perfForm?.addEventListener("submit", async (e) => {
@@ -253,28 +282,15 @@ document.addEventListener("DOMContentLoaded", () => {
     };
 
     if (!payload.date || payload.weight <= 0 || payload.reps <= 0) {
-      alert("Date, charge et répétitions obligatoires.");
-      return;
+      return alert("Date, charge et répétitions obligatoires.");
     }
 
     try {
-      // ✅ ton endpoint actuel (si tu utilises workouts)
-      let res = await fetch("/api/workouts/create", {
-        method: "POST",
-        headers: { "Content-Type":"application/json" },
-        body: JSON.stringify(payload)
-      });
-
-      // fallback si jamais tu as /api/performances/create
-      if (!res.ok) {
-        res = await fetch("/api/performances/create", {
-          method: "POST",
-          headers: { "Content-Type":"application/json" },
-          body: JSON.stringify(payload)
-        });
-      }
-
-      if (!res.ok) throw new Error(`API error: ${res.status}`);
+      // On tente d’abord l’endpoint “workouts” (chez toi c’est souvent celui-là)
+      await tryPost(
+        ["/api/workouts/create", "/api/performances/create"],
+        payload
+      );
 
       closePerfModal();
       await loadPerformancesForExercise(currentExercise);
@@ -286,55 +302,29 @@ document.addEventListener("DOMContentLoaded", () => {
   });
 
   // ==========================
-  // ESCAPE global (modales)
-  // ==========================
-  document.addEventListener("keydown", (e) => {
-    if (e.key !== "Escape") return;
-
-    if (perfModal && !perfModal.classList.contains("hidden")) closePerfModal();
-    else if (openModalEl && !openModalEl.classList.contains("hidden")) closeExerciseModal();
-    else if (createModal && !createModal.classList.contains("hidden")) closeCreateExerciseModal();
-  });
-
-  // ==========================
-  // API — PERF LIST + DELETE
+  // PERFORMANCES (LIST + DELETE)
   // ==========================
   async function fetchPerformances(ex){
     const eid = ex.exercise_id;
     const u = encodeURIComponent(userId);
 
-    // ✅ on tente plusieurs URLs (selon ton backend actuel)
-    const tryUrls = [
+    const urls = [
       `/api/workouts?user_id=${u}&exercise_id=${encodeURIComponent(eid)}`,
       `/api/performances?user_id=${u}&exercise_id=${encodeURIComponent(eid)}`,
       `/api/exercises/${encodeURIComponent(eid)}/performances?user_id=${u}`,
     ];
 
-    let lastErr = null;
-
-    for (const url of tryUrls) {
-      try {
-        const r = await fetch(url);
-        if (!r.ok) throw new Error(`HTTP ${r.status}`);
-        const j = await r.json();
-
-        if (Array.isArray(j)) return j;
-        if (Array.isArray(j?.items)) return j.items;
-
-        return [];
-      } catch (err) {
-        lastErr = err;
-      }
-    }
-
-    throw lastErr || new Error("No endpoint worked");
+    const j = await tryGet(urls);
+    if (Array.isArray(j)) return j;
+    if (Array.isArray(j?.items)) return j.items;
+    return [];
   }
 
   function renderPerformances(list){
     if (!openListEl) return;
 
     if (!Array.isArray(list) || list.length === 0) {
-      openListEl.innerHTML = `<div style="opacity:.75;color:#fff;padding:10px 0;">Aucune performance.</div>`;
+      openListEl.innerHTML = `<div class="exopen-empty">Aucune performance.</div>`;
       return;
     }
 
@@ -342,16 +332,15 @@ document.addEventListener("DOMContentLoaded", () => {
       const id = p.performance_id || p.id || p.workout_id || "";
       const weight = Number(p.weight ?? p.kg ?? 0);
       const reps = Number(p.reps ?? p.repetitions ?? 0);
-      const rpe = (p.rpe ?? p.ressenti ?? p.rpe10 ?? "");
+      const rpe = (p.rpe ?? p.ressenti ?? "");
       const date = formatDateFR(p.date || p.created_at || p.at || "");
 
       return `
-        <div class="exopen-item" data-perf-id="${esc(id)}">
+        <div class="exopen-item">
           <div class="exopen-left">
             <div class="exopen-main">${esc(weight)} kg × ${esc(reps)} reps</div>
             <div class="exopen-sub">${esc(date)}</div>
           </div>
-
           <div class="exopen-right">
             <div class="exopen-rpe">RPE: ${esc(rpe)}/10</div>
             <button class="exopen-del" type="button" data-del="${esc(id)}">Supprimer</button>
@@ -379,7 +368,7 @@ document.addEventListener("DOMContentLoaded", () => {
       renderPerformances(list);
     } catch (err) {
       console.error("Erreur chargement performances", err);
-      if (openListEl) openListEl.innerHTML = `<div style="opacity:.75;color:#fff;padding:10px 0;">Erreur de chargement.</div>`;
+      if (openListEl) openListEl.innerHTML = `<div class="exopen-empty">Erreur de chargement.</div>`;
     }
   }
 
@@ -388,23 +377,10 @@ document.addEventListener("DOMContentLoaded", () => {
     if (!confirm("Supprimer cette performance ?")) return;
 
     try {
-      // ✅ ton endpoint potentiel (workouts)
-      let res = await fetch("/api/workouts/delete", {
-        method: "POST",
-        headers: { "Content-Type":"application/json" },
-        body: JSON.stringify({ user_id: userId, performance_id: performanceId, workout_id: performanceId }),
-      });
-
-      // fallback performances/delete
-      if (!res.ok) {
-        res = await fetch("/api/performances/delete", {
-          method: "POST",
-          headers: { "Content-Type":"application/json" },
-          body: JSON.stringify({ user_id: userId, performance_id: performanceId }),
-        });
-      }
-
-      if (!res.ok) throw new Error(`API error: ${res.status}`);
+      await tryPost(
+        ["/api/workouts/delete", "/api/performances/delete"],
+        { user_id: userId, performance_id: performanceId, workout_id: performanceId }
+      );
 
       await loadPerformancesForExercise(currentExercise);
       await loadExercises();
@@ -415,13 +391,13 @@ document.addEventListener("DOMContentLoaded", () => {
   }
 
   // ==========================
-  // API — EXERCICE LE MOINS TRAVAILLÉ
+  // API — LEAST EXERCISE
   // ==========================
   async function loadLeastExercise() {
     if (!userId) return;
     try {
       const res = await fetch(`/api/least-exercise?user_id=${encodeURIComponent(userId)}`);
-      if (!res.ok) throw new Error(`API error: ${res.status}`);
+      if (!res.ok) throw new Error("API error");
       const data = await res.json();
       const label = qs("#least-exercise-name");
       if (label) label.textContent = data.exercise || "Aucun exercice";
@@ -431,7 +407,7 @@ document.addEventListener("DOMContentLoaded", () => {
   }
 
   // ==========================
-  // API — LISTE DES EXERCICES
+  // API — EXERCISES
   // ==========================
   async function loadExercises() {
     if (!userId) return;
@@ -443,7 +419,7 @@ document.addEventListener("DOMContentLoaded", () => {
 
     try {
       const res = await fetch(`/api/exercises?user_id=${encodeURIComponent(userId)}`);
-      if (!res.ok) throw new Error(`API error: ${res.status}`);
+      if (!res.ok) throw new Error(`API error ${res.status}`);
 
       const exercises = await res.json();
       grid.innerHTML = "";
