@@ -880,3 +880,177 @@ input, select, textarea, button { font-size: 16px; }
 .add-plus-btn:active {
   transform: scale(0.95);
 }
+
+/* ==========================
+   MODALE "OUVRIR EXERCICE"
+   ========================== */
+
+#exercise-open-modal.hidden { display: none !important; }
+
+#exercise-open-modal{
+  position: fixed;
+  inset: 0;
+  z-index: 5000;
+}
+
+#exercise-open-modal .exopen-backdrop{
+  position: absolute;
+  inset: 0;
+  background: rgba(0,0,0,0.70);
+}
+
+#exercise-open-modal .exopen-modal{
+  position: relative;
+  width: min(760px, calc(100vw - 32px));
+  margin: 24px auto;
+  padding: 22px;
+  border-radius: 18px;
+
+  background: linear-gradient(145deg, #0d0d0d, #1a1a1a);
+  border: 1px solid rgba(245,197,24,0.25);
+  box-shadow: 0 20px 60px rgba(0,0,0,0.65);
+
+  max-height: calc(100dvh - 48px);
+  display: flex;
+  flex-direction: column;
+}
+
+.exopen-header{
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  align-items: center;
+  margin-bottom: 14px;
+}
+
+#exopen-title{
+  margin: 0;
+  font-size: 26px;
+  font-weight: 900;
+  color: #f5c518;
+  text-align: center;
+  line-height: 1.15;
+}
+
+.exopen-zone{
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  padding: 8px 14px;
+  border-radius: 999px;
+  font-weight: 800;
+  font-size: 13px;
+  background: #2e6cf6;
+  color: #fff;
+}
+
+.exopen-add-btn{
+  width: 100%;
+  border: none;
+  border-radius: 999px;
+  padding: 14px 16px;
+  cursor: pointer;
+
+  background: #f5b300;
+  color: #000;
+  font-weight: 900;
+  font-size: 14px;
+
+  box-shadow: 0 10px 25px rgba(245,197,24,0.18);
+  transition: transform .2s ease, filter .2s ease;
+}
+
+.exopen-add-btn:hover{ transform: translateY(-1px); filter: brightness(1.03); }
+.exopen-add-btn:active{ transform: translateY(0px) scale(0.99); }
+
+.exopen-subtitle{
+  margin: 18px 0 10px;
+  color: #f5c518;
+  font-weight: 900;
+  text-align: left;
+  font-size: 18px;
+}
+
+.exopen-list{
+  flex: 1 1 auto;
+  min-height: 0;
+  overflow: auto;
+  -webkit-overflow-scrolling: touch;
+  padding-right: 6px;
+}
+
+.exopen-row{
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+
+  background: rgba(255,255,255,0.03);
+  border: 1px solid rgba(255,255,255,0.06);
+  border-radius: 14px;
+  padding: 14px 14px;
+  margin-bottom: 12px;
+}
+
+.exopen-left{
+  min-width: 0;
+}
+
+.exopen-main{
+  font-weight: 900;
+  color: #fff;
+}
+
+.exopen-date{
+  margin-top: 6px;
+  font-size: 12px;
+  color: rgba(255,255,255,0.65);
+}
+
+.exopen-right{
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  flex-shrink: 0;
+}
+
+.exopen-rpe{
+  font-weight: 900;
+  color: #f5c518;
+  white-space: nowrap;
+}
+
+.exopen-del{
+  border: none;
+  border-radius: 8px;
+  padding: 8px 12px;
+  cursor: pointer;
+  font-weight: 900;
+
+  background: #e53935;
+  color: #fff;
+}
+
+.exopen-close-btn{
+  margin-top: 14px;
+  width: 100%;
+  border: none;
+  border-radius: 999px;
+  padding: 14px 16px;
+  cursor: pointer;
+
+  background: rgba(110,130,160,0.45);
+  color: #fff;
+  font-weight: 900;
+}
+
+/* Mobile */
+@media (max-width: 520px){
+  #exercise-open-modal .exopen-modal{
+    width: calc(100vw - 24px);
+    margin: 12px auto;
+    padding: 18px;
+    max-height: calc(100dvh - 24px);
+  }
+  #exopen-title{ font-size: 22px; }
+}
