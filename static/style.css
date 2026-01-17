@@ -1332,3 +1332,8 @@ padding-bottom: calc(90px + env(safe-area-inset-bottom));
   }
 }
 
+flex-wrap: wrap;
+
+.dashboard-ring{
+  max-width: 110px;
+}
