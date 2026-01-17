@@ -1379,3 +1379,66 @@ html, body{
   white-space: nowrap;
 }
 
+/* Anti "petit scroll" global */
+html, body {
+  margin: 0;
+  padding: 0;
+  width: 100%;
+  overflow-x: hidden; /* empêche le micro-scroll horizontal */
+}
+
+*, *::before, *::after {
+  box-sizing: border-box;
+}
+
+/* ==========================
+   FIX DASHBOARD (bloc rond + stats) - MOBILE
+   ========================== */
+
+/* 1) Empêche toute coupe bizarre / débordements dans les cartes stats */
+.dashboard-top-card,
+.dashboard-top-card * {
+  box-sizing: border-box;
+}
+
+/* 2) Sur mobile: cartes "Volume semaine / Exercices / Record" en colonne */
+@media (max-width: 420px){
+
+  /* adapte la taille du rond si besoin */
+  .progress-ring,
+  .ring,
+  .circle-ring {
+    transform: scale(0.92);
+    transform-origin: left center;
+  }
+
+  /* cible les 3 petites cards à droite :
+     -> mets ici LA classe exacte de tes cards si ce n'est pas .stat-card */
+  .stat-card {
+    display: flex !important;
+    flex-direction: column !important;
+    align-items: flex-start !important;
+    gap: 6px !important;
+    padding: 12px 12px !important;
+  }
+
+  /* ligne titre (icône + texte) */
+  .stat-card .stat-title,
+  .stat-card .label,
+  .stat-card .title {
+    font-size: clamp(12px, 3.2vw, 14px) !important;
+    line-height: 1.15 !important;
+    opacity: .92;
+    white-space: normal !important;
+  }
+
+  /* valeur en dessous */
+  .stat-card .stat-value,
+  .stat-card .value,
+  .stat-card .number {
+    font-size: clamp(14px, 3.8vw, 16px) !important;
+    font-weight: 900 !important;
+    margin-left: 0 !important;
+    white-space: nowrap !important;
+  }
+}
