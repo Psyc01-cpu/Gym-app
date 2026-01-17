@@ -1471,3 +1471,86 @@ body{
 .container{
   padding-bottom: calc(var(--bottom-nav-h) + env(safe-area-inset-bottom));
 }
+
+:root{
+  --topbar-h: 72px;      /* hauteur barre du haut */
+  --bottombar-h: 92px;   /* hauteur barre du bas */
+}
+
+/* Base iOS/Safari */
+html, body{
+  height: 100%;
+  margin: 0;
+}
+body{
+  overflow-x: hidden;
+  /* IMPORTANT: on laisse le scroll vertical au body */
+}
+
+/* =========================
+   BARRE DU HAUT (FIXE)
+   ========================= */
+.topbar{
+  position: fixed;
+  left: 0;
+  right: 0;
+  top: 0;
+  height: var(--topbar-h);
+  z-index: 4000;
+
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+
+  padding: 0 16px;
+  padding-top: env(safe-area-inset-top);
+  box-sizing: border-box;
+
+  /* visuel */
+  background: rgba(0,0,0,0.88);
+  backdrop-filter: blur(10px);
+}
+
+/* =========================
+   BARRE DU BAS (FIXE)
+   ========================= */
+.bottom-nav{
+  position: fixed;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  height: var(--bottombar-h);
+  z-index: 4000;
+
+  padding-bottom: env(safe-area-inset-bottom);
+  box-sizing: border-box;
+
+  /* visuel */
+  background: rgba(0,0,0,0.88);
+  backdrop-filter: blur(10px);
+}
+
+/* =========================
+   CONTENU (SCROLL ENTRE LES 2)
+   ========================= */
+
+/* Mets ici le wrapper qui contient TOUT le contenu de la page
+   (sauf .topbar et .bottom-nav) */
+.page-content{
+  padding-top: calc(var(--topbar-h) + env(safe-area-inset-top) + 12px);
+  padding-bottom: calc(var(--bottombar-h) + env(safe-area-inset-bottom) + 12px);
+  box-sizing: border-box;
+}
+
+/* Si tes pages sont #dashboard-page et #exercises-page, applique aussi */
+#dashboard-page,
+#exercises-page{
+  padding-top: calc(var(--topbar-h) + env(safe-area-inset-top) + 12px);
+  padding-bottom: calc(var(--bottombar-h) + env(safe-area-inset-bottom) + 12px);
+  box-sizing: border-box;
+}
+
+/* Optionnel : évite un “petit scroll” parasite */
+body.modal-open{
+  overflow: hidden;
+}
