@@ -1236,3 +1236,40 @@ body{
     transition: transform .15s ease, filter .15s ease;
   }
 }
+
+/* ==========================
+   FIX MOBILE : centrage + zone masquée en bas
+   ========================== */
+
+/* Conteneur principal des pages */
+.page,
+#exercises-page,
+#dashboard-page{
+  padding-bottom: calc(90px + env(safe-area-inset-bottom));
+  box-sizing: border-box;
+}
+
+/* Centre horizontalement les cartes */
+.exercise-card{
+  margin-left: auto;
+  margin-right: auto;
+}
+
+/* Sécurité iOS : évite que les boutons soient sous la barre */
+body{
+  padding-bottom: env(safe-area-inset-bottom);
+}
+
+/* Amélioration mobile */
+@media (max-width: 520px){
+  .exercise-card{
+    width: calc(100% - 16px);
+  }
+}
+
+padding-bottom: calc(90px + env(safe-area-inset-bottom));
+
+.exercise-card{
+  margin-left: auto;
+  margin-right: auto;
+}
