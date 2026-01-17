@@ -919,9 +919,8 @@ input, select, textarea, button { font-size: 16px; }
   /* ✅ jamais plus haut que l'écran */
   max-height: calc(100dvh - 2 * clamp(10px, 3vw, 20px));
 
-  /* ✅ scroll interne */
-  overflow-y: auto;
-  overflow-x: hidden;
+  /* ✅ IMPORTANT : la modale ne scrolle pas, c’est la liste qui scrolle */
+  overflow: hidden;
 
   padding: 22px;
   border-radius: 18px;
@@ -940,6 +939,22 @@ body{
   overflow-x: hidden;
 }
 
+.exopen-list{
+  flex: 1 1 auto;
+  min-height: 0;                 /* ✅ essentiel en flex column */
+  overflow: auto;
+  -webkit-overflow-scrolling: touch;
+  padding-right: 6px;
+}
+
+.exopen-add-btn,
+.exopen-close-btn{
+  display: block;
+  width: 100%;
+  border: none;
+  -webkit-appearance: none;
+  appearance: none;
+}
 
 /* ===============================
    MODALE AJOUT PERFORMANCE
