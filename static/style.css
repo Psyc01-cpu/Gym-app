@@ -1442,3 +1442,32 @@ html, body {
     white-space: nowrap !important;
   }
 }
+
+:root{
+  --bottom-nav-h: 92px; /* ajuste si ta nav est plus petite/grande */
+}
+
+/* évite les pièges iOS */
+html, body{
+  height: 100%;
+}
+
+body{
+  margin: 0;
+  overflow-x: hidden;
+  /* NE PAS mettre overflow-y: hidden ici */
+}
+
+/* pages qui scrollent */
+#dashboard-page,
+#exercises-page{
+  min-height: 100dvh;
+  padding-bottom: calc(var(--bottom-nav-h) + env(safe-area-inset-bottom));
+  box-sizing: border-box;
+}
+
+/* si ton contenu est dans un wrapper (ex: .page / .container), ajoute-le aussi */
+.page,
+.container{
+  padding-bottom: calc(var(--bottom-nav-h) + env(safe-area-inset-bottom));
+}
