@@ -1550,3 +1550,14 @@ body{
   box-sizing: border-box;
 }
 
+#perf-modal .perf-cancel{
+  width: 100%;
+  margin-top: 10px;
+  padding: 14px 14px;
+  border-radius: 999px;
+  border: none;
+  background: rgba(110,130,160,0.45);
+  color: #fff;
+  font-weight: 900;
+  cursor: pointer;
+}
