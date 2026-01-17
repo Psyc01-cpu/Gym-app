@@ -1275,44 +1275,54 @@ padding-bottom: calc(90px + env(safe-area-inset-bottom));
 }
 
 /* ==========================
-   RESPONSIVE CERCLE + STATS
+   FIX DEBORDEMENT BLOC ROND + STATS (MOBILE)
    ========================== */
 
-/* Conteneur du widget cercle + stats */
+/* la carte qui contient le rond + stats */
 .dashboard-top{
   display: flex;
-  gap: 14px;
   align-items: center;
-  justify-content: center;
-  flex-wrap: wrap;
+  gap: 14px;
+  width: 100%;
+  max-width: 100%;
+  box-sizing: border-box;
 }
 
-/* Cercle */
-.dashboard-ring{
-  flex: 0 0 auto;
-  max-width: 140px;
-}
-
-/* Texte à droite */
-.dashboard-stats{
-  flex: 1 1 160px;
+/* CRUCIAL : empêche le flex child de forcer la largeur */
+.dashboard-top > *{
   min-width: 0;
 }
 
-/* Cartes stats */
+/* colonne du rond */
+.dashboard-ring{
+  flex: 0 0 auto;
+  width: clamp(110px, 34vw, 150px);
+  max-width: 150px;
+}
+
+/* colonne des stats */
+.dashboard-stats{
+  flex: 1 1 auto;
+  min-width: 0;
+  width: 100%;
+  max-width: 100%;
+}
+
+/* mini-cartes à droite : elles doivent aussi être "shrinkables" */
 .dashboard-stat{
-  padding: 10px 12px;
-  font-size: 13px;
+  min-width: 0;
+  width: 100%;
+  max-width: 100%;
 }
 
-/* Valeur */
-.dashboard-stat strong{
-  font-size: 15px;
+/* évite les lignes qui débordent */
+.dashboard-stat,
+.dashboard-stat *{
+  overflow-wrap: anywhere;
 }
 
-/* 🔽 Mobile */
+/* MOBILE : on empile */
 @media (max-width: 520px){
-
   .dashboard-top{
     flex-direction: column;
     align-items: center;
@@ -1320,20 +1330,16 @@ padding-bottom: calc(90px + env(safe-area-inset-bottom));
   }
 
   .dashboard-ring{
-    max-width: 110px;
+    width: clamp(105px, 42vw, 140px);
+    max-width: 140px;
   }
 
-  .dashboard-stat{
-    font-size: 12px;
-  }
-
-  .dashboard-stat strong{
-    font-size: 14px;
+  .dashboard-stats{
+    width: 100%;
   }
 }
 
-flex-wrap: wrap;
-
-.dashboard-ring{
-  max-width: 110px;
+html, body{
+  max-width: 100%;
+  overflow-x: hidden;
 }
