@@ -156,7 +156,86 @@ document.addEventListener("DOMContentLoaded", () => {
   const openListEl    = qs("#exopen-list");
   const openCloseBtn  = qs("#exopen-close");
   const openAddBtn    = qs("#exopen-add-performance");
+  const perfModal = document.getElementById("perf-modal");
+  const perfForm  = document.getElementById("perf-form");
+  const perfDate  = document.getElementById("perf-date");
+  const perfWeight= document.getElementById("perf-weight");
+  const perfReps  = document.getElementById("perf-reps");
+  const perfRpe   = document.getElementById("perf-rpe");
+  const perfNotes = document.getElementById("perf-notes");
+  
+  function isoToday(){
+    const d = new Date();
+    const yyyy = d.getFullYear();
+    const mm = String(d.getMonth()+1).padStart(2,"0");
+    const dd = String(d.getDate()).padStart(2,"0");
+    return `${yyyy}-${mm}-${dd}`;
+  }
+  
+  function openPerfModal(){
+    if (!perfModal) return;
+    perfModal.classList.remove("hidden");
+    perfModal.setAttribute("aria-hidden","false");
+    document.body.classList.add("modal-open");
+  
+    if (perfDate) perfDate.value = isoToday();
+    if (perfWeight) perfWeight.value = "";
+    if (perfReps) perfReps.value = "";
+    if (perfRpe) perfRpe.value = "";
+    if (perfNotes) perfNotes.value = "";
+  
+    setTimeout(() => perfWeight?.focus(), 100);
+  }
+  
+  function closePerfModal(){
+    if (!perfModal) return;
+    perfModal.classList.add("hidden");
+    perfModal.setAttribute("aria-hidden","true");
+    document.body.classList.remove("modal-open");
+  }
+  
+  document.getElementById("exopen-add-performance")?.addEventListener("click", openPerfModal);
+  
+  perfModal?.addEventListener("click", (e) => {
+    if (e.target?.dataset?.close === "true") closePerfModal();
+  });
+  
+  document.addEventListener("keydown", (e) => {
+    if (e.key === "Escape" && perfModal && !perfModal.classList.contains("hidden")) closePerfModal();
+  });
+  
+  perfForm?.addEventListener("submit", async (e) => {
+    e.preventDefault();
+    if (!currentExercise) return;
+  
+    const payload = {
+      user_id: userId,
+      exercise_id: currentExercise.exercise_id,
+      date: perfDate?.value || "",
+      weight: Number(perfWeight?.value || 0),
+      reps: Number(perfReps?.value || 0),
+      rpe: Number(perfRpe?.value || 0),
+      notes: (perfNotes?.value || "").trim(),
+    };
+  
+    try {
+      const res = await fetch("/api/workouts/create", {
+        method: "POST",
+        headers: { "Content-Type":"application/json" },
+        body: JSON.stringify(payload)
+      });
+      if (!res.ok) throw new Error("API error");
+  
+      closePerfModal();
+      await loadPerformancesForExercise(currentExercise); // recharge l’historique
+    } catch (err) {
+      console.error(err);
+      alert("Erreur lors de l'enregistrement.");
+    }
+  });
 
+  
+  
   let currentExercise = null; // {exercise_id, name, zone, ...}
 
   function openExerciseModal(ex){
@@ -457,7 +536,27 @@ document.addEventListener("DOMContentLoaded", () => {
           </div>
         `;
 
+        const btnOpen = card.querySelector(".btn-open");
+        const btnEdit = card.querySelector(".btn-edit");
+        const btnDel  = card.querySelector(".btn-delete");
+        
+        btnOpen?.addEventListener("click", (e) => {
+          e.stopPropagation();
+          openExerciseModal(ex);
+        });
+        
+        btnEdit?.addEventListener("click", (e) => {
+          e.stopPropagation();
+          alert("Modifier : à brancher (prochaine étape).");
+        });
+        
+        btnDel?.addEventListener("click", (e) => {
+          e.stopPropagation();
+          alert("Supprimer : à brancher (prochaine étape).");
+        });
 
+        
+        
         // Bouton Ouvrir => modale (PAS un alert)
         card.querySelector(".btn-open")?.addEventListener("click", (e) => {
           e.preventDefault();
