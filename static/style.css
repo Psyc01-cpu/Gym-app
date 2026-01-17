@@ -1238,3 +1238,53 @@ input, select, textarea, button { font-size: 16px; }
   border-radius: 10px;
   cursor: pointer;
 }
+
+/* ===============================
+   LISTE PERFORMANCES — VERSION COMPACTE
+   =============================== */
+
+.exopen-item{
+  padding: 10px 12px;
+  margin: 8px 0;
+  border-radius: 10px;
+}
+
+/* Poids x reps */
+.exopen-main{
+  font-size: 15px;       /* avant 18px */
+  font-weight: 800;
+  line-height: 1.2;
+}
+
+/* Date */
+.exopen-sub{
+  margin-top: 4px;
+  font-size: 12px;       /* avant 13px */
+  opacity: 0.75;
+}
+
+/* Commentaire */
+.exopen-notes{
+  margin-top: 6px;
+  font-size: 12px;       /* plus discret */
+  line-height: 1.25;
+  opacity: 0.75;
+}
+
+/* Bloc droite (RPE + bouton) */
+.exopen-right{
+  gap: 8px;
+}
+
+/* RPE */
+.exopen-rpe{
+  font-size: 12px;       /* avant 14px */
+  font-weight: 800;
+}
+
+/* Bouton supprimer */
+.exopen-del{
+  font-size: 12px;
+  padding: 6px 10px;
+  border-radius: 8px;
+}
