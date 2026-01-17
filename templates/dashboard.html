@@ -18,7 +18,7 @@
 <!-- ===================== -->
 <!-- TOP BAR -->
 <!-- ===================== -->
-<header class="top-bar">
+<header class="topbar">
   <div class="logo">
     Batcave
     <span id="username-display" class="username"></span>
@@ -209,6 +209,36 @@
 
 </div>
 
+
+<!-- ===================== -->
+<!-- MODALE EXERCICE (OUVRIR) -->
+<!-- ===================== -->
+<div id="exercise-open-modal" class="hidden" aria-hidden="true">
+  <div class="exopen-backdrop" data-close="true"></div>
+
+  <div class="exopen-modal" role="dialog" aria-modal="true" aria-label="Détail exercice">
+
+    <header class="exopen-header">
+      <h2 id="exopen-title">Exercice</h2>
+      <span id="exopen-zone" class="exopen-zone">Haut du corps</span>
+    </header>
+
+    <button id="exopen-add-performance" class="exopen-add-btn" type="button">
+      Ajouter une performance
+    </button>
+
+    <h3 class="exopen-subtitle">Historique des performances</h3>
+
+    <div id="exopen-list" class="exopen-list">
+      <!-- performances injectées en JS -->
+    </div>
+
+    <button id="exopen-close" class="exopen-close-btn" type="button">
+      Fermer
+    </button>
+  </div>
+</div>
+
 <!-- ===================== -->
 <!-- MODALE AJOUT PERFORMANCE -->
 <!-- ===================== -->
@@ -242,73 +272,6 @@
 
       <button id="perf-save" class="perf-save" type="submit">Enregistrer</button>
     </form>
-  </div>
-</div>
-
-
-<!-- ===================== -->
-<!-- MODALE EXERCICE (OUVRIR) -->
-<!-- ===================== -->
-<div id="exercise-open-modal" class="hidden" aria-hidden="true">
-  <div class="exopen-backdrop" data-close="true"></div>
-
-  <div class="exopen-modal" role="dialog" aria-modal="true" aria-label="Détail exercice">
-
-    <header class="exopen-header">
-      <h2 id="exopen-title">Exercice</h2>
-      <span id="exopen-zone" class="exopen-zone">Haut du corps</span>
-    </header>
-
-    <button id="exopen-add-performance" class="exopen-add-btn" type="button">
-      Ajouter une performance
-    </button>
-
-    <h3 class="exopen-subtitle">Historique des performances</h3>
-
-    <div id="exopen-list" class="exopen-list">
-      <!-- performances injectées en JS -->
-    </div>
-
-    <button id="exopen-close" class="exopen-close-btn" type="button">
-      Fermer
-    </button>
-  </div>
-</div>
-
-  <!-- ===================== -->
-<!-- MODALE AJOUT PERFORMANCE -->
-<!-- ===================== -->
-<div id="perf-modal" class="hidden" aria-hidden="true">
-  <div class="perf-backdrop" data-close="true"></div>
-
-  <div class="perf-modal" role="dialog" aria-modal="true" aria-label="Ajouter une performance">
-
-    <h2 class="perf-title">Ajouter une performance</h2>
-
-    <label class="perf-label">Date</label>
-    <input id="perf-date" type="date" class="perf-input" />
-
-    <div class="perf-row">
-      <div class="perf-col">
-        <label class="perf-label">Charge (kg)</label>
-        <input id="perf-weight" type="number" step="0.5" min="0" class="perf-input" />
-      </div>
-
-      <div class="perf-col">
-        <label class="perf-label">Répétitions</label>
-        <input id="perf-reps" type="number" step="1" min="0" class="perf-input" />
-      </div>
-    </div>
-
-    <label class="perf-label">RPE (1-10)</label>
-    <input id="perf-rpe" type="number" step="1" min="1" max="10" class="perf-input" />
-
-    <label class="perf-label">Observations (optionnel)</label>
-    <textarea id="perf-notes" class="perf-textarea" rows="4"></textarea>
-
-    <button id="perf-save" type="button" class="perf-save">Enregistrer</button>
-    <button id="perf-close" type="button" class="perf-cancel">Fermer</button>
-
   </div>
 </div>
 
