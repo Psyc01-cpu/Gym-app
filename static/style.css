@@ -1189,3 +1189,50 @@ body{
   padding: 6px 10px;
   border-radius: 8px;
 }
+
+/* ==========================
+   FIX BOUTONS (iOS + responsive)
+   ========================== */
+
+#exopen-add-performance,
+#exopen-close,
+.exopen-add-btn,
+.exopen-close-btn{
+  display: block;
+  width: 100%;
+  border: none !important;
+  border-radius: 999px !important;
+  padding: 14px 16px !important;
+  font-weight: 900;
+  font-size: 14px;
+  cursor: pointer;
+  line-height: 1;
+  -webkit-appearance: none;
+  appearance: none;
+  background-clip: padding-box;
+}
+
+/* Bouton "Ajouter une performance" */
+#exopen-add-performance,
+.exopen-add-btn{
+  background: #f5b300 !important;
+  color: #000 !important;
+  box-shadow: 0 10px 25px rgba(245,197,24,0.18);
+}
+
+/* Bouton "Fermer" */
+#exopen-close,
+.exopen-close-btn{
+  background: rgba(110,130,160,0.45) !important;
+  color: #fff !important;
+}
+
+/* Optionnel: petit effet hover desktop (sans casser mobile) */
+@media (hover:hover){
+  #exopen-add-performance:hover,
+  .exopen-add-btn:hover{
+    filter: brightness(1.03);
+    transform: translateY(-1px);
+    transition: transform .15s ease, filter .15s ease;
+  }
+}
