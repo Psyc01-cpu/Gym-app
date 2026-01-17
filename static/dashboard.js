@@ -2,34 +2,25 @@ console.log("Dashboard JS chargé");
 
 const API_BASE = ""; // laisse vide si tes routes sont du type /api/...
 
-// Endpoints (adaptables sans toucher au reste)
 const ENDPOINTS = {
   exercisesList: "/api/exercises",
   exercisesCreate: "/api/exercises/create",
   leastExercise: "/api/least-exercise",
 
-  // Performances (selon ton backend)
-  // On tente d'abord /api/performances puis fallback /api/workouts
+  // Performances: on tente /api/performances puis fallback /api/workouts
   perfListPrimary: "/api/performances",
   perfListFallback: "/api/workouts",
 
-  // Suppression performance (si ton API est différente, change ici)
-  // - soit DELETE /api/performances/{id}
-  // - soit POST /api/performances/delete { performance_id }
-  perfDeleteById: "/api/performances", // DELETE /api/performances/:id
-  perfDeletePost: "/api/performances/delete",
+  // Delete performance (adaptable)
+  perfDeleteById: "/api/performances",      // DELETE /api/performances/:id
+  perfDeletePost: "/api/performances/delete" // POST { performance_id, user_id }
 };
 
 function qs(sel) { return document.querySelector(sel); }
-function qsa(sel) { return Array.from(document.querySelectorAll(sel)); }
 
 function esc(s) {
   return String(s ?? "").replace(/[&<>"']/g, (m) => ({
-    "&": "&amp;",
-    "<": "&lt;",
-    ">": "&gt;",
-    '"': "&quot;",
-    "'": "&#39;",
+    "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;"
   }[m]));
 }
 
@@ -52,7 +43,7 @@ async function fetchJson(url, options) {
 async function fetchJsonWithFallback(primaryUrl, fallbackUrl) {
   try {
     return await fetchJson(primaryUrl);
-  } catch (e) {
+  } catch {
     return await fetchJson(fallbackUrl);
   }
 }
@@ -146,10 +137,10 @@ document.addEventListener("DOMContentLoaded", () => {
 
   openCloseBtn?.addEventListener("click", closeExerciseModal);
 
-  // backdrop click
+  // click backdrop
   openModalEl?.addEventListener("click", (e) => {
-    const target = e.target;
-    if (target?.dataset?.close === "true") closeExerciseModal();
+    const t = e.target;
+    if (t?.dataset?.close === "true") closeExerciseModal();
   });
 
   document.addEventListener("keydown", (e) => {
@@ -158,13 +149,12 @@ document.addEventListener("DOMContentLoaded", () => {
     }
   });
 
-  // (optionnel) Ajouter une performance : on laisse un placeholder propre
   openAddBtn?.addEventListener("click", () => {
     if (!currentExercise) return;
-    alert("Ajout performance : prochaine étape (formulaire date / reps / RPE / observation). ");
+    alert("Ajout performance : prochaine étape (formulaire).");
   });
 
-  // Suppression performance (délégation)
+  // delete performance (delegation)
   openListEl?.addEventListener("click", async (e) => {
     const btn = e.target.closest("[data-del-perf]");
     if (!btn) return;
@@ -174,13 +164,11 @@ document.addEventListener("DOMContentLoaded", () => {
 
     if (!confirm("Supprimer cette performance ?")) return;
 
-    // 1) on tente DELETE /api/performances/:id
     try {
       await fetchJson(`${API_BASE}${ENDPOINTS.perfDeleteById}/${encodeURIComponent(perfId)}`, {
         method: "DELETE",
       });
     } catch (err1) {
-      // 2) fallback POST /api/performances/delete
       try {
         await fetchJson(`${API_BASE}${ENDPOINTS.perfDeletePost}`, {
           method: "POST",
@@ -195,9 +183,9 @@ document.addEventListener("DOMContentLoaded", () => {
       }
     }
 
-    // update UI
     const row = openListEl.querySelector(`.exopen-row[data-perf-id="${CSS.escape(perfId)}"]`);
     row?.remove();
+
     if (openListEl.querySelectorAll(".exopen-row").length === 0) {
       openListEl.innerHTML = '<div style="opacity:.75;color:#fff;padding:10px 0;">Aucune performance pour le moment.</div>';
     }
@@ -206,8 +194,10 @@ document.addEventListener("DOMContentLoaded", () => {
   async function loadPerformancesForExercise(ex) {
     if (!openListEl || !userId) return;
 
-    const primary = `${API_BASE}${ENDPOINTS.perfListPrimary}?user_id=${encodeURIComponent(userId)}&exercise_id=${encodeURIComponent(ex.exercise_id)}`;
-    const fallback = `${API_BASE}${ENDPOINTS.perfListFallback}?user_id=${encodeURIComponent(userId)}&exercise_id=${encodeURIComponent(ex.exercise_id)}`;
+    const primary =
+      `${API_BASE}${ENDPOINTS.perfListPrimary}?user_id=${encodeURIComponent(userId)}&exercise_id=${encodeURIComponent(ex.exercise_id)}`;
+    const fallback =
+      `${API_BASE}${ENDPOINTS.perfListFallback}?user_id=${encodeURIComponent(userId)}&exercise_id=${encodeURIComponent(ex.exercise_id)}`;
 
     try {
       const rows = await fetchJsonWithFallback(primary, fallback);
@@ -256,7 +246,6 @@ document.addEventListener("DOMContentLoaded", () => {
       alert("Nom et zone obligatoires");
       return;
     }
-
     if (!userId) {
       alert("Erreur: user_id manquant dans l'URL. Reconnectez-vous depuis la page login.");
       return;
@@ -266,26 +255,22 @@ document.addEventListener("DOMContentLoaded", () => {
       await fetchJson(`${API_BASE}${ENDPOINTS.exercisesCreate}`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          user_id: userId,
-          name,
-          zone,
-          video_url: video || "",
-        }),
+        body: JSON.stringify({ user_id: userId, name, zone, video_url: video || "" }),
       });
 
       closeCreateExerciseModal();
 
-      // reset inputs
+      // reset form
       const n = qs("#exercise-name");
       const v = qs("#exercise-video");
       if (n) n.value = "";
       if (v) v.value = "";
 
-      // Remet le radio "haut" si tu veux un défaut
+      // défaut = haut
       const defaultRadio = qs("input[name='zone'][value='haut']");
       if (defaultRadio) defaultRadio.checked = true;
 
+      // refresh list if user is on exercises page
       await loadExercises();
 
     } catch (err) {
@@ -324,14 +309,14 @@ document.addEventListener("DOMContentLoaded", () => {
   navDashboard?.addEventListener("click", showDashboard);
   navExercises?.addEventListener("click", showExercises);
 
+  // default page
   showDashboard();
 
   // ==========================
-  // API — EXERCICE LE MOINS TRAVAILLÉ
+  // API — LEAST EXERCISE
   // ==========================
   async function loadLeastExercise() {
     if (!userId) return;
-
     try {
       const data = await fetchJson(`${API_BASE}${ENDPOINTS.leastExercise}?user_id=${encodeURIComponent(userId)}`);
       const label = qs("#least-exercise-name");
@@ -357,17 +342,16 @@ document.addEventListener("DOMContentLoaded", () => {
     grid.innerHTML = "Chargement...";
 
     try {
-      const exercises = await fetchJson(`${API_BASE}${ENDPOINTS.exercisesList}?user_id=${encodeURIComponent(userId)}`);
-
+      const raw = await fetchJson(`${API_BASE}${ENDPOINTS.exercisesList}?user_id=${encodeURIComponent(userId)}`);
       grid.innerHTML = "";
 
-      if (!Array.isArray(exercises) || exercises.length === 0) {
+      if (!Array.isArray(raw) || raw.length === 0) {
         grid.innerHTML = "<p>Aucun exercice enregistré.</p>";
         EXERCISES_CACHE = [];
         return;
       }
 
-      EXERCISES_CACHE = exercises.map((e) => ({
+      EXERCISES_CACHE = raw.map((e) => ({
         exercise_id: e.exercise_id || e.id || e.exerciseId || "",
         name: e.name || e.exercise || "",
         zone: e.zone || "haut",
@@ -383,7 +367,7 @@ document.addEventListener("DOMContentLoaded", () => {
 
         card.innerHTML = `
           <div class="exercise-header">
-            <div class="exercise-title">${esc(ex.name)}</div>
+            <div class="exercise-title">${esc(ex.name || "Exercice")}</div>
             <div class="exercise-badge">${esc(ex.zone || "zone")}</div>
           </div>
 
@@ -407,10 +391,14 @@ document.addEventListener("DOMContentLoaded", () => {
     }
   }
 
-  // Délégation clic boutons (évite le bug: clic sur la card entière)
-  qs("#exercises-grid")?.addEventListener("click", (e) => {
+  // Delegation buttons (IMPORTANT)
+  const gridEl = qs("#exercises-grid");
+  gridEl?.addEventListener("click", (e) => {
     const btn = e.target.closest("[data-action]");
     if (!btn) return;
+
+    e.preventDefault();
+    e.stopPropagation();
 
     const action = btn.getAttribute("data-action");
     const id = btn.getAttribute("data-exercise-id");
@@ -421,12 +409,10 @@ document.addEventListener("DOMContentLoaded", () => {
       openExerciseModal(ex);
       return;
     }
-
     if (action === "edit") {
       alert("Modifier exercice : prochaine étape.");
       return;
     }
-
     if (action === "delete") {
       alert("Supprimer exercice : prochaine étape.");
       return;
