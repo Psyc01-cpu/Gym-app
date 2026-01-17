@@ -1,53 +1,32 @@
-console.log("DASHBOARD.JS VERSION 999");
-
 console.log("Dashboard JS chargé");
 
-const API_BASE = ""; // laisse vide si tes routes sont du type /api/...
-
-const ENDPOINTS = {
-  exercisesList: "/api/exercises",
-  exercisesCreate: "/api/exercises/create",
-  leastExercise: "/api/least-exercise",
-
-  // Performances: on tente /api/performances puis fallback /api/workouts
-  perfListPrimary: "/api/performances",
-  perfListFallback: "/api/workouts",
-
-  // Delete performance (adaptable)
-  perfDeleteById: "/api/performances",      // DELETE /api/performances/:id
-  perfDeletePost: "/api/performances/delete" // POST { performance_id, user_id }
-};
-
 function qs(sel) { return document.querySelector(sel); }
+function qsa(sel){ return Array.from(document.querySelectorAll(sel)); }
 
-function esc(s) {
+function esc(s){
   return String(s ?? "").replace(/[&<>"']/g, (m) => ({
-    "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;"
+    "&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"
   }[m]));
 }
 
-function formatDateFR(iso) {
-  if (!iso) return "";
+function formatDateFR(iso){
+  if(!iso) return "";
   const d = new Date(iso);
   if (Number.isNaN(d.getTime())) return String(iso);
-  const dd = String(d.getDate()).padStart(2, "0");
-  const mm = String(d.getMonth() + 1).padStart(2, "0");
+  const dd = String(d.getDate()).padStart(2,"0");
+  const mm = String(d.getMonth()+1).padStart(2,"0");
   const yy = d.getFullYear();
   return `${dd}/${mm}/${yy}`;
 }
 
-async function fetchJson(url, options) {
-  const res = await fetch(url, options);
-  if (!res.ok) throw new Error(`HTTP ${res.status} on ${url}`);
-  return res.json();
-}
-
-async function fetchJsonWithFallback(primaryUrl, fallbackUrl) {
-  try {
-    return await fetchJson(primaryUrl);
-  } catch {
-    return await fetchJson(fallbackUrl);
-  }
+function toISODateInput(v){
+  if(!v) return "";
+  const d = new Date(v);
+  if(Number.isNaN(d.getTime())) return "";
+  const yy = d.getFullYear();
+  const mm = String(d.getMonth()+1).padStart(2,"0");
+  const dd = String(d.getDate()).padStart(2,"0");
+  return `${yy}-${mm}-${dd}`;
 }
 
 document.addEventListener("DOMContentLoaded", () => {
@@ -58,228 +37,12 @@ document.addEventListener("DOMContentLoaded", () => {
   const username = params.get("user");
   const userId = params.get("user_id");
 
-  console.log("USER URL (username) =", username);
-  console.log("USER URL (user_id) =", userId);
-
   const usernameEl = qs("#username-display");
   if (usernameEl) usernameEl.textContent = username || "Profil";
 
   if (!userId) {
     console.warn("Paramètre ?user_id manquant : les appels API ne fonctionneront pas.");
   }
-
-  // ==========================
-  // MODALE (NOUVEL EXERCICE)
-  // ==========================
-  const createModal = qs("#exercise-modal");
-  const closeCreateModalBtn = qs("#close-exercise-modal");
-  const createExerciseBtn = qs("#create-exercise-btn");
-
-  const newExerciseBtn = qs("#new-exercise-btn");
-  const addExerciseBtn = qs("#add-exercise-btn");
-
-  function openCreateExerciseModal() {
-    if (!createModal) return;
-    createModal.classList.remove("hidden");
-    document.body.classList.add("modal-open");
-    setTimeout(() => qs("#exercise-name")?.focus(), 150);
-  }
-
-  function closeCreateExerciseModal() {
-    if (!createModal) return;
-    createModal.classList.add("hidden");
-    document.body.classList.remove("modal-open");
-  }
-
-  newExerciseBtn?.addEventListener("click", openCreateExerciseModal);
-  addExerciseBtn?.addEventListener("click", openCreateExerciseModal);
-  closeCreateModalBtn?.addEventListener("click", closeCreateExerciseModal);
-
-  createModal?.addEventListener("click", (e) => {
-    if (e.target === createModal) closeCreateExerciseModal();
-  });
-
-  // ==========================
-  // MODALE (OUVRIR EXERCICE)
-  // ==========================
-  const openModalEl = qs("#exercise-open-modal");
-  const openTitleEl = qs("#exopen-title");
-  const openZoneEl = qs("#exopen-zone");
-  const openListEl = qs("#exopen-list");
-  const openCloseBtn = qs("#exopen-close");
-  const openAddBtn = qs("#exopen-add-performance");
-
-  let currentExercise = null;
-  let EXERCISES_CACHE = [];
-
-  function openExerciseModal(ex) {
-    if (!openModalEl || !openTitleEl || !openZoneEl || !openListEl) return;
-
-    currentExercise = ex;
-
-    openTitleEl.textContent = ex.name || "Exercice";
-    openZoneEl.textContent = ex.zone === "bas" ? "Bas du corps" : "Haut du corps";
-
-    openListEl.innerHTML = '<div style="opacity:.75;color:#fff;padding:10px 0;">Chargement…</div>';
-
-    openModalEl.classList.remove("hidden");
-    openModalEl.setAttribute("aria-hidden", "false");
-    document.body.classList.add("modal-open");
-
-    loadPerformancesForExercise(ex);
-  }
-
-  function closeExerciseModal() {
-    if (!openModalEl) return;
-    openModalEl.classList.add("hidden");
-    openModalEl.setAttribute("aria-hidden", "true");
-    document.body.classList.remove("modal-open");
-    currentExercise = null;
-  }
-
-  openCloseBtn?.addEventListener("click", closeExerciseModal);
-
-  // click backdrop
-  openModalEl?.addEventListener("click", (e) => {
-    const t = e.target;
-    if (t?.dataset?.close === "true") closeExerciseModal();
-  });
-
-  document.addEventListener("keydown", (e) => {
-    if (e.key === "Escape" && openModalEl && !openModalEl.classList.contains("hidden")) {
-      closeExerciseModal();
-    }
-  });
-
-  openAddBtn?.addEventListener("click", () => {
-    if (!currentExercise) return;
-    alert("Ajout performance : prochaine étape (formulaire).");
-  });
-
-  // delete performance (delegation)
-  openListEl?.addEventListener("click", async (e) => {
-    const btn = e.target.closest("[data-del-perf]");
-    if (!btn) return;
-
-    const perfId = btn.getAttribute("data-del-perf");
-    if (!perfId) return;
-
-    if (!confirm("Supprimer cette performance ?")) return;
-
-    try {
-      await fetchJson(`${API_BASE}${ENDPOINTS.perfDeleteById}/${encodeURIComponent(perfId)}`, {
-        method: "DELETE",
-      });
-    } catch (err1) {
-      try {
-        await fetchJson(`${API_BASE}${ENDPOINTS.perfDeletePost}`, {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ performance_id: perfId, user_id: userId }),
-        });
-      } catch (err2) {
-        console.error(err1);
-        console.error(err2);
-        alert("Impossible de supprimer (endpoint à ajuster côté API).");
-        return;
-      }
-    }
-
-    const row = openListEl.querySelector(`.exopen-row[data-perf-id="${CSS.escape(perfId)}"]`);
-    row?.remove();
-
-    if (openListEl.querySelectorAll(".exopen-row").length === 0) {
-      openListEl.innerHTML = '<div style="opacity:.75;color:#fff;padding:10px 0;">Aucune performance pour le moment.</div>';
-    }
-  });
-
-  async function loadPerformancesForExercise(ex) {
-    if (!openListEl || !userId) return;
-
-    const primary =
-      `${API_BASE}${ENDPOINTS.perfListPrimary}?user_id=${encodeURIComponent(userId)}&exercise_id=${encodeURIComponent(ex.exercise_id)}`;
-    const fallback =
-      `${API_BASE}${ENDPOINTS.perfListFallback}?user_id=${encodeURIComponent(userId)}&exercise_id=${encodeURIComponent(ex.exercise_id)}`;
-
-    try {
-      const rows = await fetchJsonWithFallback(primary, fallback);
-
-      if (!Array.isArray(rows) || rows.length === 0) {
-        openListEl.innerHTML = '<div style="opacity:.75;color:#fff;padding:10px 0;">Aucune performance pour le moment.</div>';
-        return;
-      }
-
-      openListEl.innerHTML = rows.map((p) => {
-        const perfId = p.perf_id || p.performance_id || p.id || "";
-        const weight = p.weight ?? p.kg ?? p.charge ?? 0;
-        const reps = p.reps ?? p.repetitions ?? 0;
-        const rpe = p.ressenti ?? p.rpe ?? "-";
-        const date = formatDateFR(p.date || p.created_at || p.timestamp);
-
-        return `
-          <div class="exopen-row" data-perf-id="${esc(perfId)}">
-            <div class="exopen-left">
-              <div class="exopen-main">${esc(weight)} kg × ${esc(reps)} reps</div>
-              <div class="exopen-date">${esc(date)}</div>
-            </div>
-            <div class="exopen-right">
-              <div class="exopen-rpe">RPE: ${esc(rpe)}/10</div>
-              <button class="exopen-del" type="button" data-del-perf="${esc(perfId)}">Supprimer</button>
-            </div>
-          </div>
-        `;
-      }).join("");
-
-    } catch (err) {
-      console.error(err);
-      openListEl.innerHTML = '<div style="opacity:.75;color:#fff;padding:10px 0;">Erreur de chargement.</div>';
-    }
-  }
-
-  // ==========================
-  // CREATE EXERCISE
-  // ==========================
-  createExerciseBtn?.addEventListener("click", async () => {
-    const name = qs("#exercise-name")?.value.trim();
-    const zone = qs("input[name='zone']:checked")?.value || "";
-    const video = qs("#exercise-video")?.value.trim();
-
-    if (!name || !zone) {
-      alert("Nom et zone obligatoires");
-      return;
-    }
-    if (!userId) {
-      alert("Erreur: user_id manquant dans l'URL. Reconnectez-vous depuis la page login.");
-      return;
-    }
-
-    try {
-      await fetchJson(`${API_BASE}${ENDPOINTS.exercisesCreate}`, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ user_id: userId, name, zone, video_url: video || "" }),
-      });
-
-      closeCreateExerciseModal();
-
-      // reset form
-      const n = qs("#exercise-name");
-      const v = qs("#exercise-video");
-      if (n) n.value = "";
-      if (v) v.value = "";
-
-      // défaut = haut
-      const defaultRadio = qs("input[name='zone'][value='haut']");
-      if (defaultRadio) defaultRadio.checked = true;
-
-      // refresh list if user is on exercises page
-      await loadExercises();
-
-    } catch (err) {
-      console.error(err);
-      alert("Erreur lors de la création");
-    }
-  });
 
   // ==========================
   // NAVIGATION PAGES
@@ -290,7 +53,7 @@ document.addEventListener("DOMContentLoaded", () => {
   const navExercises = qs("#nav-exercises");
 
   function setActiveNav(activeId) {
-    [navDashboard, navExercises].filter(Boolean).forEach((btn) => btn.classList.remove("active"));
+    [navDashboard, navExercises].filter(Boolean).forEach((b) => b.classList.remove("active"));
     if (activeId === "dashboard") navDashboard?.classList.add("active");
     if (activeId === "exercises") navExercises?.classList.add("active");
   }
@@ -311,26 +74,326 @@ document.addEventListener("DOMContentLoaded", () => {
   navDashboard?.addEventListener("click", showDashboard);
   navExercises?.addEventListener("click", showExercises);
 
-  // default page
-  showDashboard();
+  // ==========================
+  // MODALE (NOUVEL EXERCICE)
+  // ==========================
+  const createModal = qs("#exercise-modal");
+  const closeModalBtn = qs("#close-exercise-modal");
+  const createExerciseBtn = qs("#create-exercise-btn");
+
+  const newExerciseBtn = qs("#new-exercise-btn");
+  const addExerciseBtn = qs("#add-exercise-btn");
+
+  function openCreateExerciseModal() {
+    if (!createModal) return;
+    createModal.classList.remove("hidden");
+    document.body.classList.add("modal-open");
+    setTimeout(() => qs("#exercise-name")?.focus(), 150);
+  }
+
+  function closeCreateExerciseModal() {
+    if (!createModal) return;
+    createModal.classList.add("hidden");
+    document.body.classList.remove("modal-open");
+  }
+
+  newExerciseBtn?.addEventListener("click", openCreateExerciseModal);
+  addExerciseBtn?.addEventListener("click", openCreateExerciseModal);
+  closeModalBtn?.addEventListener("click", closeCreateExerciseModal);
+
+  createModal?.addEventListener("click", (e) => {
+    if (e.target === createModal) closeCreateExerciseModal();
+  });
+
+  createExerciseBtn?.addEventListener("click", async () => {
+    const name = qs("#exercise-name")?.value.trim();
+    const zone = qs("input[name='zone']:checked")?.value || "";
+    const video = qs("#exercise-video")?.value.trim();
+
+    if (!name || !zone) {
+      alert("Nom et zone obligatoires");
+      return;
+    }
+    if (!userId) {
+      alert("Erreur: user_id manquant dans l'URL. Reconnectez-vous depuis la page login.");
+      return;
+    }
+
+    try {
+      const res = await fetch("/api/exercises/create", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          user_id: userId,
+          name,
+          zone,
+          video_url: video || "",
+        }),
+      });
+
+      if (!res.ok) throw new Error("API error");
+
+      closeCreateExerciseModal();
+
+      // reset form
+      if (qs("#exercise-name")) qs("#exercise-name").value = "";
+      if (qs("#exercise-video")) qs("#exercise-video").value = "";
+      qsa("input[name='zone']").forEach((r) => (r.checked = false));
+
+      await loadExercises();
+    } catch (err) {
+      console.error(err);
+      alert("Erreur lors de la création");
+    }
+  });
 
   // ==========================
-  // API — LEAST EXERCISE
+  // MODALE (OUVRIR EXERCICE)
+  // ==========================
+  const openModalEl   = qs("#exercise-open-modal");
+  const openTitleEl   = qs("#exopen-title");
+  const openZoneEl    = qs("#exopen-zone");
+  const openListEl    = qs("#exopen-list");
+  const openCloseBtn  = qs("#exopen-close");
+  const openAddBtn    = qs("#exopen-add-performance");
+
+  let currentExercise = null; // {exercise_id, name, zone, ...}
+
+  function openExerciseModal(ex){
+    currentExercise = ex;
+
+    if (openTitleEl) openTitleEl.textContent = ex.name || "Exercice";
+    if (openZoneEl) {
+      openZoneEl.textContent = (ex.zone === "bas") ? "Bas du corps" : "Haut du corps";
+    }
+
+    if (openListEl) {
+      openListEl.innerHTML = `<div style="opacity:.75;color:#fff;padding:10px 0;">Chargement…</div>`;
+    }
+
+    openModalEl?.classList.remove("hidden");
+    openModalEl?.setAttribute("aria-hidden", "false");
+    document.body.classList.add("modal-open");
+
+    loadPerformancesForExercise(ex);
+  }
+
+  function closeExerciseModal(){
+    openModalEl?.classList.add("hidden");
+    openModalEl?.setAttribute("aria-hidden", "true");
+    document.body.classList.remove("modal-open");
+    currentExercise = null;
+  }
+
+  openCloseBtn?.addEventListener("click", closeExerciseModal);
+  openModalEl?.addEventListener("click", (e) => {
+    if (e.target?.dataset?.close === "true") closeExerciseModal();
+  });
+  document.addEventListener("keydown", (e) => {
+    if (e.key === "Escape" && openModalEl && !openModalEl.classList.contains("hidden")) closeExerciseModal();
+  });
+
+  // ==========================
+  // MODALE (AJOUT PERFORMANCE)
+  // ==========================
+  const perfModal     = qs("#perf-modal");
+  const perfCloseBtn  = qs("#perf-close");
+  const perfSaveBtn   = qs("#perf-save");
+
+  const perfDate      = qs("#perf-date");
+  const perfWeight    = qs("#perf-weight");
+  const perfReps      = qs("#perf-reps");
+  const perfRpe       = qs("#perf-rpe");
+  const perfNotes     = qs("#perf-notes");
+
+  function openPerfModal(){
+    if (!currentExercise) return;
+    perfModal?.classList.remove("hidden");
+    perfModal?.setAttribute("aria-hidden", "false");
+    document.body.classList.add("modal-open");
+
+    const today = new Date();
+    if (perfDate) perfDate.value = toISODateInput(today);
+    if (perfWeight) perfWeight.value = "";
+    if (perfReps) perfReps.value = "";
+    if (perfRpe) perfRpe.value = "";
+    if (perfNotes) perfNotes.value = "";
+
+    setTimeout(() => perfWeight?.focus(), 80);
+  }
+
+  function closePerfModal(){
+    perfModal?.classList.add("hidden");
+    perfModal?.setAttribute("aria-hidden", "true");
+    // On garde modal-open si la modale "exercice" est ouverte
+    if (openModalEl && openModalEl.classList.contains("hidden")) {
+      document.body.classList.remove("modal-open");
+    }
+  }
+
+  openAddBtn?.addEventListener("click", openPerfModal);
+  perfCloseBtn?.addEventListener("click", closePerfModal);
+  perfModal?.addEventListener("click", (e) => {
+    if (e.target?.dataset?.close === "true") closePerfModal();
+  });
+
+  perfSaveBtn?.addEventListener("click", async () => {
+    if (!userId || !currentExercise?.exercise_id) return;
+
+    const payload = {
+      user_id: userId,
+      exercise_id: currentExercise.exercise_id,
+      date: perfDate?.value || "",
+      weight: Number(perfWeight?.value || 0),
+      reps: Number(perfReps?.value || 0),
+      rpe: Number(perfRpe?.value || 0),
+      notes: (perfNotes?.value || "").trim(),
+    };
+
+    if (!payload.date || payload.weight <= 0 || payload.reps <= 0) {
+      alert("Date, charge et répétitions obligatoires.");
+      return;
+    }
+
+    try {
+      const res = await fetch("/api/performances/create", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(payload),
+      });
+      if (!res.ok) throw new Error("API error");
+
+      closePerfModal();
+      await loadPerformancesForExercise(currentExercise);
+      // (optionnel) recharger aussi les stats sur la carte
+      await loadExercises();
+    } catch (e) {
+      console.error(e);
+      alert("Erreur lors de l'enregistrement");
+    }
+  });
+
+  // ==========================
+  // API — PERF LIST + DELETE
+  // ==========================
+  async function fetchPerformances(ex){
+    const eid = ex.exercise_id;
+    const u = encodeURIComponent(userId);
+
+    // 1) endpoint “standard”
+    const tryUrls = [
+      `/api/performances?user_id=${u}&exercise_id=${encodeURIComponent(eid)}`,
+      `/api/exercises/${encodeURIComponent(eid)}/performances?user_id=${u}`,
+    ];
+
+    let lastErr = null;
+    for (const url of tryUrls) {
+      try {
+        const r = await fetch(url);
+        if (!r.ok) throw new Error(`HTTP ${r.status}`);
+        const j = await r.json();
+        if (Array.isArray(j)) return j;
+        if (Array.isArray(j?.items)) return j.items;
+        return [];
+      } catch (err) {
+        lastErr = err;
+      }
+    }
+    throw lastErr || new Error("No endpoint worked");
+  }
+
+  function renderPerformances(list){
+    if (!openListEl) return;
+
+    if (!Array.isArray(list) || list.length === 0) {
+      openListEl.innerHTML = `<div style="opacity:.75;color:#fff;padding:10px 0;">Aucune performance.</div>`;
+      return;
+    }
+
+    const rows = list.map((p) => {
+      const id = p.performance_id || p.id || "";
+      const weight = Number(p.weight ?? p.kg ?? 0);
+      const reps = Number(p.reps ?? p.repetitions ?? 0);
+      const rpe = (p.rpe ?? p.rpe10 ?? p.intensity ?? "");
+      const date = formatDateFR(p.date || p.created_at || p.at || "");
+
+      return `
+        <div class="exopen-item" data-perf-id="${esc(id)}">
+          <div class="exopen-left">
+            <div class="exopen-main">${esc(weight)} kg × ${esc(reps)} reps</div>
+            <div class="exopen-sub">${esc(date)}</div>
+          </div>
+
+          <div class="exopen-right">
+            <div class="exopen-rpe">RPE: ${esc(rpe)}/10</div>
+            <button class="exopen-del" type="button" data-del="${esc(id)}">Supprimer</button>
+          </div>
+        </div>
+      `;
+    }).join("");
+
+    openListEl.innerHTML = rows;
+
+    // bind delete
+    qsa(".exopen-del").forEach((btn) => {
+      btn.addEventListener("click", async (e) => {
+        e.preventDefault();
+        e.stopPropagation();
+        const perfId = btn.getAttribute("data-del");
+        if (!perfId) return;
+        await deletePerformance(perfId);
+      });
+    });
+  }
+
+  async function loadPerformancesForExercise(ex){
+    if (!userId || !ex?.exercise_id) return;
+
+    try {
+      const list = await fetchPerformances(ex);
+      renderPerformances(list);
+    } catch (err) {
+      console.error("Erreur chargement performances", err);
+      if (openListEl) openListEl.innerHTML = `<div style="opacity:.75;color:#fff;padding:10px 0;">Erreur de chargement.</div>`;
+    }
+  }
+
+  async function deletePerformance(performanceId){
+    if (!userId || !currentExercise?.exercise_id) return;
+
+    if (!confirm("Supprimer cette performance ?")) return;
+
+    try {
+      const res = await fetch("/api/performances/delete", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ user_id: userId, performance_id: performanceId }),
+      });
+      if (!res.ok) throw new Error("API error");
+
+      await loadPerformancesForExercise(currentExercise);
+      await loadExercises();
+    } catch (err) {
+      console.error(err);
+      alert("Erreur suppression");
+    }
+  }
+
+  // ==========================
+  // API — EXERCICE LE MOINS TRAVAILLÉ
   // ==========================
   async function loadLeastExercise() {
     if (!userId) return;
     try {
-      const data = await fetchJson(`${API_BASE}${ENDPOINTS.leastExercise}?user_id=${encodeURIComponent(userId)}`);
+      const res = await fetch(`/api/least-exercise?user_id=${encodeURIComponent(userId)}`);
+      if (!res.ok) throw new Error("API error");
+      const data = await res.json();
       const label = qs("#least-exercise-name");
       if (label) label.textContent = data.exercise || "Aucun exercice";
     } catch (err) {
       console.error("Erreur chargement exercice faible", err);
     }
   }
-
-  qs("#least-exercise-btn")?.addEventListener("click", () => {
-    alert("Fiche exercice à venir (performances bientôt)");
-  });
 
   // ==========================
   // API — LISTE DES EXERCICES
@@ -344,33 +407,35 @@ document.addEventListener("DOMContentLoaded", () => {
     grid.innerHTML = "Chargement...";
 
     try {
-      const raw = await fetchJson(`${API_BASE}${ENDPOINTS.exercisesList}?user_id=${encodeURIComponent(userId)}`);
+      const res = await fetch(`/api/exercises?user_id=${encodeURIComponent(userId)}`);
+      if (!res.ok) throw new Error("API error");
+
+      const exercises = await res.json();
       grid.innerHTML = "";
 
-      if (!Array.isArray(raw) || raw.length === 0) {
+      if (!Array.isArray(exercises) || exercises.length === 0) {
         grid.innerHTML = "<p>Aucun exercice enregistré.</p>";
-        EXERCISES_CACHE = [];
         return;
       }
 
-      EXERCISES_CACHE = raw.map((e) => ({
-        exercise_id: e.exercise_id || e.id || e.exerciseId || "",
+      const normalized = exercises.map((e) => ({
+        exercise_id: e.exercise_id || e.id || "",
         name: e.name || e.exercise || "",
-        zone: e.zone || "haut",
-        video_url: e.video_url || e.video || e.videoUrl || "",
-        sessions: Number(e.sessions ?? e.nb ?? e.count ?? 0),
+        zone: e.zone || "",
+        video_url: e.video_url || e.video || "",
+        sessions: Number(e.sessions ?? e.count ?? 0),
         max_weight: Number(e.max_weight ?? e.max ?? 0),
-        training_weight: Number(e.training_weight ?? e.training ?? 0),
+        training_weight: Number(e.training_weight ?? e.tw ?? 0),
       }));
 
-      for (const ex of EXERCISES_CACHE) {
+      normalized.forEach((ex) => {
         const card = document.createElement("div");
         card.className = "exercise-card";
 
         card.innerHTML = `
           <div class="exercise-header">
-            <div class="exercise-title">${esc(ex.name || "Exercice")}</div>
-            <div class="exercise-badge">${esc(ex.zone || "zone")}</div>
+            <div class="exercise-title">${esc(ex.name)}</div>
+            <div class="exercise-badge">${esc(ex.zone || "Zone")}</div>
           </div>
 
           <div class="exercise-info">Nombre d'exos : <strong>${esc(ex.sessions)}</strong></div>
@@ -378,14 +443,34 @@ document.addEventListener("DOMContentLoaded", () => {
           <div class="exercise-info">Poids d'entraînement : <strong>${esc(ex.training_weight)} kg</strong></div>
 
           <div class="exercise-actions">
-            <button class="btn-open" type="button" data-action="open" data-exercise-id="${esc(ex.exercise_id)}">Ouvrir</button>
-            <button class="btn-edit" type="button" data-action="edit" data-exercise-id="${esc(ex.exercise_id)}">Modifier</button>
-            <button class="btn-delete" type="button" data-action="delete" data-exercise-id="${esc(ex.exercise_id)}">Supprimer</button>
+            <button class="btn-open" type="button">Ouvrir</button>
+            <button class="btn-edit" type="button">Modifier</button>
+            <button class="btn-delete" type="button">Supprimer</button>
           </div>
         `;
 
+        // Bouton Ouvrir => modale (PAS un alert)
+        card.querySelector(".btn-open")?.addEventListener("click", (e) => {
+          e.preventDefault();
+          e.stopPropagation();
+          openExerciseModal(ex);
+        });
+
+        // TODO: brancher ces 2 boutons à tes endpoints quand tu voudras
+        card.querySelector(".btn-edit")?.addEventListener("click", (e) => {
+          e.preventDefault();
+          e.stopPropagation();
+          alert("Modifier : à brancher");
+        });
+
+        card.querySelector(".btn-delete")?.addEventListener("click", (e) => {
+          e.preventDefault();
+          e.stopPropagation();
+          alert("Supprimer : à brancher");
+        });
+
         grid.appendChild(card);
-      }
+      });
 
     } catch (err) {
       console.error("Erreur chargement exercices", err);
@@ -393,36 +478,9 @@ document.addEventListener("DOMContentLoaded", () => {
     }
   }
 
-  // Delegation buttons (IMPORTANT)
-  const gridEl = qs("#exercises-grid");
-  gridEl?.addEventListener("click", (e) => {
-    const btn = e.target.closest("[data-action]");
-    if (!btn) return;
-
-    e.preventDefault();
-    e.stopPropagation();
-
-    const action = btn.getAttribute("data-action");
-    const id = btn.getAttribute("data-exercise-id");
-    const ex = EXERCISES_CACHE.find((x) => String(x.exercise_id) === String(id));
-    if (!ex) return;
-
-    if (action === "open") {
-      openExerciseModal(ex);
-      return;
-    }
-    if (action === "edit") {
-      alert("Modifier exercice : prochaine étape.");
-      return;
-    }
-    if (action === "delete") {
-      alert("Supprimer exercice : prochaine étape.");
-      return;
-    }
-  });
-
   // ==========================
   // INIT
   // ==========================
+  showDashboard();
   loadLeastExercise();
 });
