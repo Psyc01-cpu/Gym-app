@@ -209,6 +209,41 @@
 
 </div>
 
+<!-- ===================== -->
+<!-- MODALE AJOUT PERFORMANCE -->
+<!-- ===================== -->
+<div id="perf-modal" class="hidden" aria-hidden="true">
+  <div class="perf-backdrop" data-close="true"></div>
+
+  <div class="perf-box" role="dialog" aria-modal="true" aria-label="Ajouter une performance">
+    <h2 class="perf-title">Ajouter une performance</h2>
+
+    <form id="perf-form" autocomplete="off">
+      <label class="perf-label">Date</label>
+      <input id="perf-date" class="perf-input" type="date" required />
+
+      <div class="perf-row">
+        <div class="perf-col">
+          <label class="perf-label">Charge (kg)</label>
+          <input id="perf-weight" class="perf-input" type="number" step="0.5" min="0" inputmode="decimal" required />
+        </div>
+
+        <div class="perf-col">
+          <label class="perf-label">Répétitions</label>
+          <input id="perf-reps" class="perf-input" type="number" step="1" min="0" inputmode="numeric" required />
+        </div>
+      </div>
+
+      <label class="perf-label">RPE (1-10)</label>
+      <input id="perf-rpe" class="perf-input" type="number" step="1" min="1" max="10" inputmode="numeric" required />
+
+      <label class="perf-label">Observations (optionnel)</label>
+      <textarea id="perf-notes" class="perf-textarea" rows="4"></textarea>
+
+      <button id="perf-save" class="perf-save" type="submit">Enregistrer</button>
+    </form>
+  </div>
+</div>
 
 
 <!-- ===================== -->
