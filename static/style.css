@@ -1273,3 +1273,62 @@ padding-bottom: calc(90px + env(safe-area-inset-bottom));
   margin-left: auto;
   margin-right: auto;
 }
+
+/* ==========================
+   RESPONSIVE CERCLE + STATS
+   ========================== */
+
+/* Conteneur du widget cercle + stats */
+.dashboard-top{
+  display: flex;
+  gap: 14px;
+  align-items: center;
+  justify-content: center;
+  flex-wrap: wrap;
+}
+
+/* Cercle */
+.dashboard-ring{
+  flex: 0 0 auto;
+  max-width: 140px;
+}
+
+/* Texte à droite */
+.dashboard-stats{
+  flex: 1 1 160px;
+  min-width: 0;
+}
+
+/* Cartes stats */
+.dashboard-stat{
+  padding: 10px 12px;
+  font-size: 13px;
+}
+
+/* Valeur */
+.dashboard-stat strong{
+  font-size: 15px;
+}
+
+/* 🔽 Mobile */
+@media (max-width: 520px){
+
+  .dashboard-top{
+    flex-direction: column;
+    align-items: center;
+    text-align: center;
+  }
+
+  .dashboard-ring{
+    max-width: 110px;
+  }
+
+  .dashboard-stat{
+    font-size: 12px;
+  }
+
+  .dashboard-stat strong{
+    font-size: 14px;
+  }
+}
+
