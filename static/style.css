@@ -846,6 +846,16 @@ input, select, textarea, button { font-size: 16px; }
 /*  BOUTON AJOUT EXERCICE    */
 /* ========================= */
 
+/* reset bouton navigateur */
+button.add-exercise-btn {
+  appearance: none;
+  -webkit-appearance: none;
+  border: none;
+  outline: none;
+  background: none;
+  font: inherit;
+}
+
 .add-exercise-btn {
   display: flex;
   align-items: center;
