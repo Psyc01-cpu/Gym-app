@@ -911,3 +911,5 @@ input, select, textarea, button { font-size: 16px; }
   white-space:nowrap !important;
   letter-spacing:.2px !important;
 }
+
+#add-exercise-btn { background: red !important; }
