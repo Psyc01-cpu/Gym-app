@@ -63,12 +63,14 @@ templates = Jinja2Templates(directory="templates")
 # -------------------
 # GOOGLE SHEETS CONFIG
 # -------------------
+# Recommandé : ouvrir par ID (évite les soucis si tu renommes le fichier)
+SPREADSHEET_ID = os.environ.get("SPREADSHEET_ID", "").strip()  # ex: 1AbC...
+SPREADSHEET_NAME = os.environ.get("SPREADSHEET_NAME", "GothamUsers").strip()  # fallback si pas d'ID
 
-SPREADSHEET_NAME = "GothamUsers"
-USERS_SHEET = "users"
-EXERCISES_SHEET = "exercises"
-PERFORMANCES_SHEET = "performances"
-STATS_SHEET = "stats"
+USERS_SHEET = os.environ.get("USERS_SHEET", "users").strip()
+EXERCISES_SHEET = os.environ.get("EXERCISES_SHEET", "exercises").strip()
+PERFORMANCES_SHEET = os.environ.get("PERFORMANCES_SHEET", "performances").strip()
+STATS_SHEET = os.environ.get("STATS_SHEET", "stats").strip()
 
 
 # -------------------
@@ -103,24 +105,26 @@ def get_client():
     return gspread.authorize(creds)
 
 
+def _open_spreadsheet(client):
+    if SPREADSHEET_ID:
+        return client.open_by_key(SPREADSHEET_ID)
+    return client.open(SPREADSHEET_NAME)
+
 def get_users_sheet():
     client = get_client()
-    return client.open(SPREADSHEET_NAME).worksheet(USERS_SHEET)
-
+    return _open_spreadsheet(client).worksheet(USERS_SHEET)
 
 def get_exercises_sheet():
     client = get_client()
-    return client.open(SPREADSHEET_NAME).worksheet(EXERCISES_SHEET)
-
+    return _open_spreadsheet(client).worksheet(EXERCISES_SHEET)
 
 def get_performances_sheet():
     client = get_client()
-    return client.open(SPREADSHEET_NAME).worksheet(PERFORMANCES_SHEET)
-
+    return _open_spreadsheet(client).worksheet(PERFORMANCES_SHEET)
 
 def get_stats_sheet():
     client = get_client()
-    return client.open(SPREADSHEET_NAME).worksheet(STATS_SHEET)
+    return _open_spreadsheet(client).worksheet(STATS_SHEET)
 
 
 # -------------------
@@ -464,33 +468,85 @@ def create_exercise(data: dict = Body(...)):
 # API - PERFORMANCES
 # -------------------
 
+@app.get("/api/performances")
+def get_performances(user_id: str, exercise_id: str):
+    """
+    Retourne la liste des performances d'un user sur un exercice.
+    Compatible avec ton dashboard.js: /api/performances?user_id=...&exercise_id=...
+    """
+    try:
+        perf_rows = get_cached("performances", lambda: get_performances_sheet().get_all_records())
+
+        out = []
+        for p in perf_rows:
+            if str(p.get("user_id")) != str(user_id):
+                continue
+            if str(p.get("exercise_id")) != str(exercise_id):
+                continue
+
+            out.append({
+                "performance_id": p.get("perf_id") or p.get("performance_id") or p.get("id"),
+                "user_id": p.get("user_id"),
+                "exercise_id": p.get("exercise_id"),
+                "date": p.get("date"),
+                "weight": p.get("weight") or 0,
+                "reps": p.get("reps") or 0,
+                "rpe": p.get("ressenti") if p.get("ressenti") not in ["", None] else p.get("rpe"),
+                "notes": p.get("notes") or "",
+                "created_at": p.get("created_at"),
+            })
+
+        # Tri date desc si possible
+        def _key(x):
+            return x.get("date") or ""
+        out.sort(key=_key, reverse=True)
+
+        return out
+
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
+
+
 @app.post("/api/performances/create")
 def create_performance(data: dict = Body(...)):
     user_id = data.get("user_id")
     exercise_id = data.get("exercise_id")
-    date = data.get("date")            # ISO string
-    weight = data.get("weight", "")    # optionnel
+    date = data.get("date")  # attendu: YYYY-MM-DD
+    weight = data.get("weight", "")
     reps = data.get("reps")
+
+    # IMPORTANT: ton front envoie souvent "rpe"
+    # ton sheet utilise la colonne "ressenti"
     ressenti = data.get("ressenti")
+    if ressenti in ["", None]:
+        ressenti = data.get("rpe")
+
     notes = data.get("notes", "")
 
     if not user_id or not exercise_id or not date or reps is None or ressenti is None:
         raise HTTPException(status_code=400, detail="Champs manquants")
 
     try:
+        reps = int(reps)
+    except:
+        raise HTTPException(status_code=400, detail="reps invalide")
+
+    if weight not in ["", None]:
         try:
-            reps = int(reps)
+            weight = float(weight)
         except:
-            raise HTTPException(status_code=400, detail="reps invalide")
+            raise HTTPException(status_code=400, detail="weight invalide")
+    else:
+        weight = ""
 
-        if weight not in ["", None]:
-            try:
-                weight = float(weight)
-            except:
-                raise HTTPException(status_code=400, detail="weight invalide")
-        else:
-            weight = ""
+    # normaliser ressenti (si tu veux du 1-10)
+    try:
+        ressenti = int(ressenti)
+    except:
+        # si tu veux autoriser du texte, enlève ce bloc
+        raise HTTPException(status_code=400, detail="ressenti/rpe invalide")
 
+    try:
         sheet = get_performances_sheet()
 
         sheet.append_row([
@@ -500,10 +556,51 @@ def create_performance(data: dict = Body(...)):
             date,
             weight,
             reps,
-            ressenti,
+            ressenti,                   # colonne "ressenti" dans ton Sheet
             notes,
             datetime.utcnow().isoformat()
         ])
+
+        invalidate_cache("performances")
+        return {"success": True}
+
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
+
+@app.post("/api/performances/delete")
+def delete_performance(data: dict = Body(...)):
+    user_id = data.get("user_id")
+    performance_id = data.get("performance_id") or data.get("perf_id")
+
+    if not user_id or not performance_id:
+        raise HTTPException(status_code=400, detail="Champs manquants")
+
+    try:
+        sheet = get_performances_sheet()
+
+        # On récupère toutes les valeurs (incluant header)
+        values = sheet.get_all_values()
+        if not values or len(values) < 2:
+            raise HTTPException(status_code=404, detail="Aucune donnée")
+
+        header = values[0]
+        if "perf_id" not in header:
+            raise HTTPException(status_code=500, detail="Colonne perf_id introuvable dans l'onglet performances")
+
+        perf_col = header.index("perf_id")
+
+        # Cherche la ligne
+        row_to_delete = None
+        for i in range(1, len(values)):
+            row = values[i]
+            if len(row) > perf_col and row[perf_col] == str(performance_id):
+                row_to_delete = i + 1  # index gspread 1-based
+                break
+
+        if not row_to_delete:
+            raise HTTPException(status_code=404, detail="Performance introuvable")
+
+        sheet.delete_rows(row_to_delete)
 
         invalidate_cache("performances")
         return {"success": True}
@@ -512,7 +609,6 @@ def create_performance(data: dict = Body(...)):
         raise
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
-
 
 # -------------------
 # HEALTH CHECK
