@@ -1,5 +1,20 @@
 console.log("Dashboard JS chargé");
 
+const API_BASE = ""; // laisse vide si tes routes sont du type /api/...
+
+function qs(sel) { return document.querySelector(sel); }
+function esc(s){ return String(s ?? "").replace(/[&<>"']/g, m => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[m])); }
+
+function formatDateFR(iso){
+  if(!iso) return "";
+  const d = new Date(iso);
+  if (Number.isNaN(d.getTime())) return iso;
+  const dd = String(d.getDate()).padStart(2,"0");
+  const mm = String(d.getMonth()+1).padStart(2,"0");
+  const yy = d.getFullYear();
+  return `${dd}/${mm}/${yy}`;
+}
+
 document.addEventListener("DOMContentLoaded", () => {
   // ==========================
   // USER FROM URL
