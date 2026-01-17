@@ -434,20 +434,29 @@ document.addEventListener("DOMContentLoaded", () => {
 
         card.innerHTML = `
           <div class="exercise-header">
-            <div class="exercise-title">${esc(ex.name)}</div>
-            <div class="exercise-badge">${esc(ex.zone || "Zone")}</div>
+            <div class="exercise-title">${escapeHtml(ex.name)}</div>
+            <div class="exercise-badge">${escapeHtml(ex.zone || "Zone")}</div>
           </div>
-
-          <div class="exercise-info">Nombre d'exos : <strong>${esc(ex.sessions)}</strong></div>
-          <div class="exercise-info">Max atteint : <strong>${esc(ex.max_weight)} kg</strong></div>
-          <div class="exercise-info">Poids d'entraînement : <strong>${esc(ex.training_weight)} kg</strong></div>
-
+        
+          <div class="exercise-info">
+            Nombre d'exos : <strong>${Number(ex.sessions || 0)}</strong>
+          </div>
+        
+          <div class="exercise-info">
+            Max atteint : <strong>${Number(ex.max_weight || 0)} kg</strong>
+          </div>
+        
+          <div class="exercise-info">
+            Poids d'entraînement : <strong>${Number(ex.training_weight || 0)} kg</strong>
+          </div>
+        
           <div class="exercise-actions">
             <button class="btn-open" type="button">Ouvrir</button>
             <button class="btn-edit" type="button">Modifier</button>
             <button class="btn-delete" type="button">Supprimer</button>
           </div>
         `;
+
 
         // Bouton Ouvrir => modale (PAS un alert)
         card.querySelector(".btn-open")?.addEventListener("click", (e) => {
