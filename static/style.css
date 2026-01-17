@@ -1147,3 +1147,94 @@ input, select, textarea, button { font-size: 16px; }
   font-weight: 900;
   cursor: pointer;
 }
+
+/* ===============================
+   MODALE OUVRIR EXERCICE (taille)
+   =============================== */
+#exercise-open-modal{
+  padding: 18px !important;
+}
+
+#exercise-open-modal .modal{
+  width: min(780px, 96vw) !important;
+  max-height: calc(100dvh - 36px) !important;
+  overflow: hidden !important; /* évite que tout déborde */
+  padding: 22px !important;
+}
+
+/* La zone qui scroll = seulement l’historique */
+#exopen-list{
+  max-height: calc(100dvh - 330px) !important; /* ajuste si besoin */
+  overflow: auto !important;
+  -webkit-overflow-scrolling: touch;
+  padding-right: 8px;
+}
+
+/* ===============================
+   LISTE PERFORMANCES (dans exopen)
+   =============================== */
+.exopen-item{
+  display:flex;
+  align-items:flex-start;
+  justify-content:space-between;
+  gap:14px;
+
+  background: rgba(255,255,255,0.05);
+  border: 1px solid rgba(255,255,255,0.06);
+  border-radius: 12px;
+  padding: 14px 14px;
+  margin: 12px 0;
+}
+
+.exopen-left{
+  flex: 1;
+  min-width: 0;
+}
+
+.exopen-main{
+  color:#fff;
+  font-weight: 900;
+  font-size: 18px;
+  line-height: 1.15;
+}
+
+.exopen-sub{
+  margin-top: 6px;
+  color: rgba(255,255,255,0.65);
+  font-size: 13px;
+  font-weight: 700;
+}
+
+.exopen-notes{
+  margin-top: 8px;
+  color: rgba(255,255,255,0.75);
+  font-size: 13px;
+  font-style: italic;
+  line-height: 1.25;
+  word-break: break-word;
+}
+
+.exopen-right{
+  display:flex;
+  align-items:center;
+  gap:12px;
+  flex-shrink: 0;
+}
+
+.exopen-rpe{
+  color: var(--gold);
+  font-weight: 900;
+  font-size: 14px;
+  white-space: nowrap;
+}
+
+.exopen-del{
+  border: none;
+  background: #e53935;
+  color: #fff;
+  font-weight: 900;
+  font-size: 13px;
+  padding: 8px 12px;
+  border-radius: 10px;
+  cursor: pointer;
+}
