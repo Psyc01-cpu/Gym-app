@@ -1343,3 +1343,39 @@ html, body{
   max-width: 100%;
   overflow-x: hidden;
 }
+
+/* ==========================
+   DASHBOARD - STATS (texte + valeur en colonne)
+   ========================== */
+
+/* le conteneur des 3 stats à droite */
+.dashboard-stats{
+  display: grid;
+  gap: 12px;
+}
+
+/* chaque carte stat */
+.dashboard-stat{
+  display: grid;
+  grid-template-columns: 1fr;   /* ✅ valeur sous le texte */
+  gap: 6px;
+  padding: 12px 14px;
+  min-width: 0;
+}
+
+/* libellé (Volume semaine, Exercices, Record du mois) */
+.dashboard-stat .label{
+  font-size: clamp(14px, 3.5vw, 18px);
+  line-height: 1.15;
+  opacity: .9;
+  word-break: break-word;
+}
+
+/* valeur (8 200 kg / 14 / 2 450 kg) */
+.dashboard-stat .value{
+  font-size: clamp(16px, 4vw, 20px);
+  font-weight: 900;
+  text-align: left;            /* ✅ plus de valeur collée à droite */
+  white-space: nowrap;
+}
+
