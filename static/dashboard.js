@@ -2,17 +2,59 @@ console.log("Dashboard JS chargé");
 
 const API_BASE = ""; // laisse vide si tes routes sont du type /api/...
 
-function qs(sel) { return document.querySelector(sel); }
-function esc(s){ return String(s ?? "").replace(/[&<>"']/g, m => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[m])); }
+// Endpoints (adaptables sans toucher au reste)
+const ENDPOINTS = {
+  exercisesList: "/api/exercises",
+  exercisesCreate: "/api/exercises/create",
+  leastExercise: "/api/least-exercise",
 
-function formatDateFR(iso){
-  if(!iso) return "";
+  // Performances (selon ton backend)
+  // On tente d'abord /api/performances puis fallback /api/workouts
+  perfListPrimary: "/api/performances",
+  perfListFallback: "/api/workouts",
+
+  // Suppression performance (si ton API est différente, change ici)
+  // - soit DELETE /api/performances/{id}
+  // - soit POST /api/performances/delete { performance_id }
+  perfDeleteById: "/api/performances", // DELETE /api/performances/:id
+  perfDeletePost: "/api/performances/delete",
+};
+
+function qs(sel) { return document.querySelector(sel); }
+function qsa(sel) { return Array.from(document.querySelectorAll(sel)); }
+
+function esc(s) {
+  return String(s ?? "").replace(/[&<>"']/g, (m) => ({
+    "&": "&amp;",
+    "<": "&lt;",
+    ">": "&gt;",
+    '"': "&quot;",
+    "'": "&#39;",
+  }[m]));
+}
+
+function formatDateFR(iso) {
+  if (!iso) return "";
   const d = new Date(iso);
-  if (Number.isNaN(d.getTime())) return iso;
-  const dd = String(d.getDate()).padStart(2,"0");
-  const mm = String(d.getMonth()+1).padStart(2,"0");
+  if (Number.isNaN(d.getTime())) return String(iso);
+  const dd = String(d.getDate()).padStart(2, "0");
+  const mm = String(d.getMonth() + 1).padStart(2, "0");
   const yy = d.getFullYear();
   return `${dd}/${mm}/${yy}`;
+}
+
+async function fetchJson(url, options) {
+  const res = await fetch(url, options);
+  if (!res.ok) throw new Error(`HTTP ${res.status} on ${url}`);
+  return res.json();
+}
+
+async function fetchJsonWithFallback(primaryUrl, fallbackUrl) {
+  try {
+    return await fetchJson(primaryUrl);
+  } catch (e) {
+    return await fetchJson(fallbackUrl);
+  }
 }
 
 document.addEventListener("DOMContentLoaded", () => {
@@ -20,17 +62,14 @@ document.addEventListener("DOMContentLoaded", () => {
   // USER FROM URL
   // ==========================
   const params = new URLSearchParams(window.location.search);
-  const username = params.get("user");     // affichage
-  const userId = params.get("user_id");    // appels API
+  const username = params.get("user");
+  const userId = params.get("user_id");
 
   console.log("USER URL (username) =", username);
   console.log("USER URL (user_id) =", userId);
 
-  const usernameEl = document.getElementById("username-display");
-  if (usernameEl) {
-    usernameEl.textContent = username || "Profil";
-    if (!username) console.warn("Impossible d'afficher le pseudo (param ?user manquant)");
-  }
+  const usernameEl = qs("#username-display");
+  if (usernameEl) usernameEl.textContent = username || "Profil";
 
   if (!userId) {
     console.warn("Paramètre ?user_id manquant : les appels API ne fonctionneront pas.");
@@ -39,51 +78,179 @@ document.addEventListener("DOMContentLoaded", () => {
   // ==========================
   // MODALE (NOUVEL EXERCICE)
   // ==========================
-  const modal = document.getElementById("exercise-modal");
-  const closeModalBtn = document.getElementById("close-exercise-modal");
-  const createExerciseBtn = document.getElementById("create-exercise-btn");
+  const createModal = qs("#exercise-modal");
+  const closeCreateModalBtn = qs("#close-exercise-modal");
+  const createExerciseBtn = qs("#create-exercise-btn");
 
-  const newExerciseBtn = document.getElementById("new-exercise-btn"); // dashboard
-  const addExerciseBtn = document.getElementById("add-exercise-btn"); // page exercices (header)
+  const newExerciseBtn = qs("#new-exercise-btn");
+  const addExerciseBtn = qs("#add-exercise-btn");
 
   function openCreateExerciseModal() {
-    if (!modal) return;
-    modal.classList.remove("hidden");
-
-    // focus mobile
-    setTimeout(() => {
-      document.getElementById("exercise-name")?.focus();
-    }, 150);
+    if (!createModal) return;
+    createModal.classList.remove("hidden");
+    document.body.classList.add("modal-open");
+    setTimeout(() => qs("#exercise-name")?.focus(), 150);
   }
 
   function closeCreateExerciseModal() {
-    if (!modal) return;
-    modal.classList.add("hidden");
+    if (!createModal) return;
+    createModal.classList.add("hidden");
+    document.body.classList.remove("modal-open");
   }
 
-  // Ouvre la modale depuis dashboard
   newExerciseBtn?.addEventListener("click", openCreateExerciseModal);
-
-  // Ouvre la modale depuis page Exercices
   addExerciseBtn?.addEventListener("click", openCreateExerciseModal);
+  closeCreateModalBtn?.addEventListener("click", closeCreateExerciseModal);
 
-  closeModalBtn?.addEventListener("click", closeCreateExerciseModal);
-
-  // Fermer si clic sur l'overlay (si tu veux)
-  modal?.addEventListener("click", (e) => {
-    if (e.target === modal) closeCreateExerciseModal();
+  createModal?.addEventListener("click", (e) => {
+    if (e.target === createModal) closeCreateExerciseModal();
   });
+
+  // ==========================
+  // MODALE (OUVRIR EXERCICE)
+  // ==========================
+  const openModalEl = qs("#exercise-open-modal");
+  const openTitleEl = qs("#exopen-title");
+  const openZoneEl = qs("#exopen-zone");
+  const openListEl = qs("#exopen-list");
+  const openCloseBtn = qs("#exopen-close");
+  const openAddBtn = qs("#exopen-add-performance");
+
+  let currentExercise = null;
+  let EXERCISES_CACHE = [];
+
+  function openExerciseModal(ex) {
+    if (!openModalEl || !openTitleEl || !openZoneEl || !openListEl) return;
+
+    currentExercise = ex;
+
+    openTitleEl.textContent = ex.name || "Exercice";
+    openZoneEl.textContent = ex.zone === "bas" ? "Bas du corps" : "Haut du corps";
+
+    openListEl.innerHTML = '<div style="opacity:.75;color:#fff;padding:10px 0;">Chargement…</div>';
+
+    openModalEl.classList.remove("hidden");
+    openModalEl.setAttribute("aria-hidden", "false");
+    document.body.classList.add("modal-open");
+
+    loadPerformancesForExercise(ex);
+  }
+
+  function closeExerciseModal() {
+    if (!openModalEl) return;
+    openModalEl.classList.add("hidden");
+    openModalEl.setAttribute("aria-hidden", "true");
+    document.body.classList.remove("modal-open");
+    currentExercise = null;
+  }
+
+  openCloseBtn?.addEventListener("click", closeExerciseModal);
+
+  // backdrop click
+  openModalEl?.addEventListener("click", (e) => {
+    const target = e.target;
+    if (target?.dataset?.close === "true") closeExerciseModal();
+  });
+
+  document.addEventListener("keydown", (e) => {
+    if (e.key === "Escape" && openModalEl && !openModalEl.classList.contains("hidden")) {
+      closeExerciseModal();
+    }
+  });
+
+  // (optionnel) Ajouter une performance : on laisse un placeholder propre
+  openAddBtn?.addEventListener("click", () => {
+    if (!currentExercise) return;
+    alert("Ajout performance : prochaine étape (formulaire date / reps / RPE / observation). ");
+  });
+
+  // Suppression performance (délégation)
+  openListEl?.addEventListener("click", async (e) => {
+    const btn = e.target.closest("[data-del-perf]");
+    if (!btn) return;
+
+    const perfId = btn.getAttribute("data-del-perf");
+    if (!perfId) return;
+
+    if (!confirm("Supprimer cette performance ?")) return;
+
+    // 1) on tente DELETE /api/performances/:id
+    try {
+      await fetchJson(`${API_BASE}${ENDPOINTS.perfDeleteById}/${encodeURIComponent(perfId)}`, {
+        method: "DELETE",
+      });
+    } catch (err1) {
+      // 2) fallback POST /api/performances/delete
+      try {
+        await fetchJson(`${API_BASE}${ENDPOINTS.perfDeletePost}`, {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ performance_id: perfId, user_id: userId }),
+        });
+      } catch (err2) {
+        console.error(err1);
+        console.error(err2);
+        alert("Impossible de supprimer (endpoint à ajuster côté API).");
+        return;
+      }
+    }
+
+    // update UI
+    const row = openListEl.querySelector(`.exopen-row[data-perf-id="${CSS.escape(perfId)}"]`);
+    row?.remove();
+    if (openListEl.querySelectorAll(".exopen-row").length === 0) {
+      openListEl.innerHTML = '<div style="opacity:.75;color:#fff;padding:10px 0;">Aucune performance pour le moment.</div>';
+    }
+  });
+
+  async function loadPerformancesForExercise(ex) {
+    if (!openListEl || !userId) return;
+
+    const primary = `${API_BASE}${ENDPOINTS.perfListPrimary}?user_id=${encodeURIComponent(userId)}&exercise_id=${encodeURIComponent(ex.exercise_id)}`;
+    const fallback = `${API_BASE}${ENDPOINTS.perfListFallback}?user_id=${encodeURIComponent(userId)}&exercise_id=${encodeURIComponent(ex.exercise_id)}`;
+
+    try {
+      const rows = await fetchJsonWithFallback(primary, fallback);
+
+      if (!Array.isArray(rows) || rows.length === 0) {
+        openListEl.innerHTML = '<div style="opacity:.75;color:#fff;padding:10px 0;">Aucune performance pour le moment.</div>';
+        return;
+      }
+
+      openListEl.innerHTML = rows.map((p) => {
+        const perfId = p.perf_id || p.performance_id || p.id || "";
+        const weight = p.weight ?? p.kg ?? p.charge ?? 0;
+        const reps = p.reps ?? p.repetitions ?? 0;
+        const rpe = p.ressenti ?? p.rpe ?? "-";
+        const date = formatDateFR(p.date || p.created_at || p.timestamp);
+
+        return `
+          <div class="exopen-row" data-perf-id="${esc(perfId)}">
+            <div class="exopen-left">
+              <div class="exopen-main">${esc(weight)} kg × ${esc(reps)} reps</div>
+              <div class="exopen-date">${esc(date)}</div>
+            </div>
+            <div class="exopen-right">
+              <div class="exopen-rpe">RPE: ${esc(rpe)}/10</div>
+              <button class="exopen-del" type="button" data-del-perf="${esc(perfId)}">Supprimer</button>
+            </div>
+          </div>
+        `;
+      }).join("");
+
+    } catch (err) {
+      console.error(err);
+      openListEl.innerHTML = '<div style="opacity:.75;color:#fff;padding:10px 0;">Erreur de chargement.</div>';
+    }
+  }
 
   // ==========================
   // CREATE EXERCISE
   // ==========================
   createExerciseBtn?.addEventListener("click", async () => {
-    const name = document.getElementById("exercise-name")?.value.trim();
-
-    // Zone depuis radio buttons (haut/bas)
-    const zone = document.querySelector("input[name='zone']:checked")?.value || "";
-
-    const video = document.getElementById("exercise-video")?.value.trim();
+    const name = qs("#exercise-name")?.value.trim();
+    const zone = qs("input[name='zone']:checked")?.value || "";
+    const video = qs("#exercise-video")?.value.trim();
 
     if (!name || !zone) {
       alert("Nom et zone obligatoires");
@@ -96,7 +263,7 @@ document.addEventListener("DOMContentLoaded", () => {
     }
 
     try {
-      const res = await fetch("/api/exercises/create", {
+      await fetchJson(`${API_BASE}${ENDPOINTS.exercisesCreate}`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
@@ -107,23 +274,18 @@ document.addEventListener("DOMContentLoaded", () => {
         }),
       });
 
-      if (!res.ok) throw new Error("API error");
-
       closeCreateExerciseModal();
-      alert("Exercice créé avec succès ✅");
 
-      // Reset form
-      const n = document.getElementById("exercise-name");
-      const v = document.getElementById("exercise-video");
+      // reset inputs
+      const n = qs("#exercise-name");
+      const v = qs("#exercise-video");
       if (n) n.value = "";
       if (v) v.value = "";
 
-      // Reset zone radios (aucun coché)
-      document.querySelectorAll("input[name='zone']").forEach((radio) => {
-        radio.checked = false;
-      });
+      // Remet le radio "haut" si tu veux un défaut
+      const defaultRadio = qs("input[name='zone'][value='haut']");
+      if (defaultRadio) defaultRadio.checked = true;
 
-      // Recharge la liste (important)
       await loadExercises();
 
     } catch (err) {
@@ -135,14 +297,13 @@ document.addEventListener("DOMContentLoaded", () => {
   // ==========================
   // NAVIGATION PAGES
   // ==========================
-  const dashboardPage = document.getElementById("dashboard-page");
-  const exercisesPage = document.getElementById("exercises-page");
-  const navDashboard = document.getElementById("nav-dashboard");
-  const navExercises = document.getElementById("nav-exercises");
+  const dashboardPage = qs("#dashboard-page");
+  const exercisesPage = qs("#exercises-page");
+  const navDashboard = qs("#nav-dashboard");
+  const navExercises = qs("#nav-exercises");
 
   function setActiveNav(activeId) {
-    const items = [navDashboard, navExercises].filter(Boolean);
-    items.forEach((btn) => btn.classList.remove("active"));
+    [navDashboard, navExercises].filter(Boolean).forEach((btn) => btn.classList.remove("active"));
     if (activeId === "dashboard") navDashboard?.classList.add("active");
     if (activeId === "exercises") navExercises?.classList.add("active");
   }
@@ -163,112 +324,82 @@ document.addEventListener("DOMContentLoaded", () => {
   navDashboard?.addEventListener("click", showDashboard);
   navExercises?.addEventListener("click", showExercises);
 
-  // Page par défaut
   showDashboard();
 
   // ==========================
   // API — EXERCICE LE MOINS TRAVAILLÉ
-  // (reste basé sur workouts → OK)
   // ==========================
   async function loadLeastExercise() {
     if (!userId) return;
 
     try {
-      const res = await fetch(`/api/least-exercise?user_id=${encodeURIComponent(userId)}`);
-      if (!res.ok) throw new Error("API error");
-
-      const data = await res.json();
-      const label = document.getElementById("least-exercise-name");
-      if (!label) return;
-
-      label.textContent = data.exercise || "Aucun exercice";
+      const data = await fetchJson(`${API_BASE}${ENDPOINTS.leastExercise}?user_id=${encodeURIComponent(userId)}`);
+      const label = qs("#least-exercise-name");
+      if (label) label.textContent = data.exercise || "Aucun exercice";
     } catch (err) {
       console.error("Erreur chargement exercice faible", err);
     }
   }
 
-  function bindLeastExerciseClick() {
-    const btn = document.getElementById("least-exercise-btn");
-    if (!btn) return;
-
-    btn.addEventListener("click", () => {
-      alert("Fiche exercice à venir (performances bientôt)");
-    });
-  }
+  qs("#least-exercise-btn")?.addEventListener("click", () => {
+    alert("Fiche exercice à venir (performances bientôt)");
+  });
 
   // ==========================
-  // API — LISTE DES EXERCICES (exercises sheet)
+  // API — LISTE DES EXERCICES
   // ==========================
   async function loadExercises() {
     if (!userId) return;
 
-    const grid = document.getElementById("exercises-grid");
+    const grid = qs("#exercises-grid");
     if (!grid) return;
 
     grid.innerHTML = "Chargement...";
 
     try {
-      // IMPORTANT : endpoint doit renvoyer les exercices créés (sheet exercises)
-      const res = await fetch(`/api/exercises?user_id=${encodeURIComponent(userId)}`);
-      if (!res.ok) throw new Error("API error");
+      const exercises = await fetchJson(`${API_BASE}${ENDPOINTS.exercisesList}?user_id=${encodeURIComponent(userId)}`);
 
-      const exercises = await res.json();
       grid.innerHTML = "";
 
       if (!Array.isArray(exercises) || exercises.length === 0) {
         grid.innerHTML = "<p>Aucun exercice enregistré.</p>";
+        EXERCISES_CACHE = [];
         return;
       }
 
-      // Normalisation (au cas où)
-      const normalized = exercises.map((e) => ({
-        exercise_id: e.exercise_id || e.id || "",
+      EXERCISES_CACHE = exercises.map((e) => ({
+        exercise_id: e.exercise_id || e.id || e.exerciseId || "",
         name: e.name || e.exercise || "",
-        zone: e.zone || "",
-        video_url: e.video_url || e.video || "",
-        created_at: e.created_at || "",
+        zone: e.zone || "haut",
+        video_url: e.video_url || e.video || e.videoUrl || "",
+        sessions: Number(e.sessions ?? e.nb ?? e.count ?? 0),
+        max_weight: Number(e.max_weight ?? e.max ?? 0),
+        training_weight: Number(e.training_weight ?? e.training ?? 0),
       }));
 
-      normalized.forEach((ex) => {
+      for (const ex of EXERCISES_CACHE) {
         const card = document.createElement("div");
         card.className = "exercise-card";
 
-        const zoneLabel = ex.zone ? ex.zone.toUpperCase() : "-";
-        const videoLabel = ex.video_url ? "🎥 Vidéo" : "";
-
         card.innerHTML = `
           <div class="exercise-header">
-            <div class="exercise-title">${escapeHtml(ex.exercise)}</div>
-            <div class="exercise-badge">${escapeHtml(ex.zone || "Zone")}</div>
+            <div class="exercise-title">${esc(ex.name)}</div>
+            <div class="exercise-badge">${esc(ex.zone || "zone")}</div>
           </div>
-        
-          <div class="exercise-info">
-            Nombre d'exos : <strong>${Number(ex.sessions || 0)}</strong>
-          </div>
-        
-          <div class="exercise-info">
-            Max atteint : <strong>${Number(ex.max_weight || 0)} kg</strong>
-          </div>
-        
-          <div class="exercise-info">
-            Poids d'entraînement : <strong>${Number(ex.training_weight || 0)} kg</strong>
-          </div>
-        
+
+          <div class="exercise-info">Nombre d'exos : <strong>${esc(ex.sessions)}</strong></div>
+          <div class="exercise-info">Max atteint : <strong>${esc(ex.max_weight)} kg</strong></div>
+          <div class="exercise-info">Poids d'entraînement : <strong>${esc(ex.training_weight)} kg</strong></div>
+
           <div class="exercise-actions">
-            <button class="btn-open">Ouvrir</button>
-            <button class="btn-edit">Modifier</button>
-            <button class="btn-delete">Supprimer</button>
+            <button class="btn-open" type="button" data-action="open" data-exercise-id="${esc(ex.exercise_id)}">Ouvrir</button>
+            <button class="btn-edit" type="button" data-action="edit" data-exercise-id="${esc(ex.exercise_id)}">Modifier</button>
+            <button class="btn-delete" type="button" data-action="delete" data-exercise-id="${esc(ex.exercise_id)}">Supprimer</button>
           </div>
         `;
 
-
-        // Click : plus tard → ouvrir modale performance
-        card.addEventListener("click", () => {
-          openExercise(ex);
-        });
-
         grid.appendChild(card);
-      });
+      }
 
     } catch (err) {
       console.error("Erreur chargement exercices", err);
@@ -276,38 +407,34 @@ document.addEventListener("DOMContentLoaded", () => {
     }
   }
 
-  function openExercise(ex) {
-    // Placeholder (prochaine étape : modale performance)
-    alert(
-      `Exercice : ${ex.name}\n` +
-      `Zone : ${ex.zone || "-"}\n` +
-      (ex.video_url ? `Vidéo : ${ex.video_url}\n` : "")
-    );
-  }
+  // Délégation clic boutons (évite le bug: clic sur la card entière)
+  qs("#exercises-grid")?.addEventListener("click", (e) => {
+    const btn = e.target.closest("[data-action]");
+    if (!btn) return;
 
-  // ==========================
-  // UTILS
-  // ==========================
-  function escapeHtml(str) {
-    return String(str || "")
-      .replaceAll("&", "&amp;")
-      .replaceAll("<", "&lt;")
-      .replaceAll(">", "&gt;")
-      .replaceAll('"', "&quot;")
-      .replaceAll("'", "&#039;");
-  }
+    const action = btn.getAttribute("data-action");
+    const id = btn.getAttribute("data-exercise-id");
+    const ex = EXERCISES_CACHE.find((x) => String(x.exercise_id) === String(id));
+    if (!ex) return;
+
+    if (action === "open") {
+      openExerciseModal(ex);
+      return;
+    }
+
+    if (action === "edit") {
+      alert("Modifier exercice : prochaine étape.");
+      return;
+    }
+
+    if (action === "delete") {
+      alert("Supprimer exercice : prochaine étape.");
+      return;
+    }
+  });
 
   // ==========================
   // INIT
   // ==========================
   loadLeastExercise();
-  bindLeastExerciseClick();
 });
-
-function escapeHtml(text) {
-  return String(text || "")
-    .replace(/&/g, "&amp;")
-    .replace(/</g, "&lt;")
-    .replace(/>/g, "&gt;")
-    .replace(/"/g, "&quot;");
-}
