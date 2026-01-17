@@ -321,44 +321,54 @@ document.addEventListener("DOMContentLoaded", () => {
   }
 
   function renderPerformances(list){
-    if (!openListEl) return;
+  if (!openListEl) return;
 
-    if (!Array.isArray(list) || list.length === 0) {
-      openListEl.innerHTML = `<div class="exopen-empty">Aucune performance.</div>`;
-      return;
-    }
-
-    openListEl.innerHTML = list.map((p) => {
-      const id = p.performance_id || p.id || p.workout_id || "";
-      const weight = Number(p.weight ?? p.kg ?? 0);
-      const reps = Number(p.reps ?? p.repetitions ?? 0);
-      const rpe = (p.rpe ?? p.ressenti ?? "");
-      const date = formatDateFR(p.date || p.created_at || p.at || "");
-
-      return `
-        <div class="exopen-item">
-          <div class="exopen-left">
-            <div class="exopen-main">${esc(weight)} kg × ${esc(reps)} reps</div>
-            <div class="exopen-sub">${esc(date)}</div>
-          </div>
-          <div class="exopen-right">
-            <div class="exopen-rpe">RPE: ${esc(rpe)}/10</div>
-            <button class="exopen-del" type="button" data-del="${esc(id)}">Supprimer</button>
-          </div>
-        </div>
-      `;
-    }).join("");
-
-    qsa(".exopen-del").forEach((btn) => {
-      btn.addEventListener("click", async (e) => {
-        e.preventDefault();
-        e.stopPropagation();
-        const perfId = btn.getAttribute("data-del");
-        if (!perfId) return;
-        await deletePerformance(perfId);
-      });
-    });
+  if (!Array.isArray(list) || list.length === 0) {
+    openListEl.innerHTML = `<div style="opacity:.75;color:#fff;padding:10px 0;">Aucune performance.</div>`;
+    return;
   }
+
+  const rows = list.map((p) => {
+    const id = p.perf_id || p.performance_id || p.id || "";
+    const weight = Number(p.weight ?? p.kg ?? 0);
+    const reps = Number(p.reps ?? p.repetitions ?? 0);
+
+    // Ton backend utilise "ressenti" (pas "rpe")
+    const rpe = (p.ressenti ?? p.rpe ?? p.rpe10 ?? "");
+    const date = formatDateFR(p.date || p.created_at || p.at || "");
+
+    const notes = (p.notes || "").trim();
+
+    return `
+      <div class="exopen-item" data-perf-id="${esc(id)}">
+        <div class="exopen-left">
+          <div class="exopen-main">${esc(weight)} kg × ${esc(reps)} reps</div>
+          <div class="exopen-sub">${esc(date)}</div>
+          ${notes ? `<div class="exopen-notes">${esc(notes)}</div>` : ``}
+        </div>
+
+        <div class="exopen-right">
+          <div class="exopen-rpe">RPE: ${esc(rpe)}/10</div>
+          <button class="exopen-del" type="button" data-del="${esc(id)}">Supprimer</button>
+        </div>
+      </div>
+    `;
+  }).join("");
+
+  openListEl.innerHTML = rows;
+
+  // bind delete
+  qsa(".exopen-del").forEach((btn) => {
+    btn.addEventListener("click", async (e) => {
+      e.preventDefault();
+      e.stopPropagation();
+      const perfId = btn.getAttribute("data-del");
+      if (!perfId) return;
+      await deletePerformance(perfId);
+    });
+  });
+}
+
 
   async function loadPerformancesForExercise(ex){
     if (!userId || !ex?.exercise_id) return;
