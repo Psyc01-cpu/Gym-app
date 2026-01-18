@@ -1891,7 +1891,7 @@ img, svg, canvas{ max-width: 100%; height: auto; }
 }
 
 /* ==========================
-   FIX DEBORDEMENT OBJECTIVE (MOBILE)
+   OBJECTIVE : CERCLE GAUCHE / STATS DROITE (RESPONSIVE)
    ========================== */
 
 /* Sécurité anti overflow dans la carte */
@@ -1900,48 +1900,57 @@ img, svg, canvas{ max-width: 100%; height: auto; }
   overflow: hidden;
 }
 
-/* Les mini stats : par défaut on empêche de sortir */
+/* Layout : cercle à gauche / stats à droite */
+.objective-wrapper{
+  display: grid;
+  grid-template-columns: auto 1fr;
+  gap: 14px;
+  align-items: center;
+}
+
+/* Colonne des stats */
+.objective-stats{
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 10px;
+  min-width: 0;
+}
+
+/* Carte mini-stat : texte au-dessus / valeur en dessous */
 .objective-stats .mini-stat{
   min-width: 0;
   max-width: 100%;
+  padding: 12px 14px;
+
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  justify-content: center;
+  gap: 4px;
 }
 
-/* Force le texte à ne jamais déborder */
-.objective-stats .mini-stat span,
+/* Texte */
+.objective-stats .mini-stat span{
+  max-width: 100%;
+  font-size: 13px;
+  line-height: 1.2;
+  white-space: normal;
+}
+
+/* Valeur */
 .objective-stats .mini-stat strong{
   max-width: 100%;
+  font-size: 16px;
+  font-weight: 900;
+  white-space: nowrap;
 }
 
-/* MOBILE : on met la valeur en dessous + on réduit un peu */
+/* Mobile fin : on réduit légèrement le cercle */
 @media (max-width: 420px){
-
-  /* optionnel mais très utile : un peu plus compact */
-  .objective-wrapper{
-    gap: 14px;
-  }
-
-  /* mini-stat : empilement vertical (texte puis valeur) */
-  .objective-stats .mini-stat{
-    display: flex !important;
-    flex-direction: column !important;
-    align-items: flex-start !important;
-    justify-content: flex-start !important;
-    gap: 4px !important;
-    padding: 12px 14px !important;
-  }
-
-  .objective-stats .mini-stat span{
-    font-size: 13px !important;
-    line-height: 1.15 !important;
-    white-space: normal !important;
-  }
-
-  .objective-stats .mini-stat strong{
-    font-size: 16px !important;
-    font-weight: 900 !important;
-    white-space: nowrap !important;
-    overflow: hidden !important;
-    text-overflow: ellipsis !important;
+  .progress-ring{
+    transform: scale(0.9);
+    transform-origin: left center;
   }
 }
+
 
