@@ -1549,3 +1549,85 @@ body{
   padding-bottom: calc(var(--bottombar-h) + env(safe-area-inset-bottom) + 12px);
   box-sizing: border-box;
 }
+
+:root{
+  --topbar-h: 64px;
+  --bottombar-h: 86px;
+}
+
+/* ✅ stop le scroll global (sinon topbar “monte”) */
+html, body{
+  height: 100%;
+  margin: 0;
+}
+body{
+  overflow: hidden;          /* <- CRITIQUE */
+  overscroll-behavior: none;
+}
+
+/* ✅ conteneur app plein écran */
+body.app{
+  height: 100dvh;
+}
+
+/* ✅ TOP BAR FIXE */
+.top-bar{
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  z-index: 5000;
+
+  height: calc(var(--topbar-h) + env(safe-area-inset-top));
+  padding-top: env(safe-area-inset-top);
+  padding-left: 16px;
+  padding-right: 16px;
+  box-sizing: border-box;
+
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+
+  background: rgba(0,0,0,0.88);
+  backdrop-filter: blur(10px);
+  -webkit-backdrop-filter: blur(10px);
+}
+
+/* ✅ BOTTOM NAV FIXE */
+.bottom-nav{
+  position: fixed;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  z-index: 5000;
+
+  height: calc(var(--bottombar-h) + env(safe-area-inset-bottom));
+  padding-bottom: env(safe-area-inset-bottom);
+  box-sizing: border-box;
+
+  background: rgba(0,0,0,0.88);
+  backdrop-filter: blur(10px);
+  -webkit-backdrop-filter: blur(10px);
+}
+
+/* ✅ ZONE QUI SCROLL (entre topbar et bottombar) */
+#dashboard-page,
+#exercises-page{
+  position: fixed;
+  left: 0;
+  right: 0;
+
+  top: calc(var(--topbar-h) + env(safe-area-inset-top));
+  bottom: calc(var(--bottombar-h) + env(safe-area-inset-bottom));
+
+  overflow-y: auto;                 /* <- le scroll est ici */
+  -webkit-overflow-scrolling: touch;
+  padding: 16px;
+  box-sizing: border-box;
+}
+
+/* tes classes hidden */
+.hidden{ display:none !important; }
+
+/* ✅ évite le “petit scroll” horizontal */
+*{ max-width: 100%; }
