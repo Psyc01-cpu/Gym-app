@@ -1703,3 +1703,73 @@ body.app{
 /* Evite le petit scroll horizontal */
 *{ max-width: 100%; }
 body{ overflow-x: hidden; }
+
+/* ==========================
+   LAYOUT APP (TOP FIXE + CONTENT SCROLL + BOTTOM FIXE)
+   ========================== */
+
+:root{
+  --topbar-h: 64px;
+  --bottombar-h: 86px; /* ajuste selon ta bottom bar */
+}
+
+/* iOS: évite les décalages */
+html, body{
+  height: 100%;
+  margin: 0;
+  padding: 0;
+}
+
+body.app{
+  height: 100dvh;
+  overflow: hidden;              /* ✅ le body ne scrolle plus */
+  overscroll-behavior: none;
+}
+
+/* TOP BAR fixée */
+.top-bar{
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: var(--topbar-h);
+  z-index: 4000;
+
+  padding-top: env(safe-area-inset-top);
+  box-sizing: border-box;
+}
+
+/* BOTTOM NAV fixée */
+.bottom-nav{
+  position: fixed;
+  left: 0;
+  right: 0;
+  bottom: 0;
+
+  height: calc(var(--bottombar-h) + env(safe-area-inset-bottom));
+  padding-bottom: env(safe-area-inset-bottom);
+
+  z-index: 4000;
+  box-sizing: border-box;
+}
+
+/* ✅ ZONE CENTRALE = SEULE ZONE QUI SCROLLE */
+.app-content{
+  position: fixed;
+  left: 0;
+  right: 0;
+
+  top: calc(var(--topbar-h) + env(safe-area-inset-top));
+  bottom: calc(var(--bottombar-h) + env(safe-area-inset-bottom));
+
+  overflow-y: auto;
+  overflow-x: hidden;
+  -webkit-overflow-scrolling: touch;
+
+  padding: 14px 14px 18px; /* marge interne */
+  box-sizing: border-box;
+}
+
+/* évite le petit scroll horizontal parasite */
+*{ box-sizing: border-box; }
+img, svg, canvas{ max-width: 100%; height: auto; }
