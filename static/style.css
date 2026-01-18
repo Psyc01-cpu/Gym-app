@@ -1773,3 +1773,23 @@ body.app{
 /* évite le petit scroll horizontal parasite */
 *{ box-sizing: border-box; }
 img, svg, canvas{ max-width: 100%; height: auto; }
+
+/* ==========================
+   ESPACE POUR LA BOTTOM BAR
+   ========================== */
+
+/* Hauteur réelle de ta bottom bar */
+:root{
+  --bottom-bar-height: 78px;   /* ajuste si besoin (70–90px) */
+}
+
+/* On pousse le contenu vers le haut */
+.app-content{
+  padding-bottom: var(--bottom-bar-height);
+  box-sizing: border-box;
+}
+
+/* Sécurité spécifique pour la page exercices */
+.exercises-page{
+  padding-bottom: calc(var(--bottom-bar-height) + 12px);
+}
