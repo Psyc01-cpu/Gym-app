@@ -4,7 +4,7 @@
   <meta charset="UTF-8">
   <title>Batcave</title>
   <meta name="viewport"
-      content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+        content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
 
   <!-- CSS -->
   <link rel="stylesheet" href="/static/style.css?v=999">
@@ -15,280 +15,272 @@
 
 <body class="app dashboard-page">
 
-<!-- ===================== -->
-<!-- TOP BAR -->
-<!-- ===================== -->
-<header class="topbar">
-  <div class="logo">
-    Batcave
-    <span id="username-display" class="username"></span>
-  </div>
+  <!-- ===================== -->
+  <!-- TOP BAR (FIXE) -->
+  <!-- ===================== -->
+  <header class="top-bar">
+    <div class="logo">
+      Batcave
+      <span id="username-display" class="username"></span>
+    </div>
 
-  <div class="tier">Bronze I</div>
-
-  <!-- ❌ Bouton déconnexion supprimé -->
-</header>
-
-<!-- ===================== -->
-<!-- CONTENT (SCROLL ZONE) -->
-<!-- ===================== -->
-<div class="app-content">
+    <div class="tier">Bronze I</div>
+  </header>
 
   <!-- ===================== -->
-  <!-- DASHBOARD -->
+  <!-- CONTENT (ZONE SCROLLABLE) -->
   <!-- ===================== -->
-  <main class="dashboard" id="dashboard-page">
+  <div class="app-content">
 
-    <!-- OBJECTIF DU JOUR -->
-    <section class="objective-card">
-      <div class="objective-wrapper">
+    <!-- ===================== -->
+    <!-- DASHBOARD -->
+    <!-- ===================== -->
+    <main class="dashboard" id="dashboard-page">
 
-        <div class="progress-ring">
-          <svg viewBox="0 0 140 140" aria-label="Objectif">
-            <!-- fond (non rempli) -->
-            <circle cx="70" cy="70" r="60" class="ring-bg"></circle>
+      <!-- OBJECTIF DU JOUR -->
+      <section class="objective-card">
+        <div class="objective-wrapper">
 
-            <!-- progression (jaune) -->
-            <circle
-              cx="70" cy="70" r="60"
-              class="ring-progress"
-              transform="rotate(-90 70 70)"
-            ></circle>
-          </svg>
+          <div class="progress-ring">
+            <svg viewBox="0 0 140 140" aria-label="Objectif">
+              <circle cx="70" cy="70" r="60" class="ring-bg"></circle>
+              <circle cx="70" cy="70" r="60"
+                      class="ring-progress"
+                      transform="rotate(-90 70 70)"></circle>
+            </svg>
 
-          <div class="progress-text">
-            <strong>2 / 3</strong>
+            <div class="progress-text">
+              <strong>2 / 3</strong>
+            </div>
           </div>
+
+          <div class="objective-stats">
+            <div class="mini-stat">
+              <span>📦 Volume semaine</span>
+              <strong>8 200 kg</strong>
+            </div>
+
+            <div class="mini-stat">
+              <span>💪 Exercices</span>
+              <strong>14</strong>
+            </div>
+
+            <div class="mini-stat">
+              <span>🏆 Record du mois</span>
+              <strong>2 450 kg</strong>
+            </div>
+          </div>
+
+        </div>
+      </section>
+
+      <!-- STATS PRINCIPALES -->
+      <section class="stats-grid">
+
+        <div class="card">
+          <i data-lucide="dumbbell"></i>
+          <span>Volume total</span>
+          <strong>12 450 kg</strong>
         </div>
 
-        <div class="objective-stats">
-          <div class="mini-stat">
-            <span>📦 Volume semaine</span>
-            <strong>8 200 kg</strong>
-          </div>
-
-          <div class="mini-stat">
-            <span>💪 Exercices</span>
-            <strong>14</strong>
-          </div>
-
-          <div class="mini-stat">
-            <span>🏆 Record du mois</span>
-            <strong>2 450 kg</strong>
-          </div>
+        <div class="card">
+          <i data-lucide="trophy"></i>
+          <span>Score</span>
+          <strong>1 240 pts</strong>
         </div>
 
+        <div class="card">
+          <i data-lucide="flame"></i>
+          <span>Série</span>
+          <strong>6 jours</strong>
+        </div>
+
+        <div class="card">
+          <i data-lucide="calendar"></i>
+          <span>Séances</span>
+          <strong>28</strong>
+        </div>
+
+      </section>
+
+      <!-- ACTIONS RAPIDES -->
+      <section class="quick-actions">
+
+        <button class="action-card" id="new-exercise-btn" type="button">
+          <i data-lucide="plus-circle"></i>
+          <span>Nouvel exercice</span>
+        </button>
+
+        <button class="action-card" id="least-exercise-btn" type="button">
+          <i data-lucide="activity"></i>
+          <span id="least-exercise-name">Chargement...</span>
+          <small>Exercice à prioriser</small>
+        </button>
+
+      </section>
+
+    </main>
+
+    <!-- ===================== -->
+    <!-- PAGE EXERCICES -->
+    <!-- ===================== -->
+    <section class="exercises-page hidden" id="exercises-page">
+
+      <div class="exercises-header">
+        <h2>💪 Exercices</h2>
+
+        <button id="add-exercise-btn" class="add-plus-btn" aria-label="Ajouter un exercice" type="button">
+          +
+        </button>
       </div>
+
+      <div class="exercises-grid" id="exercises-grid">
+        <!-- Cartes injectées en JS -->
+      </div>
+
     </section>
 
-    <!-- STATS PRINCIPALES -->
-    <section class="stats-grid">
+  </div><!-- /app-content -->
 
-      <div class="card">
-        <i data-lucide="dumbbell"></i>
-        <span>Volume total</span>
-        <strong>12 450 kg</strong>
-      </div>
-
-      <div class="card">
-        <i data-lucide="trophy"></i>
-        <span>Score</span>
-        <strong>1 240 pts</strong>
-      </div>
-
-      <div class="card">
-        <i data-lucide="flame"></i>
-        <span>Série</span>
-        <strong>6 jours</strong>
-      </div>
-
-      <div class="card">
-        <i data-lucide="calendar"></i>
-        <span>Séances</span>
-        <strong>28</strong>
-      </div>
-
-    </section>
-
-    <!-- ACTIONS RAPIDES -->
-    <section class="quick-actions">
-
-      <button class="action-card" id="new-exercise-btn">
-        <i data-lucide="plus-circle"></i>
-        <span>Nouvel exercice</span>
-      </button>
-
-      <button class="action-card" id="least-exercise-btn">
-        <i data-lucide="activity"></i>
-        <span id="least-exercise-name">Chargement...</span>
-        <small>Exercice à prioriser</small>
-      </button>
-
-    </section>
-
-  </main>
 
   <!-- ===================== -->
-  <!-- PAGE EXERCICES -->
+  <!-- NAV BAR MOBILE (FIXE) -->
   <!-- ===================== -->
-  <section class="exercises-page hidden" id="exercises-page">
+  <nav class="bottom-nav">
 
-    <div class="exercises-header">
-      <h2>💪 Exercices</h2>
-
-      <button id="add-exercise-btn" class="add-plus-btn" aria-label="Ajouter un exercice">
-        +
-      </button>
-    </div>
-
-    <div class="exercises-grid" id="exercises-grid">
-      <!-- Cartes injectées en JS -->
-    </div>
-
-  </section>
-
-</div> <!-- /app-content -->
-
-
-<!-- ===================== -->
-<!-- NAV BAR MOBILE (FIXE) -->
-<!-- ===================== -->
-<nav class="bottom-nav">
-
-  <button class="nav-item active" id="nav-dashboard">
-    <i data-lucide="bar-chart-3"></i>
-    <small>Dashboard</small>
-  </button>
-
-  <button class="nav-item" id="nav-exercises">
-    <i data-lucide="dumbbell"></i>
-    <small>Exercices</small>
-  </button>
-
-  <button class="nav-item">
-    <i data-lucide="message-circle"></i>
-    <small>Chat</small>
-  </button>
-
-  <button class="nav-item">
-    <i data-lucide="trending-up"></i>
-    <small>Suivi</small>
-  </button>
-
-  <button class="nav-item">
-    <i data-lucide="apple"></i>
-    <small>Nutrition</small>
-  </button>
-
-</nav>
-
-
-<!-- ===================== -->
-<!-- MODALE NOUVEL EXERCICE -->
-<!-- ===================== -->
-<div id="exercise-modal" class="hidden">
-  <div class="modal">
-    <h3>Créer un exercice</h3>
-
-    <input id="exercise-name" placeholder="Nom de l'exercice" />
-
-    <div class="zone-picker" id="exercise-zone-picker">
-      <label class="zone-option">
-        <input type="radio" name="zone" value="haut" checked />
-        <span>Haut du corps</span>
-      </label>
-
-      <label class="zone-option">
-        <input type="radio" name="zone" value="bas" />
-        <span>Bas du corps</span>
-      </label>
-    </div>
-
-    <input id="exercise-video" placeholder="Lien vidéo (optionnel)" />
-
-    <div class="modal-actions">
-      <button id="create-exercise-btn">Créer</button>
-      <button id="close-exercise-modal">Annuler</button>
-    </div>
-  </div>
-</div>
-
-
-<!-- ===================== -->
-<!-- MODALE EXERCICE (OUVRIR) -->
-<!-- ===================== -->
-<div id="exercise-open-modal" class="hidden" aria-hidden="true">
-  <div class="exopen-backdrop" data-close="true"></div>
-
-  <div class="exopen-modal" role="dialog" aria-modal="true" aria-label="Détail exercice">
-
-    <header class="exopen-header">
-      <h2 id="exopen-title">Exercice</h2>
-      <span id="exopen-zone" class="exopen-zone">Haut du corps</span>
-    </header>
-
-    <button id="exopen-add-performance" class="exopen-add-btn" type="button">
-      Ajouter une performance
+    <button class="nav-item active" id="nav-dashboard" type="button">
+      <i data-lucide="bar-chart-3"></i>
+      <small>Dashboard</small>
     </button>
 
-    <h3 class="exopen-subtitle">Historique des performances</h3>
-
-    <div id="exopen-list" class="exopen-list">
-      <!-- performances injectées en JS -->
-    </div>
-
-    <button id="exopen-close" class="exopen-close-btn" type="button">
-      Fermer
+    <button class="nav-item" id="nav-exercises" type="button">
+      <i data-lucide="dumbbell"></i>
+      <small>Exercices</small>
     </button>
-  </div>
-</div>
+
+    <button class="nav-item" type="button">
+      <i data-lucide="message-circle"></i>
+      <small>Chat</small>
+    </button>
+
+    <button class="nav-item" type="button">
+      <i data-lucide="trending-up"></i>
+      <small>Suivi</small>
+    </button>
+
+    <button class="nav-item" type="button">
+      <i data-lucide="apple"></i>
+      <small>Nutrition</small>
+    </button>
+
+  </nav>
 
 
-<!-- ===================== -->
-<!-- MODALE AJOUT PERFORMANCE (UNIQUE) -->
-<!-- ===================== -->
-<div id="perf-modal" class="hidden" aria-hidden="true">
-  <div class="perf-backdrop" data-close="true"></div>
+  <!-- ===================== -->
+  <!-- MODALE NOUVEL EXERCICE -->
+  <!-- ===================== -->
+  <div id="exercise-modal" class="hidden">
+    <div class="modal">
+      <h3>Créer un exercice</h3>
 
-  <div class="perf-box" role="dialog" aria-modal="true" aria-label="Ajouter une performance">
-    <h2 class="perf-title">Ajouter une performance</h2>
+      <input id="exercise-name" placeholder="Nom de l'exercice" />
 
-    <form id="perf-form" autocomplete="off">
-      <label class="perf-label">Date</label>
-      <input id="perf-date" class="perf-input" type="date" required />
+      <div class="zone-picker" id="exercise-zone-picker">
+        <label class="zone-option">
+          <input type="radio" name="zone" value="haut" checked />
+          <span>Haut du corps</span>
+        </label>
 
-      <div class="perf-row">
-        <div class="perf-col">
-          <label class="perf-label">Charge (kg)</label>
-          <input id="perf-weight" class="perf-input" type="number" step="0.5" min="0" inputmode="decimal" required />
-        </div>
-
-        <div class="perf-col">
-          <label class="perf-label">Répétitions</label>
-          <input id="perf-reps" class="perf-input" type="number" step="1" min="0" inputmode="numeric" required />
-        </div>
+        <label class="zone-option">
+          <input type="radio" name="zone" value="bas" />
+          <span>Bas du corps</span>
+        </label>
       </div>
 
-      <label class="perf-label">RPE (1-10)</label>
-      <input id="perf-rpe" class="perf-input" type="number" step="1" min="1" max="10" inputmode="numeric" required />
+      <input id="exercise-video" placeholder="Lien vidéo (optionnel)" />
 
-      <label class="perf-label">Observations (optionnel)</label>
-      <textarea id="perf-notes" class="perf-textarea" rows="4"></textarea>
-
-      <button id="perf-save" class="perf-save" type="submit">Enregistrer</button>
-    </form>
+      <div class="modal-actions">
+        <button id="create-exercise-btn" type="button">Créer</button>
+        <button id="close-exercise-modal" type="button">Annuler</button>
+      </div>
+    </div>
   </div>
-</div>
 
 
+  <!-- ===================== -->
+  <!-- MODALE EXERCICE (OUVRIR) -->
+  <!-- ===================== -->
+  <div id="exercise-open-modal" class="hidden" aria-hidden="true">
+    <div class="exopen-backdrop" data-close="true"></div>
 
-<!-- ===================== -->
-<!-- SCRIPTS -->
-<!-- ===================== -->
-<script>
-  lucide.createIcons();
-</script>
-<script src="/static/dashboard.js?v=999" defer></script>
+    <div class="exopen-modal" role="dialog" aria-modal="true" aria-label="Détail exercice">
+
+      <header class="exopen-header">
+        <h2 id="exopen-title">Exercice</h2>
+        <span id="exopen-zone" class="exopen-zone">Haut du corps</span>
+      </header>
+
+      <button id="exopen-add-performance" class="exopen-add-btn" type="button">
+        Ajouter une performance
+      </button>
+
+      <h3 class="exopen-subtitle">Historique des performances</h3>
+
+      <div id="exopen-list" class="exopen-list">
+        <!-- performances injectées en JS -->
+      </div>
+
+      <button id="exopen-close" class="exopen-close-btn" type="button">
+        Fermer
+      </button>
+    </div>
+  </div>
+
+
+  <!-- ===================== -->
+  <!-- MODALE AJOUT PERFORMANCE (UNIQUE) -->
+  <!-- ===================== -->
+  <div id="perf-modal" class="hidden" aria-hidden="true">
+    <div class="perf-backdrop" data-close="true"></div>
+
+    <div class="perf-box" role="dialog" aria-modal="true" aria-label="Ajouter une performance">
+      <h2 class="perf-title">Ajouter une performance</h2>
+
+      <form id="perf-form" autocomplete="off">
+        <label class="perf-label">Date</label>
+        <input id="perf-date" class="perf-input" type="date" required />
+
+        <div class="perf-row">
+          <div class="perf-col">
+            <label class="perf-label">Charge (kg)</label>
+            <input id="perf-weight" class="perf-input" type="number" step="0.5" min="0" inputmode="decimal" required />
+          </div>
+
+          <div class="perf-col">
+            <label class="perf-label">Répétitions</label>
+            <input id="perf-reps" class="perf-input" type="number" step="1" min="0" inputmode="numeric" required />
+          </div>
+        </div>
+
+        <label class="perf-label">RPE (1-10)</label>
+        <input id="perf-rpe" class="perf-input" type="number" step="1" min="1" max="10" inputmode="numeric" required />
+
+        <label class="perf-label">Observations (optionnel)</label>
+        <textarea id="perf-notes" class="perf-textarea" rows="4"></textarea>
+
+        <button id="perf-save" class="perf-save" type="submit">Enregistrer</button>
+      </form>
+    </div>
+  </div>
+
+
+  <!-- ===================== -->
+  <!-- SCRIPTS -->
+  <!-- ===================== -->
+  <script>
+    lucide.createIcons();
+  </script>
+  <script src="/static/dashboard.js?v=999" defer></script>
 
 </body>
 </html>
