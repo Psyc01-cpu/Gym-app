@@ -1631,3 +1631,75 @@ body.app{
 
 /* ✅ évite le “petit scroll” horizontal */
 *{ max-width: 100%; }
+
+:root{
+  --topbar-h: 64px;
+  --bottombar-h: 86px;
+}
+
+/* Base */
+html, body{
+  height: 100%;
+  margin: 0;
+}
+body{
+  overflow: hidden; /* aucun scroll global */
+}
+
+/* Coque app */
+body.app{
+  height: 100dvh;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+  padding-top: env(safe-area-inset-top);
+  padding-bottom: env(safe-area-inset-bottom);
+  box-sizing: border-box;
+}
+
+/* TOP BAR (ne bouge jamais) */
+.top-bar{
+  flex: 0 0 var(--topbar-h);
+  height: var(--topbar-h);
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 0 16px;
+  box-sizing: border-box;
+
+  z-index: 10;
+  background: rgba(0,0,0,0.88);
+  backdrop-filter: blur(10px);
+  -webkit-backdrop-filter: blur(10px);
+}
+
+/* Zone qui scroll */
+.app-content{
+  flex: 1 1 auto;
+  min-height: 0;                 /* CRITIQUE pour que le scroll marche en flex */
+  overflow-y: auto;
+  -webkit-overflow-scrolling: touch;
+  padding: 16px;
+  box-sizing: border-box;
+}
+
+/* Les pages ne doivent PAS être fixed */
+#dashboard-page,
+#exercises-page{
+  position: static;
+}
+
+/* BOTTOM NAV (toujours visible) */
+.bottom-nav{
+  flex: 0 0 var(--bottombar-h);
+  height: var(--bottombar-h);
+  z-index: 10;
+
+  background: rgba(0,0,0,0.88);
+  backdrop-filter: blur(10px);
+  -webkit-backdrop-filter: blur(10px);
+}
+
+/* Evite le petit scroll horizontal */
+*{ max-width: 100%; }
+body{ overflow-x: hidden; }
