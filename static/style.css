@@ -1843,35 +1843,57 @@ img, svg, canvas{ max-width: 100%; height: auto; }
 }
 
 /* ==========================
-   MINI STATS - MOBILE SAFE LAYOUT
+   FIX DEBORDEMENT OBJECTIVE (MOBILE)
    ========================== */
 
-/* sécurise les débordements */
-.objective-stats,
-.mini-stat{
-  min-width: 0;
+/* Sécurité anti overflow dans la carte */
+.objective-card,
+.objective-wrapper{
   overflow: hidden;
 }
 
-/* layout vertical : texte au-dessus, valeur en dessous */
-.mini-stat{
-  display: flex;
-  flex-direction: column;
-  align-items: flex-start;
-  gap: 4px;
+/* Les mini stats : par défaut on empêche de sortir */
+.objective-stats .mini-stat{
+  min-width: 0;
+  max-width: 100%;
 }
 
-/* libellé */
-.mini-stat span{
-  font-size: 13px;
-  line-height: 1.2;
-  opacity: 0.85;
-  white-space: normal;
+/* Force le texte à ne jamais déborder */
+.objective-stats .mini-stat span,
+.objective-stats .mini-stat strong{
+  max-width: 100%;
 }
 
-/* valeur */
-.mini-stat strong{
-  font-size: 16px;
-  font-weight: 900;
-  white-space: nowrap;
+/* MOBILE : on met la valeur en dessous + on réduit un peu */
+@media (max-width: 420px){
+
+  /* optionnel mais très utile : un peu plus compact */
+  .objective-wrapper{
+    gap: 14px;
+  }
+
+  /* mini-stat : empilement vertical (texte puis valeur) */
+  .objective-stats .mini-stat{
+    display: flex !important;
+    flex-direction: column !important;
+    align-items: flex-start !important;
+    justify-content: flex-start !important;
+    gap: 4px !important;
+    padding: 12px 14px !important;
+  }
+
+  .objective-stats .mini-stat span{
+    font-size: 13px !important;
+    line-height: 1.15 !important;
+    white-space: normal !important;
+  }
+
+  .objective-stats .mini-stat strong{
+    font-size: 16px !important;
+    font-weight: 900 !important;
+    white-space: nowrap !important;
+    overflow: hidden !important;
+    text-overflow: ellipsis !important;
+  }
 }
+
