@@ -30,122 +30,128 @@
 </header>
 
 <!-- ===================== -->
-<!-- DASHBOARD -->
+<!-- CONTENT (SCROLL ZONE) -->
 <!-- ===================== -->
-<main class="dashboard" id="dashboard-page">
+<div class="app-content">
 
-  <!-- OBJECTIF DU JOUR -->
-  <section class="objective-card">
-    <div class="objective-wrapper">
+  <!-- ===================== -->
+  <!-- DASHBOARD -->
+  <!-- ===================== -->
+  <main class="dashboard" id="dashboard-page">
 
-      <div class="progress-ring">
-        <svg viewBox="0 0 140 140" aria-label="Objectif">
-          <!-- fond (non rempli) -->
-          <circle cx="70" cy="70" r="60" class="ring-bg"></circle>
+    <!-- OBJECTIF DU JOUR -->
+    <section class="objective-card">
+      <div class="objective-wrapper">
 
-          <!-- progression (jaune) -->
-          <circle
-            cx="70" cy="70" r="60"
-            class="ring-progress"
-            transform="rotate(-90 70 70)"
-          ></circle>
-        </svg>
+        <div class="progress-ring">
+          <svg viewBox="0 0 140 140" aria-label="Objectif">
+            <!-- fond (non rempli) -->
+            <circle cx="70" cy="70" r="60" class="ring-bg"></circle>
 
-        <div class="progress-text">
-          <strong>2 / 3</strong>
+            <!-- progression (jaune) -->
+            <circle
+              cx="70" cy="70" r="60"
+              class="ring-progress"
+              transform="rotate(-90 70 70)"
+            ></circle>
+          </svg>
+
+          <div class="progress-text">
+            <strong>2 / 3</strong>
+          </div>
         </div>
+
+        <div class="objective-stats">
+          <div class="mini-stat">
+            <span>📦 Volume semaine</span>
+            <strong>8 200 kg</strong>
+          </div>
+
+          <div class="mini-stat">
+            <span>💪 Exercices</span>
+            <strong>14</strong>
+          </div>
+
+          <div class="mini-stat">
+            <span>🏆 Record du mois</span>
+            <strong>2 450 kg</strong>
+          </div>
+        </div>
+
+      </div>
+    </section>
+
+    <!-- STATS PRINCIPALES -->
+    <section class="stats-grid">
+
+      <div class="card">
+        <i data-lucide="dumbbell"></i>
+        <span>Volume total</span>
+        <strong>12 450 kg</strong>
       </div>
 
-      <div class="objective-stats">
-        <div class="mini-stat">
-          <span>📦 Volume semaine</span>
-          <strong>8 200 kg</strong>
-        </div>
-
-        <div class="mini-stat">
-          <span>💪 Exercices</span>
-          <strong>14</strong>
-        </div>
-
-        <div class="mini-stat">
-          <span>🏆 Record du mois</span>
-          <strong>2 450 kg</strong>
-        </div>
+      <div class="card">
+        <i data-lucide="trophy"></i>
+        <span>Score</span>
+        <strong>1 240 pts</strong>
       </div>
 
+      <div class="card">
+        <i data-lucide="flame"></i>
+        <span>Série</span>
+        <strong>6 jours</strong>
+      </div>
+
+      <div class="card">
+        <i data-lucide="calendar"></i>
+        <span>Séances</span>
+        <strong>28</strong>
+      </div>
+
+    </section>
+
+    <!-- ACTIONS RAPIDES -->
+    <section class="quick-actions">
+
+      <button class="action-card" id="new-exercise-btn">
+        <i data-lucide="plus-circle"></i>
+        <span>Nouvel exercice</span>
+      </button>
+
+      <button class="action-card" id="least-exercise-btn">
+        <i data-lucide="activity"></i>
+        <span id="least-exercise-name">Chargement...</span>
+        <small>Exercice à prioriser</small>
+      </button>
+
+    </section>
+
+  </main>
+
+  <!-- ===================== -->
+  <!-- PAGE EXERCICES -->
+  <!-- ===================== -->
+  <section class="exercises-page hidden" id="exercises-page">
+
+    <div class="exercises-header">
+      <h2>💪 Exercices</h2>
+
+      <button id="add-exercise-btn" class="add-plus-btn" aria-label="Ajouter un exercice">
+        +
+      </button>
     </div>
+
+    <div class="exercises-grid" id="exercises-grid">
+      <!-- Cartes injectées en JS -->
+    </div>
+
   </section>
 
-  <!-- STATS PRINCIPALES -->
-  <section class="stats-grid">
+</div> <!-- /app-content -->
 
-    <div class="card">
-      <i data-lucide="dumbbell"></i>
-      <span>Volume total</span>
-      <strong>12 450 kg</strong>
-    </div>
-
-    <div class="card">
-      <i data-lucide="trophy"></i>
-      <span>Score</span>
-      <strong>1 240 pts</strong>
-    </div>
-
-    <div class="card">
-      <i data-lucide="flame"></i>
-      <span>Série</span>
-      <strong>6 jours</strong>
-    </div>
-
-    <div class="card">
-      <i data-lucide="calendar"></i>
-      <span>Séances</span>
-      <strong>28</strong>
-    </div>
-
-  </section>
-
-  <!-- ACTIONS RAPIDES -->
-  <section class="quick-actions">
-
-    <button class="action-card" id="new-exercise-btn">
-      <i data-lucide="plus-circle"></i>
-      <span>Nouvel exercice</span>
-    </button>
-
-    <button class="action-card" id="least-exercise-btn">
-      <i data-lucide="activity"></i>
-      <span id="least-exercise-name">Chargement...</span>
-      <small>Exercice à prioriser</small>
-    </button>
-
-  </section>
-
-</main>
 
 <!-- ===================== -->
-<!-- PAGE EXERCICES -->
-<!-- ===================== -->
-<section class="exercises-page hidden" id="exercises-page">
-
-  <div class="exercises-header">
-    <h2>💪 Exercices</h2>
-
-    <!-- (optionnel) si tu veux, tu peux aussi supprimer ce bouton -->
-    <button id="add-exercise-btn" class="add-plus-btn" aria-label="Ajouter un exercice">
-      +
-    </button>
-
-  </div>
-
-  <div class="exercises-grid" id="exercises-grid">
-    <!-- Cartes injectées en JS -->
-  </div>
-
-</section>
-
-<!-- ===================== -->
-<!-- NAV BAR MOBILE -->
+<!-- NAV BAR MOBILE (FIXE) -->
 <!-- ===================== -->
 <nav class="bottom-nav">
 
@@ -176,28 +182,27 @@
 
 </nav>
 
+
 <!-- ===================== -->
-<!-- MODALE NOUVEL EXERCICE (CENTRÉE + ZONES EN BOUTONS) -->
+<!-- MODALE NOUVEL EXERCICE -->
 <!-- ===================== -->
 <div id="exercise-modal" class="hidden">
-
   <div class="modal">
     <h3>Créer un exercice</h3>
 
     <input id="exercise-name" placeholder="Nom de l'exercice" />
 
-    <!-- ✅ Zone du corps en boutons -->
     <div class="zone-picker" id="exercise-zone-picker">
-  <label class="zone-option">
-    <input type="radio" name="zone" value="haut" checked />
-    <span>Haut du corps</span>
-  </label>
+      <label class="zone-option">
+        <input type="radio" name="zone" value="haut" checked />
+        <span>Haut du corps</span>
+      </label>
 
-  <label class="zone-option">
-    <input type="radio" name="zone" value="bas" />
-    <span>Bas du corps</span>
-  </label>
-</div>
+      <label class="zone-option">
+        <input type="radio" name="zone" value="bas" />
+        <span>Bas du corps</span>
+      </label>
+    </div>
 
     <input id="exercise-video" placeholder="Lien vidéo (optionnel)" />
 
@@ -206,7 +211,6 @@
       <button id="close-exercise-modal">Annuler</button>
     </div>
   </div>
-
 </div>
 
 
@@ -239,8 +243,9 @@
   </div>
 </div>
 
+
 <!-- ===================== -->
-<!-- MODALE AJOUT PERFORMANCE -->
+<!-- MODALE AJOUT PERFORMANCE (UNIQUE) -->
 <!-- ===================== -->
 <div id="perf-modal" class="hidden" aria-hidden="true">
   <div class="perf-backdrop" data-close="true"></div>
@@ -274,6 +279,7 @@
     </form>
   </div>
 </div>
+
 
 
 <!-- ===================== -->
