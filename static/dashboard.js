@@ -65,14 +65,16 @@ async function tryGet(urls){
 
 /* ==========================
    DASH STATS HELPERS
+   - Semaine: lundi 00:01 -> dimanche 23:59
+   - Mois: 1er 00:01 -> dernier 23:59
    ========================== */
 
 function startOfWeekMonday(d){
   const x = new Date(d);
-  x.setHours(0,0,0,0);
   const day = x.getDay(); // 0=dim, 1=lun...
   const diff = (day === 0 ? -6 : 1) - day;
   x.setDate(x.getDate() + diff);
+  x.setHours(0, 1, 0, 0); // ✅ lundi 00:01
   return x;
 }
 
@@ -80,36 +82,42 @@ function endOfWeekSunday(d){
   const s = startOfWeekMonday(d);
   const e = new Date(s);
   e.setDate(e.getDate() + 6);
-  e.setHours(23,59,59,999);
+  e.setHours(23,59,59,999); // ✅ dimanche 23:59
   return e;
 }
 
 function startOfMonth(d){
   const x = new Date(d.getFullYear(), d.getMonth(), 1);
-  x.setHours(0,0,0,0);
+  x.setHours(0,1,0,0); // ✅ 1er jour 00:01
   return x;
 }
 
 function endOfMonth(d){
   const x = new Date(d.getFullYear(), d.getMonth()+1, 0);
-  x.setHours(23,59,59,999);
+  x.setHours(23,59,59,999); // ✅ dernier jour 23:59
   return x;
 }
 
 function parseISODateLoose(v){
-  // accepte "YYYY-MM-DD" ou ISO complet
+  // accepte "YYYY-MM-DD" ou ISO complet (created_at)
   if (!v) return null;
   const s = String(v);
+
   // cas YYYY-MM-DD
-  const m = s.match(/^(\d{4})-(\d{2})-(\d{2})/);
-  if (m) return new Date(Number(m[1]), Number(m[2])-1, Number(m[3]));
-  // sinon Date() standard
-  const d = new Date(s);
+  const m = s.match(/^(\d{4})-(\d{2})-(\d{2})$/);
+  if (m) return new Date(Number(m[1]), Number(m[2]) - 1, Number(m[3]), 0, 0, 0, 0);
+
+  // cas ISO avec microsecondes -> on tronque à 3 chiffres (ms)
+  const m2 = s.match(/^(.+\.\d{3})\d+(Z)?$/);
+  const cleaned = m2 ? (m2[1] + (m2[2] || "")) : s;
+
+  const d = new Date(cleaned);
   if (Number.isNaN(d.getTime())) return null;
   return d;
 }
 
 function perfVolume(p){
+  // ✅ tu veux "kilos total" => poids * reps
   const w = Number(p.weight ?? p.kg ?? 0) || 0;
   const r = Number(p.reps ?? p.repetitions ?? 0) || 0;
   return w * r;
@@ -141,7 +149,7 @@ document.addEventListener("DOMContentLoaded", () => {
 
     const u = encodeURIComponent(userId);
 
-    // On tente d'abord les endpoints les + probables SANS exercise_id
+    // endpoints possibles (liste complète de performances/workouts)
     const urls = [
       `/api/workouts?user_id=${u}`,
       `/api/performances?user_id=${u}`,
@@ -168,19 +176,19 @@ document.addEventListener("DOMContentLoaded", () => {
     const monthEnd = endOfMonth(now);
 
     let weekVolume = 0;
+    let weekPerfCount = 0; // ✅ "Exercices semaine" = nombre de perfs semaine
     let monthVolume = 0;
-    const weekExercises = new Set();
 
     for (const p of (perfs || [])){
-      const d = parseISODateLoose(p.date || p.created_at || p.at);
+      // priorité created_at (timestamp exact), sinon date
+      const d = parseISODateLoose(p.created_at || p.date || p.at);
       if (!d) continue;
 
       const vol = perfVolume(p);
-      const exid = p.exercise_id || p.exerciseId || p.exercise || p.exo_id || p.exoId;
 
       if (d >= weekStart && d <= weekEnd){
         weekVolume += vol;
-        if (exid != null) weekExercises.add(String(exid));
+        weekPerfCount += 1;
       }
 
       if (d >= monthStart && d <= monthEnd){
@@ -188,20 +196,20 @@ document.addEventListener("DOMContentLoaded", () => {
       }
     }
 
-    return {
-      weekVolume,
-      weekExercisesCount: weekExercises.size,
-      monthVolume
-    };
+    return { weekVolume, weekPerfCount, monthVolume };
   }
 
   function renderDashboardStats(stats){
-    const elWeekVol = qs("#stat-week-volume");
-    const elWeekExo = qs("#stat-week-exercises");
-    const elMonthVol = qs("#stat-month-volume");
+    // ✅ IDs qui doivent exister dans dashboard.html
+    // <strong id="weekly-volume">—</strong>
+    // <strong id="weekly-perfs">—</strong>
+    // <strong id="monthly-volume">—</strong>
+    const elWeekVol = qs("#weekly-volume");
+    const elWeekPerf = qs("#weekly-perfs");
+    const elMonthVol = qs("#monthly-volume");
 
     if (elWeekVol) elWeekVol.textContent = formatKg(stats.weekVolume);
-    if (elWeekExo) elWeekExo.textContent = String(stats.weekExercisesCount);
+    if (elWeekPerf) elWeekPerf.textContent = String(stats.weekPerfCount);
     if (elMonthVol) elMonthVol.textContent = formatKg(stats.monthVolume);
   }
 
@@ -209,14 +217,11 @@ document.addEventListener("DOMContentLoaded", () => {
     try{
       const perfs = await fetchAllPerformances();
       console.log("PERFS COUNT:", perfs.length, perfs[0]);
-      // IMPORTANT : certains backends renvoient "exercise_id" sous un autre nom.
-      // Ici on tente de le deviner. Si jamais ton backend ne renvoie PAS d'id d'exercice,
-      // alors "Exercices semaine" sera 0 (il faudra l'ajouter côté API).
       const stats = computeDashboardStats(perfs);
       renderDashboardStats(stats);
     }catch(err){
       console.error("Erreur stats dashboard", err);
-      // on laisse les valeurs existantes si erreur
+      // si erreur, on laisse les "—"
     }
   }
 
@@ -238,7 +243,6 @@ document.addEventListener("DOMContentLoaded", () => {
     dashboardPage?.classList.remove("hidden");
     exercisesPage?.classList.add("hidden");
     setActiveNav("dashboard");
-    // refresh stats quand on revient
     refreshDashboardStats();
   }
 
@@ -335,7 +339,7 @@ document.addEventListener("DOMContentLoaded", () => {
   // ==========================
   const perfModal     = qs("#perf-modal");
   const perfForm      = qs("#perf-form");
-  const perfCloseBtn  = qs("#perf-close"); // si tu ne l'as pas en HTML c'est OK (null)
+  const perfCloseBtn  = qs("#perf-close"); // si absent -> null
 
   const perfDate      = qs("#perf-date");
   const perfWeight    = qs("#perf-weight");
@@ -394,7 +398,6 @@ document.addEventListener("DOMContentLoaded", () => {
     perfModal.classList.add("hidden");
     perfModal.setAttribute("aria-hidden", "true");
 
-    // on garde modal-open si la modale exercice est encore ouverte
     if (openModalEl?.classList.contains("hidden")) {
       document.body.classList.remove("modal-open");
     }
@@ -479,7 +482,6 @@ document.addEventListener("DOMContentLoaded", () => {
       const weight = Number(p.weight ?? p.kg ?? 0);
       const reps = Number(p.reps ?? p.repetitions ?? 0);
 
-      // Ton backend utilise "ressenti" (pas "rpe")
       const rpe = (p.ressenti ?? p.rpe ?? p.rpe10 ?? "");
       const date = formatDateFR(p.date || p.created_at || p.at || "");
 
