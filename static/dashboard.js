@@ -149,12 +149,11 @@ document.addEventListener("DOMContentLoaded", () => {
 
     const u = encodeURIComponent(userId);
 
-    // endpoints possibles (liste complète de performances/workouts)
+    // endpoints possibles (liste complète de performances)
+    // ✅ IMPORTANT: on injecte bien user_id dans l’URL
     const urls = [
-      `/api/workouts?user_id=${u}`,
-      `/api/performances?user_id=${u}`,
-      `/api/workouts/all?user_id=${u}`,
       `/api/performances/all?user_id=${u}`,
+      `/api/performances?user_id=${u}`
     ];
 
     const j = await tryGet(urls);
