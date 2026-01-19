@@ -208,7 +208,7 @@ document.addEventListener("DOMContentLoaded", () => {
   async function refreshDashboardStats(){
     try{
       const perfs = await fetchAllPerformances();
-
+      console.log("PERFS COUNT:", perfs.length, perfs[0]);
       // IMPORTANT : certains backends renvoient "exercise_id" sous un autre nom.
       // Ici on tente de le deviner. Si jamais ton backend ne renvoie PAS d'id d'exercice,
       // alors "Exercices semaine" sera 0 (il faudra l'ajouter côté API).
