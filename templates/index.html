@@ -60,6 +60,42 @@
     </div>
   </div>
 
+  <!-- MODALE PROFIL (Voir le profil) -->
+<div id="profile-overlay" class="hidden">
+  <div class="modal profile-modal">
+
+    <div class="profile-head">
+      <div class="profile-title-wrap">
+        <h2 id="profile-name">—</h2>
+        <div id="profile-tier" class="tier-badge">—</div>
+      </div>
+      <button id="profile-close" type="button" class="btn-close">Fermer</button>
+    </div>
+
+    <div class="profile-stats">
+      <div class="stat-card">
+        <div class="stat-label">Score</div>
+        <div id="profile-score" class="stat-value">—</div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-label">Volume total</div>
+        <div id="profile-volume" class="stat-value">—</div>
+      </div>
+    </div>
+
+    <h3 class="section-title">Performances maximales</h3>
+    <div id="profile-max-list" class="max-perfs-list">
+      <!-- injecté en JS -->
+    </div>
+
+    <h3 class="section-title">Historique</h3>
+    <div id="profile-history" class="history-list">
+      <!-- injecté en JS -->
+    </div>
+
+  </div>
+</div>
+
   <!-- VERSION -->
   <div id="site-version">Gotham Training — v0.3.102</div>
 
