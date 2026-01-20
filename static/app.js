@@ -56,6 +56,120 @@ document.addEventListener("DOMContentLoaded", () => {
   let selectedUser = null; // { user_id, username, rank, score, tier, ... }
 
   // -------------------------
+  // MODALE APERÇU PROFIL
+  // -------------------------
+  const profileOverlay = document.getElementById("profile-overlay");
+  const profileCloseBtn = document.getElementById("profile-close-btn");
+  const ppUsername = document.getElementById("pp-username");
+  const ppTier = document.getElementById("pp-tier");
+  const ppScore = document.getElementById("pp-score");
+  const ppVolume = document.getElementById("pp-volume");
+  const ppMaxList = document.getElementById("pp-max-list");
+
+  function openProfilePreview() {
+    if (!profileOverlay) return;
+    profileOverlay.classList.remove("hidden");
+    document.body.classList.add("modal-open");
+  }
+
+  function closeProfilePreview() {
+    if (!profileOverlay) return;
+    profileOverlay.classList.add("hidden");
+    document.body.classList.remove("modal-open");
+  }
+
+  function formatKg(n) {
+    const v = Math.round(Number(n || 0));
+    return `${v.toLocaleString("fr-FR")} kg`;
+  }
+
+  function perfVolume(p) {
+    const w = Number(p.weight ?? p.kg ?? 0) || 0;
+    const r = Number(p.reps ?? p.repetitions ?? 0) || 0;
+    return w * r;
+  }
+
+  async function loadProfilePreviewData(user) {
+    if (!user?.user_id) return;
+
+    // Valeurs hautes (immédiates)
+    if (ppUsername) ppUsername.textContent = user.username || "—";
+    if (ppTier) ppTier.textContent = user.tier || "Unranked";
+    if (ppScore) ppScore.textContent = String(user.score ?? 0);
+
+    if (ppVolume) ppVolume.textContent = "…";
+    if (ppMaxList) ppMaxList.innerHTML = `<div class="pp-empty">Chargement…</div>`;
+
+    const u = encodeURIComponent(user.user_id);
+
+    // 1) Exercices (pour avoir le nom)
+    const exRes = await fetch(`/api/exercises?user_id=${u}`, { cache: "no-store" });
+    const exercises = exRes.ok ? await exRes.json() : [];
+    const exById = new Map();
+    (Array.isArray(exercises) ? exercises : []).forEach((ex) => {
+      const id = ex.exercise_id || ex.id;
+      const name = ex.name || ex.exercise || "Exercice";
+      if (id != null) exById.set(String(id), name);
+    });
+
+    // 2) Performances (pour volume total + max par exo)
+    const pRes = await fetch(`/api/performances/all?user_id=${u}`, { cache: "no-store" });
+    const perfsRaw = pRes.ok ? await pRes.json() : [];
+    const perfs = Array.isArray(perfsRaw) ? perfsRaw : (perfsRaw?.items || perfsRaw?.data || []);
+
+    // Volume total
+    let totalVol = 0;
+
+    // Max weight par exercice
+    const maxByExercise = new Map(); // exId -> maxWeight
+
+    for (const p of perfs) {
+      totalVol += perfVolume(p);
+
+      const exId = p.exercise_id ?? p.exerciseId ?? p.exo_id ?? p.exercise;
+      if (exId == null) continue;
+
+      const w = Number(p.weight ?? p.kg ?? 0) || 0;
+      const key = String(exId);
+      const prev = maxByExercise.get(key) ?? 0;
+      if (w > prev) maxByExercise.set(key, w);
+    }
+
+    if (ppVolume) ppVolume.textContent = formatKg(totalVol);
+
+    // Render liste max
+    const rows = Array.from(maxByExercise.entries())
+      .map(([exId, maxW]) => ({
+        exId,
+        name: exById.get(exId) || `Exercice ${exId}`,
+        maxW
+      }))
+      .sort((a, b) => b.maxW - a.maxW);
+
+    if (!ppMaxList) return;
+
+    if (rows.length === 0) {
+      ppMaxList.innerHTML = `<div class="pp-empty">Aucune performance.</div>`;
+      return;
+    }
+
+    ppMaxList.innerHTML = rows.map(r => `
+      <div class="pp-row">
+        <div class="pp-exo">${String(r.name)}</div>
+        <div class="pp-max">${Math.round(r.maxW)} kg</div>
+      </div>
+    `).join("");
+  }
+
+  // Fermetures modale
+  profileCloseBtn?.addEventListener("click", closeProfilePreview);
+  profileOverlay?.addEventListener("click", (e) => {
+    if (e.target === profileOverlay) closeProfilePreview();
+  });
+
+
+  
+  // -------------------------
   // MODALE PROFIL
   // -------------------------
   function openModal(user) {
@@ -286,17 +400,20 @@ document.addEventListener("DOMContentLoaded", () => {
   }
 
   // -------------------------
-  // 👁️ VOIR PROFIL
+  // 👁️ VOIR PROFIL (OUVRE MODALE APERÇU)
   // -------------------------
   if (viewBtn) {
-    viewBtn.addEventListener("click", () => {
+    viewBtn.addEventListener("click", async () => {
       if (!selectedUser) return;
 
-      const url =
-        `/dashboard?user=${encodeURIComponent(selectedUser.username)}` +
-        `&user_id=${encodeURIComponent(selectedUser.user_id)}`;
+      openProfilePreview();
 
-      window.location.href = url;
+      try {
+        await loadProfilePreviewData(selectedUser);
+      } catch (err) {
+        console.error(err);
+        if (ppMaxList) ppMaxList.innerHTML = `<div class="pp-empty">Erreur de chargement.</div>`;
+      }
     });
   }
 
