@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport"
-      content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+        content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
   <title>Projet Gotham</title>
   <link rel="stylesheet" href="/static/style.css?v=0.3.101">
 </head>
@@ -22,37 +22,23 @@
       <p class="login-subtitle">Bienvenue dans la Batcave</p>
     </header>
 
-    <!-- LISTE DES PROFILS (scroll interne) -->
+    <!-- LISTE DES PROFILS -->
     <main class="user-list-wrap">
-      <div class="profiles" id="users-list">
-        <!--
-          Les profils seront injectés par app.js.
-          Format recommandé (1 profil = 1 ligne) :
-
-          <button class="profile-card" data-user-id="..." data-username="...">
-            <div class="profile-left">
-              <div class="profile-name">Pseudo</div>
-              <div class="profile-meta">#1 • 1240 pts</div>
-            </div>
-            <div class="profile-right">
-              <span class="tier-badge">Bronze I</span>
-            </div>
-          </button>
-        -->
-      </div>
+      <div class="profiles" id="users-list"></div>
     </main>
 
-    <!-- FOOTER FIXE -->
+    <!-- FOOTER -->
     <footer class="login-footer">
       <div class="profiles-actions">
-        <button id="create-profile-btn">➕ Créer un profil</button>
+        <button id="create-profile-btn" type="button">➕ Créer un profil</button>
       </div>
     </footer>
 
   </div>
 
-
+  <!-- ===================== -->
   <!-- MODALE LOGIN -->
+  <!-- ===================== -->
   <div id="modal-overlay" class="hidden">
     <div class="modal">
 
@@ -75,12 +61,12 @@
     </div>
   </div>
 
-
   <!-- VERSION -->
   <div id="site-version">Gotham Training — v0.3.101</div>
 
-
+  <!-- ===================== -->
   <!-- MODALE CREATION PROFIL -->
+  <!-- ===================== -->
   <div id="create-overlay" class="hidden">
     <div class="modal">
       <h2>Créer un profil</h2>
@@ -105,100 +91,62 @@
       <!-- Mot de passe -->
       <div class="password-field">
         <input type="password" id="new-password" placeholder="Mot de passe" />
-        <button type="button" id="toggle-password" class="eye-btn">
-          👁
-        </button>
+        <button type="button" id="toggle-password" class="eye-btn">👁</button>
       </div>
 
       <input id="confirm-password" type="password" placeholder="Confirmer le mot de passe" />
 
       <div class="modal-actions">
-        <button id="validate-create-btn">Créer</button>
+        <button id="validate-create-btn" type="button">Créer</button>
       </div>
 
     </div>
   </div>
 
+  <!-- ===================== -->
   <!-- MODALE PROFIL (APERÇU) -->
+  <!-- ===================== -->
   <div id="profile-overlay" class="hidden">
     <div class="modal profile-preview">
-  
+
       <button id="profile-close-btn" type="button" class="profile-close">×</button>
-  
+
       <div class="pp-head">
-        <div class="pp-title">
+        <div>
           <div id="pp-username" class="pp-username">—</div>
         </div>
         <div id="pp-tier" class="pp-tier">—</div>
       </div>
-  
+
       <div class="pp-stats">
         <div class="pp-stat">
           <div class="pp-label">Score</div>
           <div id="pp-score" class="pp-value">—</div>
         </div>
-  
+
         <div class="pp-stat">
           <div class="pp-label">Volume total</div>
           <div id="pp-volume" class="pp-value">—</div>
         </div>
       </div>
-  
+
       <h3 class="pp-h3">Performances maximales</h3>
       <div id="pp-max-list" class="pp-list">
         <div class="pp-empty">Chargement…</div>
       </div>
-  
+
     </div>
   </div>
 
-
-  <!-- Notification -->
+  <!-- ===================== -->
+  <!-- NOTIFICATION -->
+  <!-- ===================== -->
   <div id="toast" class="toast hidden"></div>
 
-
+  <!-- ===================== -->
   <!-- JS -->
+  <!-- ===================== -->
   <script src="/static/app.js?v=0.3.101" defer></script>
-
-
-  <!-- MODALE APERCU PROFIL -->
-<div id="profile-overlay" class="hidden">
-  <div class="modal profile-preview">
-    <button id="profile-close-btn" type="button" class="profile-close">×</button>
-
-    <div class="pp-head">
-      <div>
-        <div id="pp-username" class="pp-username">—</div>
-        <div id="pp-sub" class="pp-sub">—</div>
-      </div>
-      <div id="pp-tier" class="pp-tier">—</div>
-    </div>
-
-    <div class="pp-grid">
-      <div class="pp-card">
-        <div class="pp-label">Score</div>
-        <div id="pp-score" class="pp-value">—</div>
-      </div>
-      <div class="pp-card">
-        <div class="pp-label">Volume total</div>
-        <div id="pp-total-volume" class="pp-value">—</div>
-      </div>
-      <div class="pp-card">
-        <div class="pp-label">Séances</div>
-        <div id="pp-sessions" class="pp-value">—</div>
-      </div>
-      <div class="pp-card">
-        <div class="pp-label">Performances</div>
-        <div id="pp-perfs" class="pp-value">—</div>
-      </div>
-    </div>
-
-    <h3 class="pp-h3">Performances maximales</h3>
-    <div id="pp-max-list" class="pp-list">
-      <div class="pp-empty">Chargement…</div>
-    </div>
-  </div>
-</div>
 
 </body>
 </html>
