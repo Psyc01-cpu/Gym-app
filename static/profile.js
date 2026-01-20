@@ -40,25 +40,24 @@ console.log("PROFILE JS chargé");
     return await r.json();
   }
 
-  // --------- Sélection robuste du user_id ---------
-  // 1) Profil cliqué (on mémorise)
+  // ------- Sélection user -------
   let selected = { user_id: null, username: null };
 
+  // Quand tu cliques une card profil (injectée par app.js)
   document.addEventListener("click", (e) => {
     const card = e.target?.closest?.(".profile-card");
     if (!card) return;
 
     const uid = card.getAttribute("data-user-id");
     const uname = card.getAttribute("data-username");
+
     if (uid) selected.user_id = uid;
     if (uname) selected.username = uname;
 
-    // Optionnel: marquage visuel si tu veux
     document.querySelectorAll(".profile-card.selected").forEach(x => x.classList.remove("selected"));
     card.classList.add("selected");
   }, true);
 
-  // 2) Si app.js stocke l'utilisateur sur la modale login (dataset)
   function getUserFromLoginDataset(){
     const loginOverlay = qs("#modal-overlay");
     if (!loginOverlay) return { user_id: null, username: null };
@@ -68,7 +67,6 @@ console.log("PROFILE JS chargé");
     };
   }
 
-  // 3) Fallback: profil “selected” dans la liste
   function getUserFromSelectedCard(){
     const card = document.querySelector(".profile-card.selected");
     if (!card) return { user_id: null, username: null };
@@ -81,14 +79,13 @@ console.log("PROFILE JS chargé");
   function resolveUser(){
     const ds = getUserFromLoginDataset();
     const sel = getUserFromSelectedCard();
-
     return {
       user_id: selected.user_id || ds.user_id || sel.user_id || null,
       username: selected.username || ds.username || sel.username || null,
     };
   }
 
-  // --------- Modale Profil ---------
+  // ------- Modale profil -------
   const overlay = qs("#profile-overlay");
   const closeBtn = qs("#profile-close");
 
@@ -97,6 +94,7 @@ console.log("PROFILE JS chargé");
     overlay.classList.remove("hidden");
     document.body.classList.add("modal-open");
   }
+
   function closeProfile(){
     if (!overlay) return;
     overlay.classList.add("hidden");
@@ -110,9 +108,7 @@ console.log("PROFILE JS chargé");
     if (e.key === "Escape" && overlay && !overlay.classList.contains("hidden")) closeProfile();
   });
 
-  // --------- Remplissage ---------
   async function loadProfile(userId, usernameFromUi){
-    // Vérif IDs HTML indispensables
     const need = ["#profile-name","#profile-tier","#profile-score","#profile-volume","#profile-max-list","#profile-history"];
     for (const id of need){
       if (!qs(id)) {
@@ -128,7 +124,7 @@ console.log("PROFILE JS chargé");
     qs("#profile-max-list").innerHTML = `<div style="opacity:.75;padding:10px 0;">Chargement…</div>`;
     qs("#profile-history").innerHTML = `<div style="opacity:.75;padding:10px 0;">Chargement…</div>`;
 
-    // USERS (score / tier)
+    // 1) users : score / tier
     try {
       const users = await getJSON("/api/users");
       const me = Array.isArray(users) ? users.find(u => String(u.user_id) === String(userId)) : null;
@@ -141,7 +137,7 @@ console.log("PROFILE JS chargé");
       console.error("Profil: erreur /api/users", e);
     }
 
-    // EXERCISES (max perfs + liste ids)
+    // 2) exercises : max perfs + ids
     let exercises = [];
     try {
       exercises = await getJSON(`/api/exercises?user_id=${encodeURIComponent(userId)}`);
@@ -155,7 +151,11 @@ console.log("PROFILE JS chargé");
     if (exercises.length === 0) {
       maxBox.innerHTML = `<div style="opacity:.75;padding:10px 0;">Aucune performance maximale.</div>`;
     } else {
-      const sorted = exercises.slice().sort((a,b) => Number(b.max_weight||0) - Number(a.max_weight||0)).slice(0, 15);
+      const sorted = exercises
+        .slice()
+        .sort((a,b) => Number(b.max_weight||0) - Number(a.max_weight||0))
+        .slice(0, 15);
+
       maxBox.innerHTML = sorted.map(ex => {
         const name = ex.exercise || ex.name || "Exercice";
         const w = Number(ex.max_weight || 0);
@@ -168,7 +168,7 @@ console.log("PROFILE JS chargé");
       }).join("");
     }
 
-    // PERFORMANCES (historique + volume total)
+    // 3) performances : historique + volume total
     const exNameById = new Map();
     for (const ex of exercises) {
       const id = ex.exercise_id;
@@ -195,12 +195,10 @@ console.log("PROFILE JS chargé");
       allPerfs = [];
     }
 
-    // Volume total (weight*reps)
     let totalVol = 0;
     for (const p of allPerfs) totalVol += perfVolume(p);
     qs("#profile-volume").textContent = formatKgCompact(totalVol);
 
-    // Historique: dernier au plus ancien
     allPerfs.sort((a,b) => String(b.date || b.created_at || "").localeCompare(String(a.date || a.created_at || "")));
 
     const histBox = qs("#profile-history");
@@ -224,23 +222,19 @@ console.log("PROFILE JS chargé");
     }
   }
 
-  // --------- Bouton Voir le profil ---------
+  // ------- Bouton Voir le profil -------
   const viewBtn = qs("#view-btn");
   viewBtn?.addEventListener("click", async () => {
-    try {
-      const r = resolveUser();
-      console.log("Profil resolveUser:", r);
+    const r = resolveUser();
+    console.log("Profil resolveUser:", r);
 
-      if (!r.user_id) {
-        alert("Impossible de trouver le user_id. Clique d'abord sur un profil dans la liste.");
-        return;
-      }
-
-      openProfile();
-      await loadProfile(r.user_id, r.username);
-    } catch (e) {
-      console.error("Erreur view profil", e);
-      alert("Erreur lors du chargement du profil (voir Console).");
+    if (!r.user_id) {
+      alert("Impossible de trouver le user_id. Clique d'abord sur un profil dans la liste.");
+      return;
     }
+
+    openProfile();
+    await loadProfile(r.user_id, r.username);
   });
+
 })();
