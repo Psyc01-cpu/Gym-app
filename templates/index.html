@@ -30,7 +30,7 @@
     <!-- FOOTER -->
     <footer class="login-footer">
       <div class="profiles-actions">
-        <button id="create-profile-btn" type="button">➕ Créer un profil</button>
+        <button id="create-profile-btn" type="button">Créer un profil</button>
       </div>
     </footer>
 
@@ -41,10 +41,9 @@
   <!-- ===================== -->
   <div id="modal-overlay" class="hidden">
     <div class="modal">
-
       <h2 id="modal-title">Profil</h2>
 
-      <form id="login-form">
+      <form id="login-form" autocomplete="off">
         <input
           type="password"
           placeholder="Mot de passe"
@@ -54,15 +53,15 @@
 
         <div class="modal-actions">
           <button id="login-btn" type="submit">Connexion</button>
+          <!-- IMPORTANT: type=button -->
           <button id="view-btn" type="button">Voir le profil</button>
         </div>
       </form>
-
     </div>
   </div>
 
   <!-- VERSION -->
-  <div id="site-version">Gotham Training — v0.3.101</div>
+  <div id="site-version">Gotham Training — v0.3.102</div>
 
   <!-- ===================== -->
   <!-- MODALE CREATION PROFIL -->
@@ -76,22 +75,21 @@
       <div class="gender">
         <label class="gender-option">
           <input type="radio" name="gender" value="homme" checked />
-          <span>👨 Homme</span>
+          <span>Homme</span>
         </label>
 
         <label class="gender-option">
           <input type="radio" name="gender" value="femme" />
-          <span>👩 Femme</span>
+          <span>Femme</span>
         </label>
       </div>
 
       <input id="new-age" type="number" placeholder="Âge" />
       <input id="new-height" type="number" placeholder="Taille (cm)" />
 
-      <!-- Mot de passe -->
       <div class="password-field">
         <input type="password" id="new-password" placeholder="Mot de passe" />
-        <button type="button" id="toggle-password" class="eye-btn">👁</button>
+        <button type="button" id="toggle-password" class="eye-btn">Afficher</button>
       </div>
 
       <input id="confirm-password" type="password" placeholder="Confirmer le mot de passe" />
@@ -99,7 +97,6 @@
       <div class="modal-actions">
         <button id="validate-create-btn" type="button">Créer</button>
       </div>
-
     </div>
   </div>
 
@@ -147,6 +144,50 @@
   <!-- JS -->
   <!-- ===================== -->
   <script src="/static/app.js?v=0.3.102" defer></script>
+
+  <!-- ===================== -->
+  <!-- FAILSAFE: force "Voir le profil" à ouvrir la modale -->
+  <!-- (évite toute redirection si un ancien script traine) -->
+  <!-- ===================== -->
+  <script defer>
+    document.addEventListener("DOMContentLoaded", () => {
+      const viewBtn = document.getElementById("view-btn");
+      const modalOverlay = document.getElementById("modal-overlay");
+      const profileOverlay = document.getElementById("profile-overlay");
+      const profileCloseBtn = document.getElementById("profile-close-btn");
+
+      function openProfile() {
+        if (!profileOverlay) return;
+        profileOverlay.classList.remove("hidden");
+        document.body.classList.add("modal-open");
+      }
+      function closeProfile() {
+        if (!profileOverlay) return;
+        profileOverlay.classList.add("hidden");
+        document.body.classList.remove("modal-open");
+      }
+
+      if (viewBtn) {
+        viewBtn.addEventListener("click", (e) => {
+          // bloque tout comportement parasite
+          e.preventDefault();
+          e.stopPropagation();
+
+          // ferme la modale login si ouverte
+          if (modalOverlay && !modalOverlay.classList.contains("hidden")) {
+            modalOverlay.classList.add("hidden");
+          }
+
+          openProfile();
+        }, true); // capture = prioritaire
+      }
+
+      profileCloseBtn?.addEventListener("click", closeProfile);
+      profileOverlay?.addEventListener("click", (e) => {
+        if (e.target === profileOverlay) closeProfile();
+      });
+    });
+  </script>
 
 </body>
 </html>
