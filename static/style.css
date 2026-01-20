@@ -185,7 +185,8 @@ body.modal-open { overflow: hidden; }
    MODALES
    =============================== */
 #modal-overlay,
-#create-overlay {
+#create-overlay,
+#profile-overlay {
   position: fixed;
   inset: 0;
   background: rgba(0,0,0,0.75);
@@ -1953,4 +1954,112 @@ img, svg, canvas{ max-width: 100%; height: auto; }
   }
 }
 
+/* ===============================
+   PROFILE PREVIEW MODAL
+   =============================== */
+.profile-preview{
+  position: relative;
+  max-height: 85vh;
+  overflow: auto;
+}
+
+.profile-close{
+  position: absolute;
+  top: 10px;
+  right: 12px;
+  background: transparent;
+  border: 1px solid rgba(245,197,24,0.35);
+  color: var(--gold);
+  width: 34px;
+  height: 34px;
+  border-radius: 10px;
+  cursor: pointer;
+}
+
+.pp-head{
+  display:flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 12px;
+  margin-bottom: 14px;
+}
+
+.pp-username{
+  font-size: 34px;
+  font-weight: 900;
+  color: var(--gold);
+  line-height: 1.1;
+}
+
+.pp-tier{
+  padding: 8px 14px;
+  border-radius: 999px;
+  background: rgba(245,197,24,0.12);
+  border: 1px solid rgba(245,197,24,0.35);
+  color: var(--gold);
+  font-weight: 700;
+  white-space: nowrap;
+}
+
+.pp-stats{
+  display:grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 12px;
+  margin: 10px 0 14px;
+}
+
+.pp-stat{
+  background: rgba(255,255,255,0.04);
+  border: 1px solid rgba(245,197,24,0.14);
+  border-radius: 14px;
+  padding: 12px;
+}
+
+.pp-label{
+  opacity: .75;
+  margin-bottom: 6px;
+}
+
+.pp-value{
+  font-size: 22px;
+  font-weight: 900;
+  color: #fff;
+}
+
+.pp-h3{
+  margin: 8px 0 10px;
+  color: var(--gold);
+}
+
+.pp-list{
+  display:flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.pp-row{
+  display:flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 12px;
+  padding: 12px;
+  border-radius: 14px;
+  background: rgba(255,255,255,0.03);
+  border: 1px solid rgba(255,255,255,0.06);
+  color: #fff;
+}
+
+.pp-row .pp-exo{
+  opacity: .9;
+}
+
+.pp-row .pp-max{
+  font-weight: 900;
+}
+
+.pp-empty{
+  opacity: .75;
+  color: #fff;
+  padding: 6px 0;
+}
 
