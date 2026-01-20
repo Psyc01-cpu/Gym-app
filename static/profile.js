@@ -1,6 +1,7 @@
+console.log("PROFILE JS chargé");
+
 (function () {
   function qs(sel) { return document.querySelector(sel); }
-  function qsa(sel) { return Array.from(document.querySelectorAll(sel)); }
 
   function esc(s){
     return String(s ?? "").replace(/[&<>"']/g, (m) => ({
@@ -32,27 +33,62 @@
 
   async function getJSON(url){
     const r = await fetch(url, { cache: "no-store" });
-    if (!r.ok) throw new Error(`${url} -> HTTP ${r.status}`);
+    if (!r.ok) {
+      const t = await r.text().catch(()=> "");
+      throw new Error(`${url} -> HTTP ${r.status} ${t}`);
+    }
     return await r.json();
   }
 
-  // ---- Sélection du profil (robuste) ----
-  // On capte le clic sur une "profile-card" injectée dans #users-list
-  // et on stocke le user_id/username pour "Voir le profil".
+  // --------- Sélection robuste du user_id ---------
+  // 1) Profil cliqué (on mémorise)
   let selected = { user_id: null, username: null };
 
   document.addEventListener("click", (e) => {
-    const btn = e.target && e.target.closest && e.target.closest(".profile-card");
-    if (!btn) return;
+    const card = e.target?.closest?.(".profile-card");
+    if (!card) return;
 
-    const userId = btn.getAttribute("data-user-id");
-    const username = btn.getAttribute("data-username");
+    const uid = card.getAttribute("data-user-id");
+    const uname = card.getAttribute("data-username");
+    if (uid) selected.user_id = uid;
+    if (uname) selected.username = uname;
 
-    if (userId) selected.user_id = userId;
-    if (username) selected.username = username;
+    // Optionnel: marquage visuel si tu veux
+    document.querySelectorAll(".profile-card.selected").forEach(x => x.classList.remove("selected"));
+    card.classList.add("selected");
   }, true);
 
-  // ---- Modale Profil ----
+  // 2) Si app.js stocke l'utilisateur sur la modale login (dataset)
+  function getUserFromLoginDataset(){
+    const loginOverlay = qs("#modal-overlay");
+    if (!loginOverlay) return { user_id: null, username: null };
+    return {
+      user_id: loginOverlay.dataset.userId || null,
+      username: loginOverlay.dataset.username || null,
+    };
+  }
+
+  // 3) Fallback: profil “selected” dans la liste
+  function getUserFromSelectedCard(){
+    const card = document.querySelector(".profile-card.selected");
+    if (!card) return { user_id: null, username: null };
+    return {
+      user_id: card.getAttribute("data-user-id") || null,
+      username: card.getAttribute("data-username") || null,
+    };
+  }
+
+  function resolveUser(){
+    const ds = getUserFromLoginDataset();
+    const sel = getUserFromSelectedCard();
+
+    return {
+      user_id: selected.user_id || ds.user_id || sel.user_id || null,
+      username: selected.username || ds.username || sel.username || null,
+    };
+  }
+
+  // --------- Modale Profil ---------
   const overlay = qs("#profile-overlay");
   const closeBtn = qs("#profile-close");
 
@@ -61,7 +97,6 @@
     overlay.classList.remove("hidden");
     document.body.classList.add("modal-open");
   }
-
   function closeProfile(){
     if (!overlay) return;
     overlay.classList.add("hidden");
@@ -69,18 +104,23 @@
   }
 
   closeBtn?.addEventListener("click", closeProfile);
-  overlay?.addEventListener("click", (e) => {
-    if (e.target === overlay) closeProfile();
-  });
+  overlay?.addEventListener("click", (e) => { if (e.target === overlay) closeProfile(); });
 
   document.addEventListener("keydown", (e) => {
-    if (e.key !== "Escape") return;
-    if (overlay && !overlay.classList.contains("hidden")) closeProfile();
+    if (e.key === "Escape" && overlay && !overlay.classList.contains("hidden")) closeProfile();
   });
 
-  // ---- Remplissage de la modale ----
+  // --------- Remplissage ---------
   async function loadProfile(userId, usernameFromUi){
-    // UI placeholders
+    // Vérif IDs HTML indispensables
+    const need = ["#profile-name","#profile-tier","#profile-score","#profile-volume","#profile-max-list","#profile-history"];
+    for (const id of need){
+      if (!qs(id)) {
+        console.error("Profil: ID manquant dans index.html:", id);
+        return;
+      }
+    }
+
     qs("#profile-name").textContent = usernameFromUi || "Profil";
     qs("#profile-tier").textContent = "—";
     qs("#profile-score").textContent = "—";
@@ -88,11 +128,10 @@
     qs("#profile-max-list").innerHTML = `<div style="opacity:.75;padding:10px 0;">Chargement…</div>`;
     qs("#profile-history").innerHTML = `<div style="opacity:.75;padding:10px 0;">Chargement…</div>`;
 
-    // 1) users (score/tier)
-    let me = null;
+    // USERS (score / tier)
     try {
       const users = await getJSON("/api/users");
-      me = Array.isArray(users) ? users.find(u => String(u.user_id) === String(userId)) : null;
+      const me = Array.isArray(users) ? users.find(u => String(u.user_id) === String(userId)) : null;
       if (me) {
         qs("#profile-name").textContent = me.username || usernameFromUi || "Profil";
         qs("#profile-tier").textContent = me.tier || "—";
@@ -102,7 +141,7 @@
       console.error("Profil: erreur /api/users", e);
     }
 
-    // 2) exercises (max list + ids)
+    // EXERCISES (max perfs + liste ids)
     let exercises = [];
     try {
       exercises = await getJSON(`/api/exercises?user_id=${encodeURIComponent(userId)}`);
@@ -112,32 +151,24 @@
       exercises = [];
     }
 
-    // Render max performances (top 15)
     const maxBox = qs("#profile-max-list");
-    if (maxBox) {
-      if (exercises.length === 0) {
-        maxBox.innerHTML = `<div style="opacity:.75;padding:10px 0;">Aucune performance maximale.</div>`;
-      } else {
-        const sorted = exercises
-          .slice()
-          .sort((a,b) => Number(b.max_weight||0) - Number(a.max_weight||0))
-          .slice(0, 15);
-
-        maxBox.innerHTML = sorted.map(ex => {
-          const name = ex.exercise || ex.name || "Exercice";
-          const w = Number(ex.max_weight || 0);
-          return `
-            <div class="max-perf-row">
-              <span class="max-perf-name">${esc(name)}</span>
-              <strong class="max-perf-weight">${esc(w)} kg</strong>
-            </div>
-          `;
-        }).join("");
-      }
+    if (exercises.length === 0) {
+      maxBox.innerHTML = `<div style="opacity:.75;padding:10px 0;">Aucune performance maximale.</div>`;
+    } else {
+      const sorted = exercises.slice().sort((a,b) => Number(b.max_weight||0) - Number(a.max_weight||0)).slice(0, 15);
+      maxBox.innerHTML = sorted.map(ex => {
+        const name = ex.exercise || ex.name || "Exercice";
+        const w = Number(ex.max_weight || 0);
+        return `
+          <div class="max-perf-row">
+            <span class="max-perf-name">${esc(name)}</span>
+            <strong class="max-perf-weight">${esc(w)} kg</strong>
+          </div>
+        `;
+      }).join("");
     }
 
-    // 3) performances (historique + volume total)
-    // Pas d'API "all", donc on fetch par exercise_id et on fusionne.
+    // PERFORMANCES (historique + volume total)
     const exNameById = new Map();
     for (const ex of exercises) {
       const id = ex.exercise_id;
@@ -149,76 +180,67 @@
     try {
       const ids = exercises.map(e => e.exercise_id).filter(Boolean);
 
-      // Limite de charge: on charge tout, puis on n'affiche que les 50 dernières
-      const requests = ids.map(async (eid) => {
+      const perEx = await Promise.all(ids.map(async (eid) => {
         try {
           const list = await getJSON(`/api/performances?user_id=${encodeURIComponent(userId)}&exercise_id=${encodeURIComponent(eid)}`);
           return Array.isArray(list) ? list.map(p => ({ ...p, exercise_id: eid })) : [];
         } catch {
           return [];
         }
-      });
+      }));
 
-      const perfsByEx = await Promise.all(requests);
-      allPerfs = perfsByEx.flat();
-
+      allPerfs = perEx.flat();
     } catch (e) {
       console.error("Profil: erreur historique", e);
       allPerfs = [];
     }
 
-    // Volume total = somme(weight * reps) sur toutes les perfs
+    // Volume total (weight*reps)
     let totalVol = 0;
     for (const p of allPerfs) totalVol += perfVolume(p);
     qs("#profile-volume").textContent = formatKgCompact(totalVol);
 
-    // Historique: tri desc par date si possible
-    allPerfs.sort((a,b) => {
-      const da = a.date || a.created_at || "";
-      const db = b.date || b.created_at || "";
-      return String(db).localeCompare(String(da));
-    });
+    // Historique: dernier au plus ancien
+    allPerfs.sort((a,b) => String(b.date || b.created_at || "").localeCompare(String(a.date || a.created_at || "")));
 
-    const historyBox = qs("#profile-history");
-    if (historyBox) {
-      if (allPerfs.length === 0) {
-        historyBox.innerHTML = `<div style="opacity:.75;padding:10px 0;">Aucun historique.</div>`;
-      } else {
-        const shown = allPerfs.slice(0, 50);
-        historyBox.innerHTML = shown.map(p => {
-          const name = exNameById.get(String(p.exercise_id)) || "Exercice";
-          const w = Number(p.weight || 0);
-          const r = Number(p.reps || 0);
-          const d = formatDateFR(p.date || p.created_at || "");
-          return `
-            <div class="history-row">
-              <span class="history-ex">${esc(name)}</span>
-              <strong class="history-val">${esc(w)} kg × ${esc(r)}</strong>
-              <span class="history-date">${esc(d)}</span>
-            </div>
-          `;
-        }).join("");
-      }
+    const histBox = qs("#profile-history");
+    if (allPerfs.length === 0) {
+      histBox.innerHTML = `<div style="opacity:.75;padding:10px 0;">Aucun historique.</div>`;
+    } else {
+      const shown = allPerfs.slice(0, 50);
+      histBox.innerHTML = shown.map(p => {
+        const name = exNameById.get(String(p.exercise_id)) || "Exercice";
+        const w = Number(p.weight || 0);
+        const r = Number(p.reps || 0);
+        const d = formatDateFR(p.date || p.created_at || "");
+        return `
+          <div class="history-row">
+            <span class="history-ex">${esc(name)}</span>
+            <strong class="history-val">${esc(w)} kg × ${esc(r)}</strong>
+            <span class="history-date">${esc(d)}</span>
+          </div>
+        `;
+      }).join("");
     }
   }
 
-  // ---- Bouton "Voir le profil" (dans la modale login existante) ----
+  // --------- Bouton Voir le profil ---------
   const viewBtn = qs("#view-btn");
   viewBtn?.addEventListener("click", async () => {
-    // On essaie aussi de récupérer l'ID depuis la modale login si app.js l'a stocké
-    const loginOverlay = qs("#modal-overlay");
-    const dsUserId = loginOverlay?.dataset?.userId || null;
-    const dsUsername = loginOverlay?.dataset?.username || null;
+    try {
+      const r = resolveUser();
+      console.log("Profil resolveUser:", r);
 
-    const userId = selected.user_id || dsUserId;
-    const username = selected.username || dsUsername;
+      if (!r.user_id) {
+        alert("Impossible de trouver le user_id. Clique d'abord sur un profil dans la liste.");
+        return;
+      }
 
-    if (!userId) {
-      alert("Sélectionne un profil dans la liste avant.");
-      return;
+      openProfile();
+      await loadProfile(r.user_id, r.username);
+    } catch (e) {
+      console.error("Erreur view profil", e);
+      alert("Erreur lors du chargement du profil (voir Console).");
     }
-
-    openProfile();
-    await loadProfile(userId, username);
   });
 })();
