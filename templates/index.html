@@ -64,34 +64,38 @@
   <!-- ===================== -->
   <div id="profile-overlay" class="hidden">
     <div class="modal profile-modal">
-
-      <div class="profile-head">
-        <div class="profile-title-wrap">
-          <h2 id="profile-name">—</h2>
-          <div id="profile-tier" class="tier-badge">—</div>
-        </div>
-        <button id="profile-close" type="button" class="btn-close">Fermer</button>
+  
+      <!-- Header centré -->
+      <div class="profile-header">
+        <h2 id="profile-name" class="profile-name-title">—</h2>
+        <div id="profile-tier" class="profile-tier-pill">—</div>
       </div>
-
-      <div class="profile-stats">
-        <div class="stat-card">
-          <div class="stat-label">Score</div>
-          <div id="profile-score" class="stat-value">—</div>
+  
+      <!-- Stats -->
+      <div class="profile-stats-grid">
+        <div class="profile-stat-card">
+          <div class="profile-stat-label">Score</div>
+          <div id="profile-score" class="profile-stat-value">—</div>
         </div>
-        <div class="stat-card">
-          <div class="stat-label">Volume total</div>
-          <div id="profile-volume" class="stat-value">—</div>
+  
+        <div class="profile-stat-card">
+          <div class="profile-stat-label">Volume total</div>
+          <div id="profile-volume" class="profile-stat-value">—</div>
         </div>
       </div>
-
-      <h3 class="section-title">Performances maximales</h3>
-      <div id="profile-max-list" class="max-perfs-list"></div>
-
-      <h3 class="section-title">Historique</h3>
-      <div id="profile-history" class="history-list"></div>
-
+  
+      <h3 class="profile-section-title">Performances maximales</h3>
+      <div id="profile-max-list" class="profile-list"></div>
+  
+      <h3 class="profile-section-title">Historique</h3>
+      <div id="profile-history" class="profile-history"></div>
+  
+      <!-- Bouton bas -->
+      <button id="profile-close" type="button" class="profile-close-btn">Fermer</button>
+  
     </div>
   </div>
+
 
   <!-- VERSION -->
   <div id="site-version">Gotham Training — v0.3.103</div>
