@@ -99,7 +99,6 @@ function endOfMonth(d){
 }
 
 function parseISODateLoose(v){
-  // accepte "YYYY-MM-DD" ou ISO complet (created_at)
   if (!v) return null;
   const s = String(v);
 
@@ -117,7 +116,6 @@ function parseISODateLoose(v){
 }
 
 function perfVolume(p){
-  // ✅ tu veux "kilos total" => poids * reps
   const w = Number(p.weight ?? p.kg ?? 0) || 0;
   const r = Number(p.reps ?? p.repetitions ?? 0) || 0;
   return w * r;
@@ -126,6 +124,36 @@ function perfVolume(p){
 function formatKg(n){
   const val = Math.round(Number(n || 0));
   return `${val.toLocaleString("fr-FR")} kg`;
+}
+
+/* ==========================
+   OBJECTIF 3 séances / semaine
+   - 1 séance = au moins 1 perf dans la journée
+   - cap à 3 : au-delà on reste à 3/3
+   ========================== */
+function dayKey(d){
+  const yyyy = d.getFullYear();
+  const mm = String(d.getMonth()+1).padStart(2,"0");
+  const dd = String(d.getDate()).padStart(2,"0");
+  return `${yyyy}-${mm}-${dd}`;
+}
+
+function setObjectiveText(x, max=3){
+  // On cible le <strong> dans .progress-text (ton "2/3" est hardcodé)
+  const el = document.querySelector(".progress-text strong");
+  if (el) el.textContent = `${x} / ${max}`;
+}
+
+function setRingProgress(ratio){
+  // Si ton cercle est un <circle class="ring-progress" r="...">
+  const circle = document.querySelector(".ring-progress");
+  if (!circle) return;
+
+  const r = Number(circle.getAttribute("r") || 60);
+  const c = 2 * Math.PI * r;
+
+  circle.style.strokeDasharray = `${c}`;
+  circle.style.strokeDashoffset = `${c * (1 - ratio)}`;
 }
 
 document.addEventListener("DOMContentLoaded", () => {
@@ -149,16 +177,15 @@ document.addEventListener("DOMContentLoaded", () => {
 
     const u = encodeURIComponent(userId);
 
-    // endpoints possibles (liste complète de performances)
-    // ✅ IMPORTANT: on injecte bien user_id dans l’URL
     const urls = [
       `/api/performances/all?user_id=${u}`,
-      `/api/performances?user_id=${u}`
+      `/api/performances?user_id=${u}`,
+      `/api/workouts?user_id=${u}`,
+      `/api/workouts/all?user_id=${u}`,
     ];
 
     const j = await tryGet(urls);
 
-    // Normalisation
     let list = [];
     if (Array.isArray(j)) list = j;
     else if (Array.isArray(j?.items)) list = j.items;
@@ -175,11 +202,13 @@ document.addEventListener("DOMContentLoaded", () => {
     const monthEnd = endOfMonth(now);
 
     let weekVolume = 0;
-    let weekPerfCount = 0; // ✅ "Exercices semaine" = nombre de perfs semaine
+    let weekPerfCount = 0;
     let monthVolume = 0;
 
+    // ✅ objectif séances semaine = nb de jours uniques avec ≥ 1 perf
+    const daysWithSession = new Set();
+
     for (const p of (perfs || [])){
-      // priorité created_at (timestamp exact), sinon date
       const d = parseISODateLoose(p.created_at || p.date || p.at);
       if (!d) continue;
 
@@ -188,6 +217,7 @@ document.addEventListener("DOMContentLoaded", () => {
       if (d >= weekStart && d <= weekEnd){
         weekVolume += vol;
         weekPerfCount += 1;
+        daysWithSession.add(dayKey(d)); // ✅ 1 séance/jour si ≥1 perf
       }
 
       if (d >= monthStart && d <= monthEnd){
@@ -195,14 +225,13 @@ document.addEventListener("DOMContentLoaded", () => {
       }
     }
 
-    return { weekVolume, weekPerfCount, monthVolume };
+    const sessions = daysWithSession.size;
+    const cappedSessions = Math.min(sessions, 3);
+
+    return { weekVolume, weekPerfCount, monthVolume, sessions, cappedSessions };
   }
 
   function renderDashboardStats(stats){
-    // ✅ IDs qui doivent exister dans dashboard.html
-    // <strong id="weekly-volume">—</strong>
-    // <strong id="weekly-perfs">—</strong>
-    // <strong id="monthly-volume">—</strong>
     const elWeekVol = qs("#weekly-volume");
     const elWeekPerf = qs("#weekly-perfs");
     const elMonthVol = qs("#monthly-volume");
@@ -210,6 +239,10 @@ document.addEventListener("DOMContentLoaded", () => {
     if (elWeekVol) elWeekVol.textContent = formatKg(stats.weekVolume);
     if (elWeekPerf) elWeekPerf.textContent = String(stats.weekPerfCount);
     if (elMonthVol) elMonthVol.textContent = formatKg(stats.monthVolume);
+
+    // ✅ Mise à jour 0/3, 1/3, 2/3, 3/3
+    setObjectiveText(stats.cappedSessions, 3);
+    setRingProgress(stats.cappedSessions / 3);
   }
 
   async function refreshDashboardStats(){
@@ -220,7 +253,6 @@ document.addEventListener("DOMContentLoaded", () => {
       renderDashboardStats(stats);
     }catch(err){
       console.error("Erreur stats dashboard", err);
-      // si erreur, on laisse les "—"
     }
   }
 
@@ -338,7 +370,7 @@ document.addEventListener("DOMContentLoaded", () => {
   // ==========================
   const perfModal     = qs("#perf-modal");
   const perfForm      = qs("#perf-form");
-  const perfCloseBtn  = qs("#perf-close"); // si absent -> null
+  const perfCloseBtn  = qs("#perf-close");
 
   const perfDate      = qs("#perf-date");
   const perfWeight    = qs("#perf-weight");
