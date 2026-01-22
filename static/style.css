@@ -2376,3 +2376,146 @@ img, svg, canvas{ max-width: 100%; height: auto; }
     padding-bottom: calc(16px + env(safe-area-inset-bottom));
   }
 }
+
+/* =========================================================
+   PROFILE MODAL – COMPACT + SCROLL + HISTORIQUE LIMITÉ (UI)
+   À coller tout en bas de style.css
+   ========================================================= */
+
+.modal.profile-modal{
+  max-height: calc(100vh - 24px);
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+  padding: 14px 14px 12px;
+}
+
+.profile-header{
+  padding: 4px 0 8px;
+}
+
+.profile-name-title{
+  font-size: 26px;      /* ↓ */
+  line-height: 1.05;
+}
+
+.profile-tier-pill{
+  margin-top: 8px;
+  padding: 6px 12px;
+  font-size: 12px;      /* ↓ */
+}
+
+.profile-stats-grid{
+  margin-top: 8px;
+  gap: 10px;
+}
+
+.profile-stat-card{
+  padding: 12px 12px;   /* ↓ */
+  border-radius: 12px;
+}
+
+.profile-stat-label{
+  font-size: 12px;      /* ↓ */
+}
+
+.profile-stat-value{
+  margin-top: 6px;
+  font-size: 22px;      /* ↓ */
+}
+
+/* Titres sections plus compacts */
+.profile-section-title{
+  margin: 12px 0 8px;   /* ↓ */
+  font-size: 18px;      /* ↓ */
+}
+
+/* Zone scroll globale (on scrolle l’intérieur de la modale) */
+#profile-max-list,
+#profile-history{
+  overflow-y: auto;
+  -webkit-overflow-scrolling: touch;
+}
+
+/* Max perfs plus compactes */
+#profile-max-list .max-perf-row{
+  padding: 10px 12px;   /* ↓ */
+  border-radius: 12px;
+  margin-bottom: 8px;
+}
+
+#profile-max-list .max-perf-name{
+  font-size: 14px;      /* ↓ */
+}
+
+#profile-max-list .max-perf-weight{
+  font-size: 14px;      /* ↓ */
+}
+
+/* Historique : hauteur limitée + scroll interne */
+#profile-history{
+  max-height: 210px;    /* ✅ limite la zone historique */
+  padding-right: 2px;   /* petit confort scrollbar */
+}
+
+#profile-history .history-row{
+  padding: 10px 12px;   /* ↓ */
+  border-radius: 12px;
+  margin-bottom: 8px;
+  grid-template-columns: 1fr auto auto;
+}
+
+#profile-history .history-ex{
+  font-size: 13px;      /* ↓ */
+}
+
+#profile-history .history-val{
+  font-size: 13px;      /* ↓ */
+}
+
+#profile-history .history-date{
+  font-size: 12px;      /* ↓ */
+}
+
+/* Bouton Fermer toujours visible en bas */
+.profile-close-btn{
+  margin-top: 10px;
+  padding: 12px 14px;   /* ↓ */
+  border-radius: 16px;
+  font-size: 16px;      /* ↓ */
+  flex-shrink: 0;
+}
+
+/* ================================
+   HISTORIQUE: 4 lignes visibles + scroll
+   ================================ */
+
+/* Hauteur max calibrée pour ~4 lignes (ajustable) */
+#profile-history{
+  max-height: 220px;          /* ✅ environ 4 cards */
+  overflow-y: auto;           /* ✅ scroll interne */
+  -webkit-overflow-scrolling: touch;
+  padding-right: 2px;         /* confort scrollbar */
+}
+
+/* Cards compactes */
+#profile-history .history-row{
+  padding: 10px 12px;
+  border-radius: 12px;
+  margin-bottom: 8px;
+}
+
+/* Typo plus petite */
+#profile-history .history-ex{ font-size: 13px; }
+#profile-history .history-val{ font-size: 13px; }
+#profile-history .history-date{ font-size: 12px; opacity: .6; }
+
+.modal.profile-modal{
+  max-height: calc(100vh - 24px);
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+}
+
+#profile-history{ max-height: 220px; }
+
