@@ -174,25 +174,34 @@ document.addEventListener("DOMContentLoaded", () => {
   // ==========================
   async function fetchAllPerformances(){
     if (!userId) return [];
-
     const u = encodeURIComponent(userId);
-
-    const urls = [
-      `/api/performances/all?user_id=${u}`,
-      `/api/performances?user_id=${u}`,
-      `/api/workouts?user_id=${u}`,
-      `/api/workouts/all?user_id=${u}`,
-    ];
-
-    const j = await tryGet(urls);
-
-    let list = [];
-    if (Array.isArray(j)) list = j;
-    else if (Array.isArray(j?.items)) list = j.items;
-    else if (Array.isArray(j?.data)) list = j.data;
-
-    return list;
+  
+    // 1) récupère les exercices
+    let exercises = [];
+    const exRes = await fetch(`/api/exercises?user_id=${u}`, { cache: "no-store" });
+    if (!exRes.ok) return [];
+    const exJson = await exRes.json().catch(()=>[]);
+    exercises = Array.isArray(exJson) ? exJson : [];
+  
+    const ids = exercises.map(e => e.exercise_id || e.id).filter(Boolean);
+    if (!ids.length) return [];
+  
+    // 2) récupère les perfs par exercice
+    const packs = await Promise.all(ids.map(async (eid) => {
+      const url = `/api/performances?user_id=${u}&exercise_id=${encodeURIComponent(eid)}`;
+      const r = await fetch(url, { cache: "no-store" });
+      if (!r.ok) return [];
+      const j = await r.json().catch(()=>[]);
+      if (Array.isArray(j)) return j;
+      if (Array.isArray(j?.items)) return j.items;
+      if (Array.isArray(j?.data)) return j.data;
+      return [];
+    }));
+  
+    return packs.flat();
   }
+
+ 
 
   function computeDashboardStats(perfs){
     const now = new Date();
