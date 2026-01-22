@@ -63,38 +63,52 @@
   <!-- MODALE PROFIL (Voir le profil) -->
   <!-- ===================== -->
   <div id="profile-overlay" class="hidden">
-    <div class="modal profile-modal">
-  
-      <!-- Header centré -->
+  <div class="modal profile-modal">
+
+    <!-- HEADER FIXE -->
+    <div class="profile-fixed-top">
       <div class="profile-header">
         <h2 id="profile-name" class="profile-name-title">—</h2>
         <div id="profile-tier" class="profile-tier-pill">—</div>
       </div>
-  
-      <!-- Stats -->
+
       <div class="profile-stats-grid">
         <div class="profile-stat-card">
           <div class="profile-stat-label">Score</div>
           <div id="profile-score" class="profile-stat-value">—</div>
         </div>
-  
+
         <div class="profile-stat-card">
           <div class="profile-stat-label">Volume total</div>
           <div id="profile-volume" class="profile-stat-value">—</div>
         </div>
       </div>
-  
-      <h3 class="profile-section-title">Performances maximales</h3>
-      <div id="profile-max-list" class="profile-list"></div>
-  
-      <h3 class="profile-section-title">Historique</h3>
-      <div id="profile-history" class="profile-history"></div>
-  
-      <!-- Bouton bas -->
-      <button id="profile-close" type="button" class="profile-close-btn">Fermer</button>
-  
     </div>
+
+    <!-- ZONE CENTRALE (fixe en hauteur) -->
+    <div class="profile-mid">
+
+      <!-- RECTANGLE BLEU 1 : MAX (SCROLL) -->
+      <div class="profile-box">
+        <div class="profile-box-title">Performances maximales</div>
+        <div id="profile-max-list" class="profile-box-body"></div>
+      </div>
+
+      <!-- RECTANGLE BLEU 2 : HISTORIQUE (SCROLL) -->
+      <div class="profile-box">
+        <div class="profile-box-title">Historique</div>
+        <div id="profile-history" class="profile-box-body"></div>
+      </div>
+
+    </div>
+
+    <!-- FOOTER FIXE -->
+    <div class="profile-fixed-bottom">
+      <button id="profile-close" type="button" class="profile-close-btn">Fermer</button>
+    </div>
+
   </div>
+</div>
 
 
   <!-- VERSION -->
