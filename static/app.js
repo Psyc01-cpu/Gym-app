@@ -40,7 +40,7 @@ document.addEventListener("DOMContentLoaded", () => {
     togglePasswordBtn.addEventListener("click", () => {
       const isPassword = pwdInput.type === "password";
       pwdInput.type = isPassword ? "text" : "password";
-      togglePasswordBtn.textContent = isPassword ? "🙈" : "👁";
+      togglePasswordBtn.textContent = isPassword ? "Masquer" : "Afficher";
       togglePasswordBtn.setAttribute(
         "aria-label",
         isPassword ? "Masquer le mot de passe" : "Afficher le mot de passe"
@@ -49,133 +49,25 @@ document.addEventListener("DOMContentLoaded", () => {
   }
 
   if (!overlay || !profilesContainer || !createOverlay) {
-    console.error("Éléments DOM manquants (overlay / users-list / create-overlay)");
+    console.error("Éléments DOM manquants (modal-overlay / users-list / create-overlay)");
     return;
   }
 
   let selectedUser = null; // { user_id, username, rank, score, tier, ... }
 
   // -------------------------
-  // MODALE APERÇU PROFIL
-  // -------------------------
-  const profileOverlay = document.getElementById("profile-overlay");
-  const profileCloseBtn = document.getElementById("profile-close-btn");
-  const ppUsername = document.getElementById("pp-username");
-  const ppTier = document.getElementById("pp-tier");
-  const ppScore = document.getElementById("pp-score");
-  const ppVolume = document.getElementById("pp-volume");
-  const ppMaxList = document.getElementById("pp-max-list");
-
-  function openProfilePreview() {
-    if (!profileOverlay) return;
-    profileOverlay.classList.remove("hidden");
-    document.body.classList.add("modal-open");
-  }
-
-  function closeProfilePreview() {
-    if (!profileOverlay) return;
-    profileOverlay.classList.add("hidden");
-    document.body.classList.remove("modal-open");
-  }
-
-  function formatKg(n) {
-    const v = Math.round(Number(n || 0));
-    return `${v.toLocaleString("fr-FR")} kg`;
-  }
-
-  function perfVolume(p) {
-    const w = Number(p.weight ?? p.kg ?? 0) || 0;
-    const r = Number(p.reps ?? p.repetitions ?? 0) || 0;
-    return w * r;
-  }
-
-  async function loadProfilePreviewData(user) {
-    if (!user?.user_id) return;
-
-    // Valeurs hautes (immédiates)
-    if (ppUsername) ppUsername.textContent = user.username || "—";
-    if (ppTier) ppTier.textContent = user.tier || "Unranked";
-    if (ppScore) ppScore.textContent = String(user.score ?? 0);
-
-    if (ppVolume) ppVolume.textContent = "…";
-    if (ppMaxList) ppMaxList.innerHTML = `<div class="pp-empty">Chargement…</div>`;
-
-    const u = encodeURIComponent(user.user_id);
-
-    // 1) Exercices (pour avoir le nom)
-    const exRes = await fetch(`/api/exercises?user_id=${u}`, { cache: "no-store" });
-    const exercises = exRes.ok ? await exRes.json() : [];
-    const exById = new Map();
-    (Array.isArray(exercises) ? exercises : []).forEach((ex) => {
-      const id = ex.exercise_id || ex.id;
-      const name = ex.name || ex.exercise || "Exercice";
-      if (id != null) exById.set(String(id), name);
-    });
-
-    // 2) Performances (pour volume total + max par exo)
-    const pRes = await fetch(`/api/performances/all?user_id=${u}`, { cache: "no-store" });
-    const perfsRaw = pRes.ok ? await pRes.json() : [];
-    const perfs = Array.isArray(perfsRaw) ? perfsRaw : (perfsRaw?.items || perfsRaw?.data || []);
-
-    // Volume total
-    let totalVol = 0;
-
-    // Max weight par exercice
-    const maxByExercise = new Map(); // exId -> maxWeight
-
-    for (const p of perfs) {
-      totalVol += perfVolume(p);
-
-      const exId = p.exercise_id ?? p.exerciseId ?? p.exo_id ?? p.exercise;
-      if (exId == null) continue;
-
-      const w = Number(p.weight ?? p.kg ?? 0) || 0;
-      const key = String(exId);
-      const prev = maxByExercise.get(key) ?? 0;
-      if (w > prev) maxByExercise.set(key, w);
-    }
-
-    if (ppVolume) ppVolume.textContent = formatKg(totalVol);
-
-    // Render liste max
-    const rows = Array.from(maxByExercise.entries())
-      .map(([exId, maxW]) => ({
-        exId,
-        name: exById.get(exId) || `Exercice ${exId}`,
-        maxW
-      }))
-      .sort((a, b) => b.maxW - a.maxW);
-
-    if (!ppMaxList) return;
-
-    if (rows.length === 0) {
-      ppMaxList.innerHTML = `<div class="pp-empty">Aucune performance.</div>`;
-      return;
-    }
-
-    ppMaxList.innerHTML = rows.map(r => `
-      <div class="pp-row">
-        <div class="pp-exo">${String(r.name)}</div>
-        <div class="pp-max">${Math.round(r.maxW)} kg</div>
-      </div>
-    `).join("");
-  }
-
-  // Fermetures modale
-  profileCloseBtn?.addEventListener("click", closeProfilePreview);
-  profileOverlay?.addEventListener("click", (e) => {
-    if (e.target === profileOverlay) closeProfilePreview();
-  });
-
-
-  
-  // -------------------------
-  // MODALE PROFIL
+  // MODALE PROFIL (LOGIN)
   // -------------------------
   function openModal(user) {
     selectedUser = user;
+
     modalTitle.textContent = `Profil – ${user.username}`;
     passwordInput.value = "";
+
+    // IMPORTANT: donne à profile.js un endroit fiable pour récupérer l’utilisateur
+    overlay.dataset.userId = user.user_id ?? user.id ?? "";
+    overlay.dataset.username = user.username ?? "";
+
     overlay.classList.remove("hidden");
     document.body.classList.add("modal-open");
 
@@ -187,6 +79,10 @@ document.addEventListener("DOMContentLoaded", () => {
     overlay.classList.add("hidden");
     document.body.classList.remove("modal-open");
     selectedUser = null;
+
+    // Nettoyage dataset (optionnel mais propre)
+    overlay.dataset.userId = "";
+    overlay.dataset.username = "";
   }
 
   // -------------------------
@@ -226,6 +122,10 @@ document.addEventListener("DOMContentLoaded", () => {
     // Stockage JSON (safe)
     btn.dataset.user = JSON.stringify(user);
 
+    // IMPORTANT pour profile.js (sélection par data-*)
+    btn.dataset.userId = user.user_id ?? user.id ?? "";
+    btn.dataset.username = user.username ?? "";
+
     btn.innerHTML = `
       <div class="profile-left">
         <div class="profile-name">${escapeHtml(user.username)}</div>
@@ -244,7 +144,7 @@ document.addEventListener("DOMContentLoaded", () => {
   // -------------------------
   async function loadProfiles() {
     try {
-      const res = await fetch("/api/users");
+      const res = await fetch("/api/users", { cache: "no-store" });
       if (!res.ok) throw new Error("/api/users not ok");
 
       const users = await res.json();
@@ -278,6 +178,10 @@ document.addEventListener("DOMContentLoaded", () => {
     const btn = e.target.closest(".profile-card");
     if (!btn) return;
 
+    // visuel sélection (optionnel)
+    document.querySelectorAll(".profile-card.selected").forEach(x => x.classList.remove("selected"));
+    btn.classList.add("selected");
+
     try {
       const user = JSON.parse(btn.dataset.user);
       openModal(user);
@@ -287,7 +191,7 @@ document.addEventListener("DOMContentLoaded", () => {
   });
 
   // -------------------------
-  // ➕ OUVRIR MODALE CRÉATION
+  // OUVRIR MODALE CRÉATION
   // -------------------------
   if (createProfileBtn) {
     createProfileBtn.addEventListener("click", openCreate);
@@ -345,7 +249,7 @@ document.addEventListener("DOMContentLoaded", () => {
   }
 
   // -------------------------
-  // 🔐 CONNEXION
+  // CONNEXION
   // -------------------------
   async function doLogin() {
     const password = passwordInput.value;
@@ -356,7 +260,6 @@ document.addEventListener("DOMContentLoaded", () => {
     }
 
     try {
-      // API login attend username + password
       const res = await fetch("/api/login", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
@@ -371,8 +274,6 @@ document.addEventListener("DOMContentLoaded", () => {
         return;
       }
 
-      // ✅ dashboard FastAPI exige ?user=...
-      // ✅ on ajoute user_id pour que dashboard.js puisse appeler /api/*
       const url =
         `/dashboard?user=${encodeURIComponent(selectedUser.username)}` +
         `&user_id=${encodeURIComponent(selectedUser.user_id)}`;
@@ -385,7 +286,6 @@ document.addEventListener("DOMContentLoaded", () => {
   }
 
   if (loginBtn) {
-    // bouton submit déjà géré par le form, mais on garde la compat
     loginBtn.addEventListener("click", (e) => {
       e.preventDefault();
       doLogin();
@@ -400,20 +300,17 @@ document.addEventListener("DOMContentLoaded", () => {
   }
 
   // -------------------------
-  // 👁️ VOIR PROFIL (OUVRE MODALE APERÇU)
+  // VOIR PROFIL
   // -------------------------
+  // IMPORTANT : on ne met PAS de handler ici.
+  // C’est profile.js qui gère #view-btn (ouverture + chargement).
+  // On garde seulement une sécurité: si aucun profil sélectionné.
   if (viewBtn) {
-    viewBtn.addEventListener("click", async () => {
-      if (!selectedUser) return;
-
-      openProfilePreview();
-
-      try {
-        await loadProfilePreviewData(selectedUser);
-      } catch (err) {
-        console.error(err);
-        if (ppMaxList) ppMaxList.innerHTML = `<div class="pp-empty">Erreur de chargement.</div>`;
+    viewBtn.addEventListener("click", () => {
+      if (!selectedUser) {
+        showToast("Sélectionne un profil", "error");
       }
+      // ne rien faire d’autre : profile.js prend la suite
     });
   }
 
