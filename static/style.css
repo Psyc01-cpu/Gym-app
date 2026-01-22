@@ -2744,3 +2744,16 @@ img, svg, canvas{ max-width: 100%; height: auto; }
   cursor: pointer;
 }
 .profile-close-btn:active{ transform: scale(0.99); }
+
+/* =====================================================
+   SCROLL ACTIF — PERFORMANCES MAXIMALES
+   ===================================================== */
+
+/* Force la zone Max à être scrollable */
+#profile-max-list{
+  flex: 1 1 auto;
+  min-height: 0;
+  overflow-y: auto !important;
+  overscroll-behavior: contain;
+  -webkit-overflow-scrolling: touch;
+}
