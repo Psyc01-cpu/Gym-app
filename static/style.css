@@ -2340,3 +2340,39 @@ img, svg, canvas{ max-width: 100%; height: auto; }
 .profile-close-btn:active{
   transform: scale(0.99);
 }
+
+/* =========================================================
+   PROFILE MODAL – FIX HAUTEUR ÉCRAN + SCROLL INTERNE
+   ========================================================= */
+
+.modal.profile-modal{
+  max-height: calc(100vh - 32px);
+  display: flex;
+  flex-direction: column;
+}
+
+/* Zone scrollable */
+#profile-max-list,
+#profile-history{
+  overflow-y: auto;
+  -webkit-overflow-scrolling: touch;
+}
+
+/* Permet au contenu central de scroller sans casser le layout */
+.profile-section-title,
+#profile-max-list,
+#profile-history{
+  flex-shrink: 0;
+}
+
+/* Scroll principal dans la modale */
+.modal.profile-modal{
+  overflow: hidden;
+}
+
+/* iOS safe area (encoche) */
+@supports(padding: env(safe-area-inset-bottom)){
+  .modal.profile-modal{
+    padding-bottom: calc(16px + env(safe-area-inset-bottom));
+  }
+}
