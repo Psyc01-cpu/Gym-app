@@ -713,63 +713,103 @@ document.addEventListener("DOMContentLoaded", () => {
     }
   }
 
-  // ==========================
-  // API — LEAST EXERCISE (CLICKABLE)
-  // ==========================
-  async function loadLeastExercise() {
-    if (!userId) return;
+    // ==========================
+    // API — LEAST EXERCISE
+    // ==========================
+    let leastExerciseRef = null; // { exercise_id, name }
   
-    const btn = qs("#least-exercise-btn") || qs("#least-exercise"); // au cas où
-    const label = qs("#least-exercise-name");
+    function bindLeastExerciseClick(){
+      // On cible soit un bouton dédié, soit le parent du label
+      const label = qs("#least-exercise-name");
+      const host =
+        qs("#least-exercise-card") ||
+        qs("#least-exercise-btn") ||
+        label?.closest("button") ||
+        label?.closest(".dash-cta") ||
+        label?.closest(".card") ||
+        label?.parentElement;
   
-    try {
-      const res = await fetch(`/api/least-exercise?user_id=${encodeURIComponent(userId)}`, { cache: "no-store" });
-      if (!res.ok) throw new Error("API error");
-      const data = await res.json();
+      if (!host) return;
   
-      // attendu: { exercise: "dev couché", exercise_id: "...", zone: "haut" }
-      const exName = data.exercise || data.name || "Aucun exercice";
-      const exId   = data.exercise_id || data.id || "";
-      const zone   = data.zone || "";
+      // évite de binder 10 fois
+      if (host.dataset.boundClick === "1") return;
+      host.dataset.boundClick = "1";
   
-      if (label) label.textContent = exName;
+      host.style.cursor = "pointer";
+      host.addEventListener("click", async (e) => {
+        e.preventDefault();
+        e.stopPropagation();
+        try {
+          if (!userId) return;
   
-      // Rend le bloc cliquable
-      const clickableEl = btn || (label ? label.closest("button, .btn, .card, .stat-card, .tile") : null);
+          // 1) Si on a déjà l'id, parfait
+          if (leastExerciseRef?.exercise_id) {
+            openExerciseModal({
+              exercise_id: leastExerciseRef.exercise_id,
+              name: leastExerciseRef.name || label?.textContent || "",
+              zone: leastExerciseRef.zone || ""
+            });
+            return;
+          }
   
-      if (clickableEl) {
-        clickableEl.style.cursor = exId ? "pointer" : "default";
-        clickableEl.setAttribute("role", "button");
-        clickableEl.setAttribute("tabindex", "0");
+          // 2) Sinon : on cherche dans /api/exercises par le nom affiché
+          const targetName = (leastExerciseRef?.name || label?.textContent || "").trim();
+          if (!targetName) return;
   
-        // évite de binder 15 fois
-        clickableEl.onclick = null;
-        clickableEl.onkeydown = null;
+          const res = await fetch(`/api/exercises?user_id=${encodeURIComponent(userId)}`, { cache: "no-store" });
+          if (!res.ok) throw new Error("Impossible de récupérer la liste des exercices");
   
-        if (exId) {
-          const exObj = { exercise_id: exId, name: exName, zone };
+          const exercises = await res.json().catch(()=>[]);
+          const normalized = (Array.isArray(exercises) ? exercises : []).map((ex) => ({
+            exercise_id: ex.exercise_id || ex.id || "",
+            name: ex.name || ex.exercise || "",
+            zone: ex.zone || "",
+            video_url: ex.video_url || ex.video || "",
+          }));
   
-          clickableEl.onclick = (e) => {
-            e.preventDefault();
-            e.stopPropagation();
-            openExerciseModal(exObj); // ✅ ouvre la modale + liste + bouton ajout perf
-          };
+          const found = normalized.find(x => (x.name || "").trim().toLowerCase() === targetName.toLowerCase())
+                     || normalized.find(x => (x.name || "").trim().toLowerCase().includes(targetName.toLowerCase()));
   
-          clickableEl.onkeydown = (e) => {
-            if (e.key === "Enter" || e.key === " ") {
-              e.preventDefault();
-              openExerciseModal(exObj);
-            }
-          };
+          if (!found?.exercise_id) {
+            alert("Exercice introuvable. (Le backend ne renvoie pas l'exercise_id)");
+            return;
+          }
+  
+          // On ouvre le même modal que "Ouvrir"
+          openExerciseModal(found);
+  
+        } catch (err) {
+          console.error("Erreur ouverture least exercise:", err);
+          alert("Erreur lors de l'ouverture de l'exercice.");
         }
-      }
-  
-    } catch (err) {
-      console.error("Erreur chargement exercice faible", err);
-      if (label) label.textContent = "Aucun exercice";
+      });
     }
-  }
-
+  
+    async function loadLeastExercise() {
+      if (!userId) return;
+      try {
+        const res = await fetch(`/api/least-exercise?user_id=${encodeURIComponent(userId)}`, { cache: "no-store" });
+        if (!res.ok) throw new Error("API error");
+        const data = await res.json().catch(()=> ({}));
+  
+        // Tolérant : backend peut renvoyer {exercise: "nom"} ou {name:"", exercise_id:""}
+        const exName = (data.exercise || data.name || "").trim();
+  
+        // Si ton backend renvoie un id un jour, on le prend direct
+        const exId = data.exercise_id || data.id || null;
+  
+        leastExerciseRef = { exercise_id: exId, name: exName, zone: data.zone || "" };
+  
+        const label = qs("#least-exercise-name");
+        if (label) label.textContent = exName || "Aucun exercice";
+  
+        // Rend la tuile cliquable
+        bindLeastExerciseClick();
+  
+      } catch (err) {
+        console.error("Erreur chargement exercice faible", err);
+      }
+    }
 
 
   // ==========================
