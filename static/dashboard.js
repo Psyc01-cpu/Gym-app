@@ -139,13 +139,11 @@ function dayKey(d){
 }
 
 function setObjectiveText(x, max=3){
-  // On cible le <strong> dans .progress-text (ton "2/3" est hardcodé)
   const el = document.querySelector(".progress-text strong");
   if (el) el.textContent = `${x} / ${max}`;
 }
 
 function setRingProgress(ratio){
-  // Si ton cercle est un <circle class="ring-progress" r="...">
   const circle = document.querySelector(".ring-progress");
   if (!circle) return;
 
@@ -154,6 +152,86 @@ function setRingProgress(ratio){
 
   circle.style.strokeDasharray = `${c}`;
   circle.style.strokeDashoffset = `${c * (1 - ratio)}`;
+}
+
+/* ==========================
+   KPI PATCH (Série -> Ratio / Séances -> Calories)
+   - Pour l’instant valeurs en dur
+   - Plus tard : récupérer depuis Suivi + Nutrition
+   ========================== */
+function computeShoulderWaistRatio(shoulderCm, waistCm){
+  const s = Number(shoulderCm || 0);
+  const w = Number(waistCm || 0);
+  if (!s || !w) return "—";
+  return (s / w).toFixed(2);
+}
+
+function setCardByIds({ labelId, valueId, labelText, valueText }){
+  const labelEl = labelId ? qs(labelId) : null;
+  const valueEl = valueId ? qs(valueId) : null;
+  if (labelEl) labelEl.textContent = labelText;
+  if (valueEl) valueEl.textContent = valueText;
+  return Boolean(labelEl || valueEl);
+}
+
+function setCardByTitle(oldTitle, newTitle, newValue){
+  const normalize = (t) => String(t || "").trim().toLowerCase();
+
+  // on balaye les cartes (classes typiques)
+  const candidates = qsa(
+    ".stat-card, .metric-card, .kpi-card, .dashboard-card, .tile, .card"
+  );
+
+  for (const card of candidates){
+    const titleEl =
+      card.querySelector(".stat-title, .metric-title, .kpi-title, .card-title, .label, h3, h4, h5, .title")
+      || null;
+
+    if (!titleEl) continue;
+
+    if (normalize(titleEl.textContent) === normalize(oldTitle)){
+      titleEl.textContent = newTitle;
+
+      // Valeur : on privilégie un élément "value" existant, sinon le premier <strong> de la carte
+      const valueEl =
+        card.querySelector(".stat-value, .metric-value, .kpi-value, .value, .number, strong")
+        || null;
+
+      if (valueEl) valueEl.textContent = newValue;
+      return true;
+    }
+  }
+  return false;
+}
+
+function updateRatioAndCaloriesCards(){
+  // Valeurs en dur (temporaire)
+  const shoulderCm = 120;
+  const waistCm = 75;
+  const calorieTarget = 2800;
+
+  const ratio = computeShoulderWaistRatio(shoulderCm, waistCm);
+  const ratioText = ratio;            // ex: "1.60"
+  const calText = `${calorieTarget.toLocaleString("fr-FR")} kcal`;
+
+  // 1) Si ton HTML a des IDs dédiés (au cas où)
+  //    Tu peux ajuster si tes IDs sont différents.
+  const doneByIds1 = setCardByIds({
+    labelId: "#streak-label",
+    valueId: "#streak-value",
+    labelText: "Ratio Épaules / Taille",
+    valueText: ratioText
+  });
+  const doneByIds2 = setCardByIds({
+    labelId: "#sessions-label",
+    valueId: "#sessions-value",
+    labelText: "Objectif calories",
+    valueText: calText
+  });
+
+  // 2) Sinon : on remplace en cherchant les titres "Série" et "Séances"
+  if (!doneByIds1) setCardByTitle("Série", "Ratio Épaules / Taille", ratioText);
+  if (!doneByIds2) setCardByTitle("Séances", "Objectif calories", calText);
 }
 
 document.addEventListener("DOMContentLoaded", () => {
@@ -169,23 +247,26 @@ document.addEventListener("DOMContentLoaded", () => {
   if (usernameEl) usernameEl.textContent = username || "Profil";
   if (!userId) console.warn("Paramètre ?user_id manquant : les appels API ne fonctionneront pas.");
 
+  // ✅ applique le patch KPI dès le chargement UI
+  updateRatioAndCaloriesCards();
+
   // ==========================
   // DASHBOARD STATS (API ALL PERFS)
   // ==========================
   async function fetchAllPerformances(){
     if (!userId) return [];
     const u = encodeURIComponent(userId);
-  
+
     // 1) récupère les exercices
     let exercises = [];
     const exRes = await fetch(`/api/exercises?user_id=${u}`, { cache: "no-store" });
     if (!exRes.ok) return [];
     const exJson = await exRes.json().catch(()=>[]);
     exercises = Array.isArray(exJson) ? exJson : [];
-  
+
     const ids = exercises.map(e => e.exercise_id || e.id).filter(Boolean);
     if (!ids.length) return [];
-  
+
     // 2) récupère les perfs par exercice
     const packs = await Promise.all(ids.map(async (eid) => {
       const url = `/api/performances?user_id=${u}&exercise_id=${encodeURIComponent(eid)}`;
@@ -197,11 +278,9 @@ document.addEventListener("DOMContentLoaded", () => {
       if (Array.isArray(j?.data)) return j.data;
       return [];
     }));
-  
+
     return packs.flat();
   }
-
- 
 
   function computeDashboardStats(perfs){
     const now = new Date();
@@ -214,7 +293,6 @@ document.addEventListener("DOMContentLoaded", () => {
     let weekPerfCount = 0;
     let monthVolume = 0;
 
-    // ✅ objectif séances semaine = nb de jours uniques avec ≥ 1 perf
     const daysWithSession = new Set();
 
     for (const p of (perfs || [])){
@@ -226,7 +304,7 @@ document.addEventListener("DOMContentLoaded", () => {
       if (d >= weekStart && d <= weekEnd){
         weekVolume += vol;
         weekPerfCount += 1;
-        daysWithSession.add(dayKey(d)); // ✅ 1 séance/jour si ≥1 perf
+        daysWithSession.add(dayKey(d));
       }
 
       if (d >= monthStart && d <= monthEnd){
@@ -249,9 +327,11 @@ document.addEventListener("DOMContentLoaded", () => {
     if (elWeekPerf) elWeekPerf.textContent = String(stats.weekPerfCount);
     if (elMonthVol) elMonthVol.textContent = formatKg(stats.monthVolume);
 
-    // ✅ Mise à jour 0/3, 1/3, 2/3, 3/3
     setObjectiveText(stats.cappedSessions, 3);
     setRingProgress(stats.cappedSessions / 3);
+
+    // ✅ s’assure que les KPI restent bons même après rerender/refresh
+    updateRatioAndCaloriesCards();
   }
 
   async function refreshDashboardStats(){
