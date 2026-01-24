@@ -668,20 +668,62 @@ document.addEventListener("DOMContentLoaded", () => {
   }
 
   // ==========================
-  // API — LEAST EXERCISE
+  // API — LEAST EXERCISE (CLICKABLE)
   // ==========================
   async function loadLeastExercise() {
     if (!userId) return;
+  
+    const btn = qs("#least-exercise-btn") || qs("#least-exercise"); // au cas où
+    const label = qs("#least-exercise-name");
+  
     try {
       const res = await fetch(`/api/least-exercise?user_id=${encodeURIComponent(userId)}`, { cache: "no-store" });
       if (!res.ok) throw new Error("API error");
       const data = await res.json();
-      const label = qs("#least-exercise-name");
-      if (label) label.textContent = data.exercise || "Aucun exercice";
+  
+      // attendu: { exercise: "dev couché", exercise_id: "...", zone: "haut" }
+      const exName = data.exercise || data.name || "Aucun exercice";
+      const exId   = data.exercise_id || data.id || "";
+      const zone   = data.zone || "";
+  
+      if (label) label.textContent = exName;
+  
+      // Rend le bloc cliquable
+      const clickableEl = btn || (label ? label.closest("button, .btn, .card, .stat-card, .tile") : null);
+  
+      if (clickableEl) {
+        clickableEl.style.cursor = exId ? "pointer" : "default";
+        clickableEl.setAttribute("role", "button");
+        clickableEl.setAttribute("tabindex", "0");
+  
+        // évite de binder 15 fois
+        clickableEl.onclick = null;
+        clickableEl.onkeydown = null;
+  
+        if (exId) {
+          const exObj = { exercise_id: exId, name: exName, zone };
+  
+          clickableEl.onclick = (e) => {
+            e.preventDefault();
+            e.stopPropagation();
+            openExerciseModal(exObj); // ✅ ouvre la modale + liste + bouton ajout perf
+          };
+  
+          clickableEl.onkeydown = (e) => {
+            if (e.key === "Enter" || e.key === " ") {
+              e.preventDefault();
+              openExerciseModal(exObj);
+            }
+          };
+        }
+      }
+  
     } catch (err) {
       console.error("Erreur chargement exercice faible", err);
+      if (label) label.textContent = "Aucun exercice";
     }
   }
+
 
   // ==========================
   // API — EXERCISES
