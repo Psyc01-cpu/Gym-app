@@ -251,6 +251,52 @@ document.addEventListener("DOMContentLoaded", () => {
   updateRatioAndCaloriesCards();
 
   // ==========================
+  // PLACEHOLDERS (à brancher plus tard)
+  // ==========================
+  const UI_PLACEHOLDERS = {
+    shoulderWaistRatio: "1,62",     // <-- tu pourras calculer/charger plus tard
+    calorieTarget: "2 500 kcal",    // <-- idem (nutrition)
+  };
+  
+  // Remplace un "tile" dashboard en trouvant le titre exact (ex: "Série", "Séances")
+  function replaceDashboardTile(oldTitle, newTitle, newValueHtml){
+    const root = qs("#dashboard-page") || document;
+  
+    // Cherche un élément dont le texte est exactement oldTitle
+    const titleEl = Array.from(root.querySelectorAll("*"))
+      .find(el => el.children.length === 0 && (el.textContent || "").trim() === oldTitle);
+  
+    if (!titleEl) {
+      console.warn(`Tile "${oldTitle}" introuvable (HTML différent).`);
+      return false;
+    }
+  
+    // Trouve le conteneur de la carte (selon tes classes)
+    const card = titleEl.closest(".stat-card, .dash-card, .card, .metric-card, .tile, .panel") || titleEl.parentElement;
+  
+    // Titre
+    titleEl.textContent = newTitle;
+  
+    // Valeur : on privilégie le <strong> existant, sinon on le crée
+    let strong = card?.querySelector("strong");
+    if (!strong) {
+      // Essaie de viser un bloc "valeur" courant
+      const candidate = card?.querySelector(".value, .stat-value, .metric-value") || card;
+      strong = document.createElement("strong");
+      candidate?.appendChild(strong);
+    }
+  
+    if (strong) strong.innerHTML = newValueHtml;
+  
+    return true;
+  }
+  
+  // ✅ Applique le remplacement
+  replaceDashboardTile("Série", "Ratio épaules / taille", UI_PLACEHOLDERS.shoulderWaistRatio);
+  replaceDashboardTile("Séances", "Objectif calories", UI_PLACEHOLDERS.calorieTarget);
+  
+  
+  // ==========================
   // DASHBOARD STATS (API ALL PERFS)
   // ==========================
   async function fetchAllPerformances(){
