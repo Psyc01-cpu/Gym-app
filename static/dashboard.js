@@ -905,6 +905,7 @@ document.addEventListener("DOMContentLoaded", () => {
   // INIT
   // ==========================
   showDashboard();
+  renderRatioAndCalories();
   loadLeastExercise();
   refreshDashboardStats();
 });
