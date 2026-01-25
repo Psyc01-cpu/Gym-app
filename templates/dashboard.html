@@ -141,6 +141,38 @@
 
   </div><!-- /app-content -->
 
+  <!-- ===================== -->
+  <!-- PAGE CHAT -->
+  <!-- ===================== -->
+  <section class="chat-page hidden" id="chat-page">
+  
+    <div class="chat-layout">
+  
+      <!-- Colonne gauche : conversations -->
+      <aside class="chat-left">
+        <div class="chat-left-header">Conversations</div>
+        <div id="chat-conv-list" class="chat-conv-list"></div>
+      </aside>
+  
+      <!-- Colonne droite : messages -->
+      <main class="chat-main">
+        <div class="chat-main-header">
+          <div id="chat-title">—</div>
+          <div id="chat-status" class="chat-status">offline</div>
+        </div>
+  
+        <div id="chat-messages" class="chat-messages"></div>
+  
+        <form id="chat-form" class="chat-form" autocomplete="off">
+          <input id="chat-input" type="text" placeholder="Écrire un message…" />
+          <button type="submit">Envoyer</button>
+        </form>
+      </main>
+  
+    </div>
+  
+  </section>
+
 
   <!-- ===================== -->
   <!-- NAV BAR MOBILE (FIXE) -->
@@ -157,7 +189,7 @@
       <small>Exercices</small>
     </button>
 
-    <button class="nav-item" type="button">
+    <button class="nav-item" id="nav-chat" type="button">
       <i data-lucide="message-circle"></i>
       <small>Chat</small>
     </button>
