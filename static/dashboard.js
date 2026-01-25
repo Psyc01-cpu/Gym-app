@@ -561,6 +561,116 @@ document.addEventListener("DOMContentLoaded", () => {
     chatMsgs.scrollTop = chatMsgs.scrollHeight;
   }
 
+  // --------------------
+  // CHAT (simple polling)
+  // --------------------
+  let currentRoom = "general";
+  let lastRenderedKey = "";
+  
+  function $(sel){ return document.querySelector(sel); }
+  
+  function escapeHtml(s){
+    return String(s ?? "").replace(/[&<>"']/g, m => ({
+      "&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"
+    }[m]));
+  }
+  
+  async function loadMessages(){
+    try{
+      const res = await fetch(`/api/chat/list?room=${encodeURIComponent(currentRoom)}&limit=50`, { cache: "no-store" });
+      const data = await res.json();
+  
+      if(!data || !data.ok) return;
+  
+      const items = data.items || [];
+  
+      // clé simple pour éviter de rerender si rien ne change
+      const key = items.map(m => `${m.id || ""}_${m.ts || ""}`).join("|");
+      if(key === lastRenderedKey) return;
+      lastRenderedKey = key;
+  
+      const list = $("#chat-messages"); // <= IMPORTANT : ta zone messages doit avoir cet id
+      if(!list) return;
+  
+      list.innerHTML = items.map(m => `
+        <div class="chat-msg">
+          <div class="chat-meta">
+            <strong>${escapeHtml(m.user || "User")}</strong>
+            <span>${escapeHtml(m.ts || "")}</span>
+          </div>
+          <div class="chat-text">${escapeHtml(m.message || "")}</div>
+        </div>
+      `).join("");
+  
+      // scroll en bas
+      list.scrollTop = list.scrollHeight;
+  
+      // petit statut
+      const status = $("#chat-status"); // optionnel
+      if(status) status.textContent = "online";
+    }catch(e){
+      const status = $("#chat-status");
+      if(status) status.textContent = "offline";
+      console.warn("loadMessages error", e);
+    }
+  }
+  
+  async function sendMessage(){
+    const input = $("#chat-input"); // <= IMPORTANT : ton input doit avoir cet id
+    if(!input) return;
+  
+    const msg = input.value.trim();
+    if(!msg) return;
+  
+    const username = (document.querySelector("#username-display")?.textContent || "").trim() || "Batcave";
+  
+    const payload = {
+      room: currentRoom,
+      user: username,
+      message: msg,
+      client_id: "web"
+    };
+  
+    const res = await fetch("/api/chat/send", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(payload)
+    });
+  
+    const data = await res.json();
+    if(!data.ok){
+      console.warn("send failed", data);
+      return;
+    }
+  
+    input.value = "";
+    await loadMessages(); // refresh direct
+  }
+  
+  // Hook bouton envoyer + Enter
+  function initChat(){
+    const btn = $("#chat-send");     // <= IMPORTANT : bouton envoyer
+    const input = $("#chat-input");  // <= IMPORTANT : input message
+  
+    if(btn) btn.addEventListener("click", sendMessage);
+    if(input){
+      input.addEventListener("keydown", (e) => {
+        if(e.key === "Enter"){
+          e.preventDefault();
+          sendMessage();
+        }
+      });
+    }
+  
+    loadMessages();
+    setInterval(loadMessages, 2000);
+  }
+  
+  // appelle initChat() quand ta page/onglet chat est affiché
+  // ou directement après le chargement :
+  initChat();
+  
+    
   // ==========================
   // MODALE (CREATE EXERCISE)
   // ==========================
