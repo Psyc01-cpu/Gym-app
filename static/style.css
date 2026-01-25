@@ -2932,3 +2932,11 @@ img, svg, canvas{ max-width: 100%; height: auto; }
   border-radius: 12px;
   font-weight:700;
 }
+
+/* par défaut (desktop) */
+.chat-back-btn { display: none; }
+
+/* mobile : visible quand on est en mode "thread" */
+@media (max-width: 900px){
+  .chat-layout.is-thread .chat-back-btn { display: inline-flex; }
+}
