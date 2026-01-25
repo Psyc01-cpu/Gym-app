@@ -2996,7 +2996,7 @@ body.app {
 
 /* Hauteurs (ajuste si besoin) */
 :root{
-  --topbar-h: 200px;     /* hauteur de ta top-bar */
+  --topbar-h: 72px;     /* hauteur de ta top-bar */
   --bottomnav-h: 78px;  /* hauteur de ta bottom-nav */
 }
 
