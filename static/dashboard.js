@@ -357,37 +357,171 @@ document.addEventListener("DOMContentLoaded", () => {
   }
 
   // ==========================
-  // NAVIGATION
+  // NAVIGATION (Dashboard / Exercises / Chat)
   // ==========================
   const dashboardPage = qs("#dashboard-page");
   const exercisesPage = qs("#exercises-page");
+  const chatPage      = qs("#chat-page");
+  
   const navDashboard = qs("#nav-dashboard");
   const navExercises = qs("#nav-exercises");
-
+  const navChat      = qs("#nav-chat");
+  
   function setActiveNav(activeId) {
-    [navDashboard, navExercises].filter(Boolean).forEach((b) => b.classList.remove("active"));
+    [navDashboard, navExercises, navChat].filter(Boolean).forEach((b) => b.classList.remove("active"));
     if (activeId === "dashboard") navDashboard?.classList.add("active");
     if (activeId === "exercises") navExercises?.classList.add("active");
+    if (activeId === "chat")      navChat?.classList.add("active");
   }
-
-  function showDashboard() {
-    dashboardPage?.classList.remove("hidden");
-    exercisesPage?.classList.add("hidden");
-    setActiveNav("dashboard");
-    refreshDashboardStats();
-    loadLeastExercise(); // recharge aussi le CTA
-  }
-
-  async function showExercises() {
+  
+  function hideAllPages(){
     dashboardPage?.classList.add("hidden");
+    exercisesPage?.classList.add("hidden");
+    chatPage?.classList.add("hidden");
+  }
+  
+  function showDashboard() {
+    hideAllPages();
+    dashboardPage?.classList.remove("hidden");
+    setActiveNav("dashboard");
+    refreshDashboardStats?.();
+    loadLeastExercise?.();
+  }
+  
+  async function showExercises() {
+    hideAllPages();
     exercisesPage?.classList.remove("hidden");
     setActiveNav("exercises");
-    await loadExercises();
+    await loadExercises?.();
   }
-
+  
+  function showChat(){
+    hideAllPages();
+    chatPage?.classList.remove("hidden");
+    setActiveNav("chat");
+    initChatUI(); // <-- MVP front
+  }
+  
   navDashboard?.addEventListener("click", showDashboard);
   navExercises?.addEventListener("click", showExercises);
+  navChat?.addEventListener("click", showChat);
 
+
+  // ==========================
+  // CHAT (MVP FRONT)
+  // ==========================
+  const chatConvList = qs("#chat-conv-list");
+  const chatTitle    = qs("#chat-title");
+  const chatStatus   = qs("#chat-status");
+  const chatMsgs     = qs("#chat-messages");
+  const chatForm     = qs("#chat-form");
+  const chatInput    = qs("#chat-input");
+  
+  let chatState = {
+    currentConvId: "general",
+    conversations: [
+      { id: "general", name: "Général" },
+      { id: "training", name: "Entraînement" },
+      { id: "nutrition", name: "Nutrition" },
+    ],
+    messagesByConv: {
+      general: [
+        { id: crypto.randomUUID(), at: Date.now(), author: "system", text: "Bienvenue dans le chat Batcave." },
+      ],
+      training: [],
+      nutrition: [],
+    }
+  };
+  
+  function initChatUI(){
+    if (!chatConvList || !chatTitle || !chatMsgs || !chatForm || !chatInput) {
+      console.warn("Chat UI: éléments manquants dans le DOM");
+      return;
+    }
+  
+    // statut (MVP)
+    if (chatStatus) chatStatus.textContent = "offline";
+  
+    renderConversations();
+    openConversation(chatState.currentConvId);
+  
+    // éviter double bind
+    if (chatForm.dataset.bound === "1") return;
+    chatForm.dataset.bound = "1";
+  
+    chatForm.addEventListener("submit", (e) => {
+      e.preventDefault();
+      const txt = (chatInput.value || "").trim();
+      if (!txt) return;
+  
+      addMessage(chatState.currentConvId, {
+        author: "me",
+        text: txt
+      });
+  
+      chatInput.value = "";
+      chatInput.focus();
+    });
+  }
+  
+  function renderConversations(){
+    chatConvList.innerHTML = chatState.conversations.map(c => {
+      const active = c.id === chatState.currentConvId ? " is-active" : "";
+      return `
+        <button class="chat-conv-item${active}" type="button" data-conv="${esc(c.id)}">
+          ${esc(c.name)}
+        </button>
+      `;
+    }).join("");
+  
+    qsa(".chat-conv-item").forEach(btn => {
+      btn.addEventListener("click", () => {
+        const id = btn.getAttribute("data-conv");
+        if (!id) return;
+        openConversation(id);
+      });
+    });
+  }
+  
+  function openConversation(convId){
+    chatState.currentConvId = convId;
+    renderConversations();
+  
+    const conv = chatState.conversations.find(c => c.id === convId);
+    chatTitle.textContent = conv ? conv.name : "Chat";
+  
+    renderMessages(convId);
+  }
+  
+  function addMessage(convId, {author, text}){
+    const msg = { id: crypto.randomUUID(), at: Date.now(), author, text };
+    if (!chatState.messagesByConv[convId]) chatState.messagesByConv[convId] = [];
+    chatState.messagesByConv[convId].push(msg);
+    renderMessages(convId);
+  }
+  
+  function renderMessages(convId){
+    const list = chatState.messagesByConv[convId] || [];
+    chatMsgs.innerHTML = list.map(m => {
+      const who = m.author === "me" ? "chat-msg me" : (m.author === "system" ? "chat-msg system" : "chat-msg");
+      const date = new Date(m.at);
+      const hh = String(date.getHours()).padStart(2,"0");
+      const mm = String(date.getMinutes()).padStart(2,"0");
+      return `
+        <div class="${who}">
+          <div class="chat-bubble">
+            <div class="chat-text">${esc(m.text)}</div>
+            <div class="chat-meta">${esc(hh)}:${esc(mm)}</div>
+          </div>
+        </div>
+      `;
+    }).join("");
+  
+    // auto scroll bas
+    chatMsgs.scrollTop = chatMsgs.scrollHeight;
+  }
+
+  
   // ==========================
   // MODALE (CREATE EXERCISE)
   // ==========================
