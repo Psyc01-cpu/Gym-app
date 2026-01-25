@@ -3028,3 +3028,11 @@ body.app {
   z-index: 1000;
   padding-bottom: env(safe-area-inset-bottom);
 }
+
+/* =========================
+   CHAT OFFSET SOUS TOP BAR
+   ========================= */
+
+.chat-page{
+  padding-top: calc(24px + env(safe-area-inset-top));
+}
