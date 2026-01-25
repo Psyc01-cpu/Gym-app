@@ -162,7 +162,6 @@ function computeShoulderWaistRatio(shoulderCm, waistCm){
   return (s / w).toFixed(2).replace(".", ","); // affichage FR
 }
 
-// Méthode robuste : trouve le texte exact "Série" / "Séances" même si pas de class
 function replaceDashboardTile(oldTitle, newTitle, newValue){
   const normalize = (s) => String(s || "").trim().toLowerCase();
 
@@ -191,7 +190,6 @@ function replaceDashboardTile(oldTitle, newTitle, newValue){
   return true;
 }
 
-// Fallback (si ton HTML a des titres structurés)
 function setCardByTitle(oldTitle, newTitle, newValue){
   const normalize = (t) => String(t || "").trim().toLowerCase();
 
@@ -216,15 +214,12 @@ function setCardByTitle(oldTitle, newTitle, newValue){
 }
 
 function updateRatioAndCaloriesCards(){
-  // valeurs en dur pour l’instant
   const ratio = computeShoulderWaistRatio(120, 75); // ex: 1,60
   const calText = `${(2500).toLocaleString("fr-FR")} kcal`;
 
-  // 1) robuste (texte exact)
   const ok1 = replaceDashboardTile("Série", "Ratio épaules / taille", ratio);
   const ok2 = replaceDashboardTile("Séances", "Objectif calories", calText);
 
-  // 2) fallback si jamais
   if (!ok1) setCardByTitle("Série", "Ratio épaules / taille", ratio);
   if (!ok2) setCardByTitle("Séances", "Objectif calories", calText);
 }
@@ -261,7 +256,6 @@ document.addEventListener("DOMContentLoaded", () => {
   if (usernameEl) usernameEl.textContent = username || "Profil";
   if (!userId) console.warn("Paramètre ?user_id manquant : les appels API ne fonctionneront pas.");
 
-  // KPI patch immédiat
   updateRatioAndCaloriesCards();
 
   // ==========================
@@ -271,7 +265,6 @@ document.addEventListener("DOMContentLoaded", () => {
     if (!userId) return [];
     const u = encodeURIComponent(userId);
 
-    // 1) exercices
     const exRes = await fetch(`/api/exercises?user_id=${u}`, { cache: "no-store" });
     if (!exRes.ok) return [];
     const exJson = await exRes.json().catch(()=>[]);
@@ -280,7 +273,6 @@ document.addEventListener("DOMContentLoaded", () => {
     const ids = exercises.map(e => e.exercise_id || e.id).filter(Boolean);
     if (!ids.length) return [];
 
-    // 2) perfs
     const packs = await Promise.all(ids.map(async (eid) => {
       const url = `/api/performances?user_id=${u}&exercise_id=${encodeURIComponent(eid)}`;
       const r = await fetch(url, { cache: "no-store" });
@@ -342,7 +334,6 @@ document.addEventListener("DOMContentLoaded", () => {
     setObjectiveText(stats.cappedSessions, 3);
     setRingProgress(stats.cappedSessions / 3);
 
-    // garde Ratio/Calories même après refresh
     updateRatioAndCaloriesCards();
   }
 
@@ -362,24 +353,24 @@ document.addEventListener("DOMContentLoaded", () => {
   const dashboardPage = qs("#dashboard-page");
   const exercisesPage = qs("#exercises-page");
   const chatPage      = qs("#chat-page");
-  
+
   const navDashboard = qs("#nav-dashboard");
   const navExercises = qs("#nav-exercises");
-  const navChat      = qs("#nav-chat");
-  
+  const navChat      = qs("#nav-chat"); // IMPORTANT: ton HTML doit avoir id="nav-chat" sur le bouton Chat
+
   function setActiveNav(activeId) {
     [navDashboard, navExercises, navChat].filter(Boolean).forEach((b) => b.classList.remove("active"));
     if (activeId === "dashboard") navDashboard?.classList.add("active");
     if (activeId === "exercises") navExercises?.classList.add("active");
     if (activeId === "chat")      navChat?.classList.add("active");
   }
-  
+
   function hideAllPages(){
     dashboardPage?.classList.add("hidden");
     exercisesPage?.classList.add("hidden");
     chatPage?.classList.add("hidden");
   }
-  
+
   function showDashboard() {
     hideAllPages();
     dashboardPage?.classList.remove("hidden");
@@ -387,28 +378,31 @@ document.addEventListener("DOMContentLoaded", () => {
     refreshDashboardStats?.();
     loadLeastExercise?.();
   }
-  
+
   async function showExercises() {
     hideAllPages();
     exercisesPage?.classList.remove("hidden");
     setActiveNav("exercises");
     await loadExercises?.();
   }
-  
+
   function showChat(){
     hideAllPages();
     chatPage?.classList.remove("hidden");
     setActiveNav("chat");
-    initChatUI(); // <-- MVP front
+
+    // arrivée sur chat => liste visible (mobile)
+    showChatList();
+
+    initChatUI(); // MVP front
   }
-  
+
   navDashboard?.addEventListener("click", showDashboard);
   navExercises?.addEventListener("click", showExercises);
   navChat?.addEventListener("click", showChat);
 
-
   // ==========================
-  // CHAT (MVP FRONT)
+  // CHAT (MVP FRONT) + BOUTON RETOUR
   // ==========================
   const chatConvList = qs("#chat-conv-list");
   const chatTitle    = qs("#chat-title");
@@ -416,7 +410,72 @@ document.addEventListener("DOMContentLoaded", () => {
   const chatMsgs     = qs("#chat-messages");
   const chatForm     = qs("#chat-form");
   const chatInput    = qs("#chat-input");
-  
+
+  // éléments structure
+  const chatLeft     = qs(".chat-left");
+  const chatMain     = qs(".chat-main");
+  const chatBackBtn  = qs("#chat-back"); // IMPORTANT: bouton retour dans le HTML
+
+  function isChatMobile(){
+    // seuil ajustable (ex: 900)
+    return window.matchMedia("(max-width: 900px)").matches;
+  }
+
+  function showChatList(){
+    if (!chatLeft || !chatMain) return;
+    if (!isChatMobile()) {
+      // desktop : 2 colonnes visibles
+      chatLeft.style.display = "";
+      chatMain.style.display = "";
+      if (chatBackBtn) chatBackBtn.style.display = "none";
+      return;
+    }
+    // mobile : liste visible, thread caché
+    chatLeft.style.display = "";
+    chatMain.style.display = "none";
+    if (chatBackBtn) chatBackBtn.style.display = "none";
+  }
+
+  function showChatThread(){
+    if (!chatLeft || !chatMain) return;
+    if (!isChatMobile()) {
+      chatLeft.style.display = "";
+      chatMain.style.display = "";
+      if (chatBackBtn) chatBackBtn.style.display = "none";
+      return;
+    }
+    // mobile : thread visible, liste cachée
+    chatLeft.style.display = "none";
+    chatMain.style.display = "";
+    if (chatBackBtn) chatBackBtn.style.display = "";
+  }
+
+  // bind bouton retour (anti double bind)
+  if (chatBackBtn && chatBackBtn.dataset.bound !== "1") {
+    chatBackBtn.dataset.bound = "1";
+    chatBackBtn.addEventListener("click", (e) => {
+      e.preventDefault();
+      e.stopPropagation();
+      showChatList();
+    });
+  }
+
+  // si l'écran change (rotation / resize), on re-réconcilie l'affichage
+  window.addEventListener("resize", () => {
+    // si chat pas visible => on ne force rien
+    if (chatPage?.classList.contains("hidden")) return;
+
+    // si mobile, on garde le bon mode selon si un thread est "ouvert"
+    // on considère "thread ouvert" si chatMain visible
+    const mainVisible = chatMain && chatMain.style.display !== "none";
+    if (isChatMobile()) {
+      if (mainVisible) showChatThread();
+      else showChatList();
+    } else {
+      showChatThread(); // desktop => tout visible
+    }
+  });
+
   let chatState = {
     currentConvId: "general",
     conversations: [
@@ -432,38 +491,33 @@ document.addEventListener("DOMContentLoaded", () => {
       nutrition: [],
     }
   };
-  
+
   function initChatUI(){
     if (!chatConvList || !chatTitle || !chatMsgs || !chatForm || !chatInput) {
       console.warn("Chat UI: éléments manquants dans le DOM");
       return;
     }
-  
-    // statut (MVP)
+
     if (chatStatus) chatStatus.textContent = "offline";
-  
+
     renderConversations();
     openConversation(chatState.currentConvId);
-  
-    // éviter double bind
+
     if (chatForm.dataset.bound === "1") return;
     chatForm.dataset.bound = "1";
-  
+
     chatForm.addEventListener("submit", (e) => {
       e.preventDefault();
       const txt = (chatInput.value || "").trim();
       if (!txt) return;
-  
-      addMessage(chatState.currentConvId, {
-        author: "me",
-        text: txt
-      });
-  
+
+      addMessage(chatState.currentConvId, { author: "me", text: txt });
+
       chatInput.value = "";
       chatInput.focus();
     });
   }
-  
+
   function renderConversations(){
     chatConvList.innerHTML = chatState.conversations.map(c => {
       const active = c.id === chatState.currentConvId ? " is-active" : "";
@@ -473,7 +527,7 @@ document.addEventListener("DOMContentLoaded", () => {
         </button>
       `;
     }).join("");
-  
+
     qsa(".chat-conv-item").forEach(btn => {
       btn.addEventListener("click", () => {
         const id = btn.getAttribute("data-conv");
@@ -482,24 +536,27 @@ document.addEventListener("DOMContentLoaded", () => {
       });
     });
   }
-  
+
   function openConversation(convId){
     chatState.currentConvId = convId;
     renderConversations();
-  
+
     const conv = chatState.conversations.find(c => c.id === convId);
     chatTitle.textContent = conv ? conv.name : "Chat";
-  
+
     renderMessages(convId);
+
+    // mobile => on passe en mode "thread"
+    showChatThread();
   }
-  
+
   function addMessage(convId, {author, text}){
     const msg = { id: crypto.randomUUID(), at: Date.now(), author, text };
     if (!chatState.messagesByConv[convId]) chatState.messagesByConv[convId] = [];
     chatState.messagesByConv[convId].push(msg);
     renderMessages(convId);
   }
-  
+
   function renderMessages(convId){
     const list = chatState.messagesByConv[convId] || [];
     chatMsgs.innerHTML = list.map(m => {
@@ -516,12 +573,10 @@ document.addEventListener("DOMContentLoaded", () => {
         </div>
       `;
     }).join("");
-  
-    // auto scroll bas
+
     chatMsgs.scrollTop = chatMsgs.scrollHeight;
   }
 
-  
   // ==========================
   // MODALE (CREATE EXERCISE)
   // ==========================
@@ -819,7 +874,7 @@ document.addEventListener("DOMContentLoaded", () => {
   // ==========================
   // API — LEAST EXERCISE (CTA cliquable)
   // ==========================
-  let leastExerciseRef = null; // { exercise_id, name, zone }
+  let leastExerciseRef = null;
 
   function bindLeastExerciseClick(){
     const label = qs("#least-exercise-name");
