@@ -2970,7 +2970,7 @@ body.app {
 
 /* 2) La zone scrollable */
 .app-content {
-  height: calc(100dvh - 32px); /* 64px = hauteur top-bar (ajuste si besoin) */
+  height: calc(100dvh - 64px); /* 64px = hauteur top-bar (ajuste si besoin) */
   overflow-y: auto;
   -webkit-overflow-scrolling: touch;
 
@@ -2987,7 +2987,7 @@ body.app {
 /* 4) Important : si tu as un container chat interne scrollable */
 .chat-layout {
   height: auto !important;
-  min-height: calc(100dvh - 32px - 78px - env(safe-area-inset-bottom));
+  min-height: calc(100dvh - 64px - 78px - env(safe-area-inset-bottom));
 }
 
 /* ==========================
