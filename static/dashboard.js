@@ -713,103 +713,135 @@ document.addEventListener("DOMContentLoaded", () => {
     }
   }
 
-    // ==========================
-    // API — LEAST EXERCISE
-    // ==========================
-    let leastExerciseRef = null; // { exercise_id, name }
+  // ==========================
+  // API — LEAST EXERCISE
+  // ==========================
+  let leastExerciseRef = null; // { exercise_id, name, zone }
   
-    function bindLeastExerciseClick(){
-      // On cible soit un bouton dédié, soit le parent du label
-      const label = qs("#least-exercise-name");
-      const host =
-        qs("#least-exercise-card") ||
-        qs("#least-exercise-btn") ||
-        label?.closest("button") ||
-        label?.closest(".dash-cta") ||
-        label?.closest(".card") ||
-        label?.parentElement;
+  function bindLeastExerciseClick(){
+    const label = qs("#least-exercise-name");
+    if (!label) return;
   
-      if (!host) return;
+    // On cible soit un conteneur dédié, soit un parent logique
+    const host =
+      qs("#least-exercise-card") ||
+      qs("#least-exercise-btn") ||
+      label.closest("button") ||
+      label.closest(".dash-cta") ||
+      label.closest(".card") ||
+      label.parentElement;
   
-      // évite de binder 10 fois
-      if (host.dataset.boundClick === "1") return;
-      host.dataset.boundClick = "1";
+    if (!host) return;
   
-      host.style.cursor = "pointer";
-      host.addEventListener("click", async (e) => {
-        e.preventDefault();
-        e.stopPropagation();
-        try {
-          if (!userId) return;
+    // évite de binder 10 fois
+    if (host.dataset.boundClick === "1") return;
+    host.dataset.boundClick = "1";
   
-          // 1) Si on a déjà l'id, parfait
-          if (leastExerciseRef?.exercise_id) {
-            openExerciseModal({
-              exercise_id: leastExerciseRef.exercise_id,
-              name: leastExerciseRef.name || label?.textContent || "",
-              zone: leastExerciseRef.zone || ""
-            });
-            return;
-          }
+    host.style.cursor = "pointer";
   
-          // 2) Sinon : on cherche dans /api/exercises par le nom affiché
-          const targetName = (leastExerciseRef?.name || label?.textContent || "").trim();
-          if (!targetName) return;
+    host.addEventListener("click", async (e) => {
+      e.preventDefault();
+      e.stopPropagation();
   
-          const res = await fetch(`/api/exercises?user_id=${encodeURIComponent(userId)}`, { cache: "no-store" });
-          if (!res.ok) throw new Error("Impossible de récupérer la liste des exercices");
-  
-          const exercises = await res.json().catch(()=>[]);
-          const normalized = (Array.isArray(exercises) ? exercises : []).map((ex) => ({
-            exercise_id: ex.exercise_id || ex.id || "",
-            name: ex.name || ex.exercise || "",
-            zone: ex.zone || "",
-            video_url: ex.video_url || ex.video || "",
-          }));
-  
-          const found = normalized.find(x => (x.name || "").trim().toLowerCase() === targetName.toLowerCase())
-                     || normalized.find(x => (x.name || "").trim().toLowerCase().includes(targetName.toLowerCase()));
-  
-          if (!found?.exercise_id) {
-            alert("Exercice introuvable. (Le backend ne renvoie pas l'exercise_id)");
-            return;
-          }
-  
-          // On ouvre le même modal que "Ouvrir"
-          openExerciseModal(found);
-  
-        } catch (err) {
-          console.error("Erreur ouverture least exercise:", err);
-          alert("Erreur lors de l'ouverture de l'exercice.");
-        }
-      });
-    }
-  
-    async function loadLeastExercise() {
-      if (!userId) return;
       try {
-        const res = await fetch(`/api/least-exercise?user_id=${encodeURIComponent(userId)}`, { cache: "no-store" });
-        if (!res.ok) throw new Error("API error");
-        const data = await res.json().catch(()=> ({}));
+        if (!userId) return;
   
-        // Tolérant : backend peut renvoyer {exercise: "nom"} ou {name:"", exercise_id:""}
-        const exName = (data.exercise || data.name || "").trim();
+        // 1) Si on a déjà l'id : on ouvre direct
+        if (leastExerciseRef?.exercise_id) {
+          openExerciseModal({
+            exercise_id: leastExerciseRef.exercise_id,
+            name: leastExerciseRef.name || label.textContent || "",
+            zone: leastExerciseRef.zone || ""
+          });
+          return;
+        }
   
-        // Si ton backend renvoie un id un jour, on le prend direct
-        const exId = data.exercise_id || data.id || null;
+        // 2) Sinon : on cherche dans /api/exercises par le nom affiché
+        const targetName = String(leastExerciseRef?.name || label.textContent || "").trim();
+        if (!targetName || targetName === "Chargement…" || targetName === "Aucun exercice") return;
   
-        leastExerciseRef = { exercise_id: exId, name: exName, zone: data.zone || "" };
+        const res = await fetch(`/api/exercises?user_id=${encodeURIComponent(userId)}`, { cache: "no-store" });
+        if (!res.ok) throw new Error("Impossible de récupérer la liste des exercices");
   
-        const label = qs("#least-exercise-name");
-        if (label) label.textContent = exName || "Aucun exercice";
+        const exercises = await res.json().catch(() => []);
+        const normalized = (Array.isArray(exercises) ? exercises : []).map((ex) => ({
+          exercise_id: ex.exercise_id || ex.id || "",
+          name: ex.name || ex.exercise || "",
+          zone: ex.zone || "",
+          video_url: ex.video_url || ex.video || "",
+        }));
   
-        // Rend la tuile cliquable
-        bindLeastExerciseClick();
+        const tn = targetName.toLowerCase();
+        const found =
+          normalized.find(x => String(x.name || "").trim().toLowerCase() === tn) ||
+          normalized.find(x => String(x.name || "").trim().toLowerCase().includes(tn));
+  
+        if (!found?.exercise_id) {
+          alert("Exercice introuvable. (Le backend ne renvoie pas l'exercise_id)");
+          return;
+        }
+  
+        // On ouvre le même modal que "Ouvrir"
+        openExerciseModal(found);
   
       } catch (err) {
-        console.error("Erreur chargement exercice faible", err);
+        console.error("Erreur ouverture least exercise:", err);
+        alert("Erreur lors de l'ouverture de l'exercice.");
       }
+    });
+  }
+  
+  async function loadLeastExercise() {
+    const label = qs("#least-exercise-name");
+  
+    // Si l'élément n'existe pas, on sort proprement
+    if (!label) {
+      console.warn("loadLeastExercise: #least-exercise-name introuvable dans le DOM");
+      return;
     }
+  
+    // On met "Chargement..." MAIS on garantit qu'on ne restera pas bloqué
+    label.textContent = "Chargement…";
+  
+    if (!userId) {
+      console.warn("loadLeastExercise: userId manquant");
+      label.textContent = "Aucun exercice";
+      leastExerciseRef = null;
+      return;
+    }
+  
+    try {
+      const url = `/api/least-exercise?user_id=${encodeURIComponent(userId)}`;
+      const res = await fetch(url, { cache: "no-store" });
+  
+      if (!res.ok) {
+        const txt = await res.text().catch(() => "");
+        throw new Error(`least-exercise HTTP ${res.status} ${txt}`);
+      }
+  
+      const data = await res.json().catch(() => ({}));
+      console.log("least-exercise payload:", data);
+  
+      // Tolérant : {exercise:""} ou {name:""} + éventuellement {exercise_id:""}
+      const exName = String(data.exercise || data.name || "").trim();
+      const exId = data.exercise_id || data.id || null;
+  
+      leastExerciseRef = { exercise_id: exId, name: exName, zone: data.zone || "" };
+  
+      label.textContent = exName || "Aucun exercice";
+  
+      // Rend la tuile cliquable (on bind une seule fois)
+      bindLeastExerciseClick();
+  
+    } catch (err) {
+      console.error("Erreur chargement exercice faible:", err);
+  
+      // ✅ IMPORTANT : on évite de rester sur "Chargement..."
+      label.textContent = "Aucun exercice";
+      leastExerciseRef = null;
+    }
+  }
+
 
 
   // ==========================
