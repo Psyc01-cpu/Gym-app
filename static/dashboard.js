@@ -9,6 +9,14 @@ function esc(s){
   }[m]));
 }
 
+// UUID safe (mobile old browsers)
+function safeUUID(){
+  try {
+    if (globalThis.crypto?.randomUUID) return globalThis.crypto.randomUUID();
+  } catch {}
+  return `id_${Date.now()}_${Math.random().toString(16).slice(2)}`;
+}
+
 function formatDateFR(iso){
   if(!iso) return "";
   const d = new Date(iso);
@@ -392,7 +400,7 @@ document.addEventListener("DOMContentLoaded", () => {
     setActiveNav("chat");
 
     // arrivée sur chat => liste visible (mobile)
-    showChatList();
+    setChatMode("list");
 
     initChatUI(); // MVP front
   }
@@ -402,7 +410,7 @@ document.addEventListener("DOMContentLoaded", () => {
   navChat?.addEventListener("click", showChat);
 
   // ==========================
-  // CHAT (MVP FRONT) + BOUTON RETOUR
+  // CHAT (MVP FRONT)
   // ==========================
   const chatConvList = qs("#chat-conv-list");
   const chatTitle    = qs("#chat-title");
@@ -411,68 +419,44 @@ document.addEventListener("DOMContentLoaded", () => {
   const chatForm     = qs("#chat-form");
   const chatInput    = qs("#chat-input");
 
-  // éléments structure
-  const chatLeft     = qs(".chat-left");
-  const chatMain     = qs(".chat-main");
-  const chatBackBtn  = qs("#chat-back"); // IMPORTANT: bouton retour dans le HTML
+  // ==========================
+  // CHAT — MODE MOBILE (LIST <-> THREAD) ROBUSTE
+  // ==========================
+  const chatLayout  = qs(".chat-layout");
+  const chatBackBtn = qs("#chat-back");
 
-  function isChatMobile(){
-    // seuil ajustable (ex: 900)
-    return window.matchMedia("(max-width: 900px)").matches;
-  }
+  function setChatMode(mode){
+    if (!chatLayout) return;
 
-  function showChatList(){
-    if (!chatLeft || !chatMain) return;
-    if (!isChatMobile()) {
-      // desktop : 2 colonnes visibles
-      chatLeft.style.display = "";
-      chatMain.style.display = "";
-      if (chatBackBtn) chatBackBtn.style.display = "none";
+    chatLayout.classList.remove("is-list", "is-thread");
+
+    // desktop => deux colonnes visibles (pas de mode forcé)
+    if (!window.matchMedia("(max-width: 900px)").matches) {
       return;
     }
-    // mobile : liste visible, thread caché
-    chatLeft.style.display = "";
-    chatMain.style.display = "none";
-    if (chatBackBtn) chatBackBtn.style.display = "none";
+
+    if (mode === "thread") chatLayout.classList.add("is-thread");
+    else chatLayout.classList.add("is-list");
   }
 
-  function showChatThread(){
-    if (!chatLeft || !chatMain) return;
-    if (!isChatMobile()) {
-      chatLeft.style.display = "";
-      chatMain.style.display = "";
-      if (chatBackBtn) chatBackBtn.style.display = "none";
-      return;
-    }
-    // mobile : thread visible, liste cachée
-    chatLeft.style.display = "none";
-    chatMain.style.display = "";
-    if (chatBackBtn) chatBackBtn.style.display = "";
-  }
-
-  // bind bouton retour (anti double bind)
+  // bouton retour
   if (chatBackBtn && chatBackBtn.dataset.bound !== "1") {
     chatBackBtn.dataset.bound = "1";
     chatBackBtn.addEventListener("click", (e) => {
       e.preventDefault();
       e.stopPropagation();
-      showChatList();
+      setChatMode("list");
     });
   }
 
-  // si l'écran change (rotation / resize), on re-réconcilie l'affichage
+  // resize / rotation
   window.addEventListener("resize", () => {
-    // si chat pas visible => on ne force rien
     if (chatPage?.classList.contains("hidden")) return;
 
-    // si mobile, on garde le bon mode selon si un thread est "ouvert"
-    // on considère "thread ouvert" si chatMain visible
-    const mainVisible = chatMain && chatMain.style.display !== "none";
-    if (isChatMobile()) {
-      if (mainVisible) showChatThread();
-      else showChatList();
-    } else {
-      showChatThread(); // desktop => tout visible
+    // si mobile : on garde le mode actuel, sinon rien
+    if (window.matchMedia("(max-width: 900px)").matches) {
+      const isThread = chatLayout?.classList.contains("is-thread");
+      setChatMode(isThread ? "thread" : "list");
     }
   });
 
@@ -485,7 +469,7 @@ document.addEventListener("DOMContentLoaded", () => {
     ],
     messagesByConv: {
       general: [
-        { id: crypto.randomUUID(), at: Date.now(), author: "system", text: "Bienvenue dans le chat Batcave." },
+        { id: safeUUID(), at: Date.now(), author: "system", text: "Bienvenue dans le chat Batcave." },
       ],
       training: [],
       nutrition: [],
@@ -542,16 +526,16 @@ document.addEventListener("DOMContentLoaded", () => {
     renderConversations();
 
     const conv = chatState.conversations.find(c => c.id === convId);
-    chatTitle.textContent = conv ? conv.name : "Chat";
+    if (chatTitle) chatTitle.textContent = conv ? conv.name : "Chat";
 
     renderMessages(convId);
 
     // mobile => on passe en mode "thread"
-    showChatThread();
+    setChatMode("thread");
   }
 
   function addMessage(convId, {author, text}){
-    const msg = { id: crypto.randomUUID(), at: Date.now(), author, text };
+    const msg = { id: safeUUID(), at: Date.now(), author, text };
     if (!chatState.messagesByConv[convId]) chatState.messagesByConv[convId] = [];
     chatState.messagesByConv[convId].push(msg);
     renderMessages(convId);
@@ -661,7 +645,7 @@ document.addEventListener("DOMContentLoaded", () => {
   // ==========================
   const perfModal     = qs("#perf-modal");
   const perfForm      = qs("#perf-form");
-  const perfCloseBtn  = qs("#perf-close");
+  const perfCloseBtn  = qs("#perf-close"); // (si tu n'as pas ce bouton dans le HTML, ce n'est pas bloquant)
 
   const perfDate      = qs("#perf-date");
   const perfWeight    = qs("#perf-weight");
