@@ -2757,3 +2757,120 @@ img, svg, canvas{ max-width: 100%; height: auto; }
   overscroll-behavior: contain;
   -webkit-overflow-scrolling: touch;
 }
+
+.chat-layout{
+  display:grid;
+  grid-template-columns: 320px 1fr;
+  gap:12px;
+  height: calc(100vh - 140px); /* ajuste selon ta topbar + nav */
+  padding: 12px;
+}
+
+.chat-left, .chat-main{
+  border: 1px solid rgba(255,215,0,.25);
+  border-radius: 18px;
+  background: rgba(255,255,255,.03);
+  overflow: hidden;
+}
+
+.chat-left-header, .chat-main-header{
+  padding: 12px 14px;
+  border-bottom: 1px solid rgba(255,215,0,.15);
+  font-weight: 700;
+  display:flex;
+  justify-content: space-between;
+  align-items:center;
+}
+
+.chat-status{
+  opacity:.7;
+  font-size: 12px;
+}
+
+.chat-conv-list{
+  padding:10px;
+  display:flex;
+  flex-direction:column;
+  gap:8px;
+}
+
+.chat-conv-item{
+  text-align:left;
+  padding:10px 12px;
+  border-radius: 12px;
+  background: rgba(255,255,255,.03);
+  border: 1px solid rgba(255,215,0,.12);
+  color: #fff;
+}
+
+.chat-conv-item.is-active{
+  border-color: rgba(255,215,0,.35);
+  background: rgba(255,215,0,.08);
+}
+
+.chat-messages{
+  padding: 12px;
+  height: calc(100% - 120px);
+  overflow:auto;
+  display:flex;
+  flex-direction:column;
+  gap:10px;
+}
+
+.chat-form{
+  display:flex;
+  gap:10px;
+  padding: 12px;
+  border-top: 1px solid rgba(255,215,0,.15);
+}
+
+.chat-form input{
+  flex:1;
+  padding: 12px 14px;
+  border-radius: 14px;
+  border: 1px solid rgba(255,215,0,.18);
+  background: rgba(0,0,0,.35);
+  color:#fff;
+}
+
+.chat-form button{
+  padding: 12px 14px;
+  border-radius: 14px;
+  border: none;
+  background: rgba(255,215,0,.9);
+  color:#000;
+  font-weight: 800;
+}
+
+.chat-msg{
+  display:flex;
+  justify-content:flex-start;
+}
+
+.chat-msg.me{
+  justify-content:flex-end;
+}
+
+.chat-bubble{
+  max-width: 74%;
+  padding: 10px 12px;
+  border-radius: 14px;
+  border: 1px solid rgba(255,215,0,.15);
+  background: rgba(255,255,255,.04);
+}
+
+.chat-msg.me .chat-bubble{
+  background: rgba(255,215,0,.12);
+  border-color: rgba(255,215,0,.35);
+}
+
+.chat-msg.system .chat-bubble{
+  opacity:.85;
+  font-style: italic;
+}
+
+.chat-meta{
+  margin-top: 6px;
+  font-size: 11px;
+  opacity: .65;
+}
