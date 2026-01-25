@@ -2874,3 +2874,61 @@ img, svg, canvas{ max-width: 100%; height: auto; }
   font-size: 11px;
   opacity: .65;
 }
+
+/* ==========================
+   CHAT — RESPONSIVE (mobile)
+   ========================== */
+
+/* desktop: split */
+.chat-layout{
+  display:grid;
+  grid-template-columns: 320px 1fr;
+  gap:12px;
+  height: calc(100vh - 140px);
+  padding: 12px;
+}
+
+/* mobile: 1 colonne + switch panels */
+@media (max-width: 900px){
+  .chat-layout{
+    grid-template-columns: 1fr;
+    height: calc(100vh - 140px);
+    position: relative;
+  }
+
+  /* par défaut on affiche la liste */
+  .chat-layout .chat-left{
+    display:block;
+  }
+
+  /* le chat est caché tant qu'on n'a pas choisi une conv */
+  .chat-layout .chat-main{
+    display:none;
+  }
+
+  /* quand on est en mode "chat ouvert" */
+  .chat-layout.is-chat-open .chat-left{
+    display:none;
+  }
+  .chat-layout.is-chat-open .chat-main{
+    display:block;
+  }
+
+  /* bouton retour visible seulement en mobile */
+  .chat-back-btn{
+    display:inline-flex !important;
+  }
+}
+
+/* bouton retour caché en desktop */
+.chat-back-btn{
+  display:none;
+  align-items:center;
+  gap:8px;
+  border:1px solid rgba(255,215,0,.2);
+  background: rgba(255,255,255,.03);
+  color:#fff;
+  padding:8px 10px;
+  border-radius: 12px;
+  font-weight:700;
+}
