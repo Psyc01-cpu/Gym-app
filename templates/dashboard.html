@@ -157,15 +157,19 @@
       <!-- Colonne droite : messages -->
       <main class="chat-main">
         <div class="chat-main-header">
-  
-          <!-- ✅ Bouton retour (utile sur mobile, caché en desktop via CSS) -->
-          <button id="chat-back" class="chat-back-btn" type="button">← Conversations</button>
-  
+        
+          <button id="chat-back"
+                  class="chat-back-btn"
+                  type="button"
+                  aria-label="Retour aux conversations">
+            ← Conversations
+          </button>
+        
           <div class="chat-main-headtext">
-            <div id="chat-title">—</div>
+            <div id="chat-title" class="chat-title">—</div>
             <div id="chat-status" class="chat-status">offline</div>
           </div>
-  
+        
         </div>
   
         <div id="chat-messages" class="chat-messages"></div>
