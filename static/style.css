@@ -2874,3 +2874,35 @@ img, svg, canvas{ max-width: 100%; height: auto; }
   font-size: 11px;
   opacity: .65;
 }
+
+/* ==========================
+   FIX iPhone: scroll + bottom nav
+   ========================== */
+
+/* 1) Le body ne scroll pas, c'est la zone contenu qui scroll */
+body.app {
+  height: 100dvh;              /* d=dynamic => mieux que 100vh sur iPhone */
+  overflow: hidden;
+}
+
+/* 2) La zone scrollable */
+.app-content {
+  height: calc(100dvh - 64px); /* 64px = hauteur top-bar (ajuste si besoin) */
+  overflow-y: auto;
+  -webkit-overflow-scrolling: touch;
+
+  /* réserve la place pour la barre du bas + safe area */
+  padding-bottom: calc(90px + env(safe-area-inset-bottom));
+}
+
+/* 3) La nav du bas ne doit pas manger le contenu */
+.bottom-nav {
+  height: 78px; /* ajuste à ta vraie hauteur */
+  padding-bottom: env(safe-area-inset-bottom);
+}
+
+/* 4) Important : si tu as un container chat interne scrollable */
+.chat-layout {
+  height: auto !important;
+  min-height: calc(100dvh - 64px - 78px - env(safe-area-inset-bottom));
+}
