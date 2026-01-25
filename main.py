@@ -1,3 +1,5 @@
+# main.py
+
 import os
 import json
 import time
@@ -5,6 +7,11 @@ import uuid
 import tempfile
 from datetime import datetime
 from collections import defaultdict
+
+# ✅ Chat proxy (stdlib)
+import urllib.parse
+import urllib.request
+import urllib.error
 
 import bcrypt
 import gspread
@@ -72,6 +79,11 @@ EXERCISES_SHEET = os.environ.get("EXERCISES_SHEET", "exercises").strip()
 PERFORMANCES_SHEET = os.environ.get("PERFORMANCES_SHEET", "performances").strip()
 STATS_SHEET = os.environ.get("STATS_SHEET", "stats").strip()
 
+# -------------------
+# CHAT (Google Apps Script Web App) - PROXY OPTION B
+# -------------------
+GS_CHAT_WEBAPP = os.environ.get("GS_CHAT_WEBAPP", "").strip()  # ex: https://script.google.com/macros/s/.../exec
+
 
 # -------------------
 # GOOGLE CREDS
@@ -110,21 +122,74 @@ def _open_spreadsheet(client):
         return client.open_by_key(SPREADSHEET_ID)
     return client.open(SPREADSHEET_NAME)
 
+
 def get_users_sheet():
     client = get_client()
     return _open_spreadsheet(client).worksheet(USERS_SHEET)
+
 
 def get_exercises_sheet():
     client = get_client()
     return _open_spreadsheet(client).worksheet(EXERCISES_SHEET)
 
+
 def get_performances_sheet():
     client = get_client()
     return _open_spreadsheet(client).worksheet(PERFORMANCES_SHEET)
 
+
 def get_stats_sheet():
     client = get_client()
     return _open_spreadsheet(client).worksheet(STATS_SHEET)
+
+
+# -------------------
+# CHAT HELPERS (Proxy -> Google Apps Script Web App)
+# -------------------
+
+def _gs_assert_configured():
+    if not GS_CHAT_WEBAPP:
+        raise HTTPException(status_code=500, detail="GS_CHAT_WEBAPP non défini (Railway env var manquante).")
+
+
+def gs_get(params: dict, timeout: int = 10):
+    """
+    Appelle le WebApp GAS en GET: ?action=list&room=...&limit=...
+    """
+    _gs_assert_configured()
+    qs = urllib.parse.urlencode(params)
+    url = f"{GS_CHAT_WEBAPP}?{qs}"
+
+    try:
+        req = urllib.request.Request(url, method="GET")
+        with urllib.request.urlopen(req, timeout=timeout) as resp:
+            raw = resp.read().decode("utf-8", errors="replace")
+            return json.loads(raw) if raw else {}
+    except urllib.error.HTTPError as e:
+        body = e.read().decode("utf-8", errors="replace") if hasattr(e, "read") else ""
+        raise HTTPException(status_code=502, detail=f"GAS HTTPError {e.code}: {body}")
+    except Exception as e:
+        raise HTTPException(status_code=502, detail=f"GAS GET error: {str(e)}")
+
+
+def gs_post(payload: dict, timeout: int = 10):
+    """
+    Appelle le WebApp GAS en POST JSON (action=send).
+    """
+    _gs_assert_configured()
+    data = json.dumps(payload).encode("utf-8")
+    headers = {"Content-Type": "application/json; charset=utf-8"}
+
+    try:
+        req = urllib.request.Request(GS_CHAT_WEBAPP, data=data, headers=headers, method="POST")
+        with urllib.request.urlopen(req, timeout=timeout) as resp:
+            raw = resp.read().decode("utf-8", errors="replace")
+            return json.loads(raw) if raw else {}
+    except urllib.error.HTTPError as e:
+        body = e.read().decode("utf-8", errors="replace") if hasattr(e, "read") else ""
+        raise HTTPException(status_code=502, detail=f"GAS HTTPError {e.code}: {body}")
+    except Exception as e:
+        raise HTTPException(status_code=502, detail=f"GAS POST error: {str(e)}")
 
 
 # -------------------
@@ -567,6 +632,7 @@ def create_performance(data: dict = Body(...)):
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
 
+
 @app.post("/api/performances/delete")
 def delete_performance(data: dict = Body(...)):
     user_id = data.get("user_id")
@@ -609,6 +675,49 @@ def delete_performance(data: dict = Body(...)):
         raise
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
+
+
+# -------------------
+# API - CHAT (Proxy Option B)
+# -------------------
+
+@app.get("/api/chat/list")
+def chat_list(room: str = "general", limit: int = 50):
+    """
+    Retourne les derniers messages.
+    Appelle GAS: ?action=list&room=...&limit=...
+    """
+    limit = max(1, min(int(limit or 50), 200))
+    data = gs_get({"action": "list", "room": room, "limit": limit}, timeout=10)
+    return data
+
+
+@app.post("/api/chat/send")
+def chat_send(data: dict = Body(...)):
+    """
+    Envoie un message.
+    Payload attendu: { room, user_id, username, message }
+    Appelle GAS en POST JSON avec action=send
+    """
+    room = (data.get("room") or "general").strip()
+    user_id = str(data.get("user_id") or "").strip()
+    username = (data.get("username") or "Profil").strip()
+    message = str(data.get("message") or "").strip()
+
+    if not message:
+        raise HTTPException(status_code=400, detail="Message vide")
+
+    payload = {
+        "action": "send",
+        "room": room,
+        "user_id": user_id,
+        "username": username,
+        "message": message
+    }
+
+    out = gs_post(payload, timeout=10)
+    return out
+
 
 # -------------------
 # HEALTH CHECK
