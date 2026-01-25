@@ -3036,3 +3036,12 @@ body.app {
 .chat-page{
   padding-top: calc(40px + env(safe-area-inset-top));
 }
+
+/* Cache l'ancien composer qui n'est pas dans la page chat */
+textarea:not(#chatInput),
+button:not(#chatSendBtn) {
+  /* on ne fait PAS ça en prod normalement, mais ça dépanne */
+}
+
+/* Meilleure version : cible le bloc parent si tu l'identifies */
+#legacy-composer { display: none !important; }
