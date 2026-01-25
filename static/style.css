@@ -3028,29 +3028,3 @@ body.app {
   z-index: 1000;
   padding-bottom: env(safe-area-inset-bottom);
 }
-
-/* ==========================
-   Décalage du contenu sous la top-bar
-   ========================== */
-
-:root {
-  --topbar-h: 72px;   /* hauteur réelle de ta top bar */
-}
-
-/* La top-bar reste fixe */
-.top-bar {
-  position: fixed;
-  top: 0;
-  left: 0;
-  right: 0;
-  z-index: 1000;
-}
-
-/* Tout le contenu démarre SOUS la top-bar */
-.app-content {
-  margin-top: var(--topbar-h);
-}
-
-.app-content {
-  margin-top: calc(var(--topbar-h) + env(safe-area-inset-top));
-}
