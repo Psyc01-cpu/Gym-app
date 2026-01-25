@@ -718,6 +718,74 @@ def chat_send(data: dict = Body(...)):
     out = gs_post(payload, timeout=10)
     return out
 
+import requests  # <-- ajoute cet import en haut avec les autres
+
+# -------------------
+# CHAT (Option B = Google Apps Script WebApp)
+# -------------------
+
+GS_CHAT_WEBAPP = os.environ.get("GS_CHAT_WEBAPP", "").strip()
+CHAT_TIMEOUT = float(os.environ.get("CHAT_TIMEOUT", "10"))
+
+def _require_chat_webapp():
+    if not GS_CHAT_WEBAPP:
+        raise HTTPException(status_code=500, detail="GS_CHAT_WEBAPP non défini (Railway env var manquante).")
+
+def _gas_get(params: dict):
+    _require_chat_webapp()
+    try:
+        r = requests.get(GS_CHAT_WEBAPP, params=params, timeout=CHAT_TIMEOUT)
+        r.raise_for_status()
+        return r.json()
+    except requests.exceptions.JSONDecodeError:
+        raise HTTPException(status_code=502, detail=f"GAS GET error: réponse non-JSON (status {r.status_code})")
+    except Exception as e:
+        raise HTTPException(status_code=502, detail=f"GAS GET error: {str(e)}")
+
+def _gas_post(payload: dict):
+    _require_chat_webapp()
+    try:
+        r = requests.post(GS_CHAT_WEBAPP, json=payload, timeout=CHAT_TIMEOUT)
+        r.raise_for_status()
+        return r.json()
+    except requests.exceptions.JSONDecodeError:
+        raise HTTPException(status_code=502, detail=f"GAS POST error: réponse non-JSON (status {r.status_code})")
+    except Exception as e:
+        raise HTTPException(status_code=502, detail=f"GAS POST error: {str(e)}")
+
+@app.get("/api/chat/ping")
+def chat_ping():
+    # ping GAS
+    return _gas_get({"action": "ping"})
+
+@app.get("/api/chat/list")
+def chat_list(room: str = "general", limit: int = 50, before_ts: str = ""):
+    # list messages
+    params = {"action": "list", "room": room, "limit": str(limit)}
+    if before_ts:
+        params["before_ts"] = before_ts
+    return _gas_get(params)
+
+@app.post("/api/chat/send")
+def chat_send(data: dict = Body(...)):
+    # send message
+    room = data.get("room", "general")
+    user = data.get("user", "anonymous")
+    text = data.get("text", "")
+    client_id = data.get("client_id", "")
+
+    if not text or not str(text).strip():
+        raise HTTPException(status_code=400, detail="Message vide")
+
+    payload = {
+        "action": "send",
+        "room": room,
+        "user": user,
+        "text": text,
+        "client_id": client_id
+    }
+    return _gas_post(payload)
+
 
 # -------------------
 # HEALTH CHECK
