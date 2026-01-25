@@ -2980,7 +2980,7 @@ body.app {
 
 /* 3) La nav du bas ne doit pas manger le contenu */
 .bottom-nav {
-  height: 32px; /* ajuste à ta vraie hauteur */
+  height: 64px; /* ajuste à ta vraie hauteur */
   padding-bottom: env(safe-area-inset-bottom);
 }
 
