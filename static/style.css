@@ -2970,7 +2970,7 @@ body.app {
 
 /* 2) La zone scrollable */
 .app-content {
-  height: calc(100dvh - 64px); /* 64px = hauteur top-bar (ajuste si besoin) */
+  height: calc(100dvh - 32px); /* 64px = hauteur top-bar (ajuste si besoin) */
   overflow-y: auto;
   -webkit-overflow-scrolling: touch;
 
@@ -2980,14 +2980,14 @@ body.app {
 
 /* 3) La nav du bas ne doit pas manger le contenu */
 .bottom-nav {
-  height: 48px; /* ajuste à ta vraie hauteur */
+  height: 32px; /* ajuste à ta vraie hauteur */
   padding-bottom: env(safe-area-inset-bottom);
 }
 
 /* 4) Important : si tu as un container chat interne scrollable */
 .chat-layout {
   height: auto !important;
-  min-height: calc(100dvh - 64px - 78px - env(safe-area-inset-bottom));
+  min-height: calc(100dvh - 32px - 78px - env(safe-area-inset-bottom));
 }
 
 /* ==========================
@@ -2996,7 +2996,7 @@ body.app {
 
 /* Hauteurs (ajuste si besoin) */
 :root{
-  --topbar-h: 48px;     /* hauteur de ta top-bar */
+  --topbar-h: 32px;     /* hauteur de ta top-bar */
   --bottomnav-h: 78px;  /* hauteur de ta bottom-nav */
 }
 
@@ -3034,5 +3034,5 @@ body.app {
    ========================= */
 
 .chat-page{
-  padding-top: calc(32px + env(safe-area-inset-top));
+  padding-top: calc(40px + env(safe-area-inset-top));
 }
