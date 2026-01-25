@@ -2940,3 +2940,20 @@ img, svg, canvas{ max-width: 100%; height: auto; }
 @media (max-width: 900px){
   .chat-layout.is-thread .chat-back-btn { display: inline-flex; }
 }
+
+/* Base */
+.chat-layout { display: flex; width: 100%; height: 100%; }
+.chat-left, .chat-main { min-height: 0; } /* important pour scroll */
+
+#chat-back { display: none; }
+
+/* Mobile: on switch via classes */
+@media (max-width: 900px){
+  .chat-layout.is-list .chat-left { display: block; width: 100%; }
+  .chat-layout.is-list .chat-main { display: none; }
+
+  .chat-layout.is-thread .chat-left { display: none; }
+  .chat-layout.is-thread .chat-main { display: block; width: 100%; }
+
+  .chat-layout.is-thread #chat-back { display: inline-flex; }
+}
