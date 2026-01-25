@@ -2989,3 +2989,42 @@ body.app {
   height: auto !important;
   min-height: calc(100dvh - 64px - 78px - env(safe-area-inset-bottom));
 }
+
+/* ==========================
+   FIX iPhone : contenu caché sous la top-bar
+   ========================== */
+
+/* Hauteurs (ajuste si besoin) */
+:root{
+  --topbar-h: 72px;     /* hauteur de ta top-bar */
+  --bottomnav-h: 78px;  /* hauteur de ta bottom-nav */
+}
+
+/* top-bar fixe */
+.top-bar{
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  z-index: 1000;
+  padding-top: env(safe-area-inset-top);
+}
+
+/* le contenu commence APRES la top-bar */
+.app-content{
+  padding-top: calc(var(--topbar-h) + env(safe-area-inset-top));
+  padding-bottom: calc(var(--bottomnav-h) + env(safe-area-inset-bottom));
+  height: 100dvh;
+  overflow-y: auto;
+  -webkit-overflow-scrolling: touch;
+}
+
+/* bottom nav fixe */
+.bottom-nav{
+  position: fixed;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  z-index: 1000;
+  padding-bottom: env(safe-area-inset-bottom);
+}
