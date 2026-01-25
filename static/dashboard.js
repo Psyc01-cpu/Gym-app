@@ -65,8 +65,6 @@ async function tryGet(urls){
 
 /* ==========================
    DASH STATS HELPERS
-   - Semaine: lundi 00:01 -> dimanche 23:59
-   - Mois: 1er 00:01 -> dernier 23:59
    ========================== */
 
 function startOfWeekMonday(d){
@@ -74,7 +72,7 @@ function startOfWeekMonday(d){
   const day = x.getDay(); // 0=dim, 1=lun...
   const diff = (day === 0 ? -6 : 1) - day;
   x.setDate(x.getDate() + diff);
-  x.setHours(0, 1, 0, 0); // ✅ lundi 00:01
+  x.setHours(0, 1, 0, 0); // lundi 00:01
   return x;
 }
 
@@ -82,19 +80,19 @@ function endOfWeekSunday(d){
   const s = startOfWeekMonday(d);
   const e = new Date(s);
   e.setDate(e.getDate() + 6);
-  e.setHours(23,59,59,999); // ✅ dimanche 23:59
+  e.setHours(23,59,59,999); // dimanche 23:59
   return e;
 }
 
 function startOfMonth(d){
   const x = new Date(d.getFullYear(), d.getMonth(), 1);
-  x.setHours(0,1,0,0); // ✅ 1er jour 00:01
+  x.setHours(0,1,0,0); // 1er 00:01
   return x;
 }
 
 function endOfMonth(d){
   const x = new Date(d.getFullYear(), d.getMonth()+1, 0);
-  x.setHours(23,59,59,999); // ✅ dernier jour 23:59
+  x.setHours(23,59,59,999); // dernier 23:59
   return x;
 }
 
@@ -102,11 +100,11 @@ function parseISODateLoose(v){
   if (!v) return null;
   const s = String(v);
 
-  // cas YYYY-MM-DD
+  // YYYY-MM-DD
   const m = s.match(/^(\d{4})-(\d{2})-(\d{2})$/);
   if (m) return new Date(Number(m[1]), Number(m[2]) - 1, Number(m[3]), 0, 0, 0, 0);
 
-  // cas ISO avec microsecondes -> on tronque à 3 chiffres (ms)
+  // ISO microsecondes -> tronque ms
   const m2 = s.match(/^(.+\.\d{3})\d+(Z)?$/);
   const cleaned = m2 ? (m2[1] + (m2[2] || "")) : s;
 
@@ -128,9 +126,8 @@ function formatKg(n){
 
 /* ==========================
    OBJECTIF 3 séances / semaine
-   - 1 séance = au moins 1 perf dans la journée
-   - cap à 3 : au-delà on reste à 3/3
    ========================== */
+
 function dayKey(d){
   const yyyy = d.getFullYear();
   const mm = String(d.getMonth()+1).padStart(2,"0");
@@ -155,47 +152,31 @@ function setRingProgress(ratio){
 }
 
 /* ==========================
-   KPI PATCH (Série -> Ratio / Séances -> Calories)
-   - Pour l’instant valeurs en dur
-   - Plus tard : récupérer depuis Suivi + Nutrition
+   KPI PATCH (Ratio / Calories)
    ========================== */
+
 function computeShoulderWaistRatio(shoulderCm, waistCm){
   const s = Number(shoulderCm || 0);
   const w = Number(waistCm || 0);
   if (!s || !w) return "—";
-  return (s / w).toFixed(2);
-}
-
-function setCardByIds({ labelId, valueId, labelText, valueText }){
-  const labelEl = labelId ? qs(labelId) : null;
-  const valueEl = valueId ? qs(valueId) : null;
-  if (labelEl) labelEl.textContent = labelText;
-  if (valueEl) valueEl.textContent = valueText;
-  return Boolean(labelEl || valueEl);
+  return (s / w).toFixed(2).replace(".", ","); // affichage FR
 }
 
 function setCardByTitle(oldTitle, newTitle, newValue){
   const normalize = (t) => String(t || "").trim().toLowerCase();
 
-  // on balaye les cartes (classes typiques)
-  const candidates = qsa(
-    ".stat-card, .metric-card, .kpi-card, .dashboard-card, .tile, .card"
-  );
-
+  const candidates = qsa(".stat-card, .metric-card, .kpi-card, .dashboard-card, .tile, .card");
   for (const card of candidates){
     const titleEl =
-      card.querySelector(".stat-title, .metric-title, .kpi-title, .card-title, .label, h3, h4, h5, .title")
-      || null;
+      card.querySelector(".stat-title, .metric-title, .kpi-title, .card-title, .label, h3, h4, h5, .title") || null;
 
     if (!titleEl) continue;
 
     if (normalize(titleEl.textContent) === normalize(oldTitle)){
       titleEl.textContent = newTitle;
 
-      // Valeur : on privilégie un élément "value" existant, sinon le premier <strong> de la carte
       const valueEl =
-        card.querySelector(".stat-value, .metric-value, .kpi-value, .value, .number, strong")
-        || null;
+        card.querySelector(".stat-value, .metric-value, .kpi-value, .value, .number, strong") || null;
 
       if (valueEl) valueEl.textContent = newValue;
       return true;
@@ -205,33 +186,31 @@ function setCardByTitle(oldTitle, newTitle, newValue){
 }
 
 function updateRatioAndCaloriesCards(){
-  // Valeurs en dur (temporaire)
-  const shoulderCm = 120;
-  const waistCm = 75;
-  const calorieTarget = 2800;
+  // valeurs en dur pour l’instant
+  const ratio = computeShoulderWaistRatio(120, 75); // => 1,60
+  const calText = `${(2500).toLocaleString("fr-FR")} kcal`;
 
-  const ratio = computeShoulderWaistRatio(shoulderCm, waistCm);
-  const ratioText = ratio;            // ex: "1.60"
-  const calText = `${calorieTarget.toLocaleString("fr-FR")} kcal`;
+  setCardByTitle("Série", "Ratio épaules / taille", ratio);
+  setCardByTitle("Séances", "Objectif calories", calText);
+}
 
-  // 1) Si ton HTML a des IDs dédiés (au cas où)
-  //    Tu peux ajuster si tes IDs sont différents.
-  const doneByIds1 = setCardByIds({
-    labelId: "#streak-label",
-    valueId: "#streak-value",
-    labelText: "Ratio Épaules / Taille",
-    valueText: ratioText
-  });
-  const doneByIds2 = setCardByIds({
-    labelId: "#sessions-label",
-    valueId: "#sessions-value",
-    labelText: "Objectif calories",
-    valueText: calText
-  });
+/* ==========================
+   Fetch JSON avec timeout (évite "Chargement…" infini)
+   ========================== */
+async function fetchJsonWithTimeout(url, { timeoutMs = 7000 } = {}){
+  const ctrl = new AbortController();
+  const t = setTimeout(() => ctrl.abort(), timeoutMs);
 
-  // 2) Sinon : on remplace en cherchant les titres "Série" et "Séances"
-  if (!doneByIds1) setCardByTitle("Série", "Ratio Épaules / Taille", ratioText);
-  if (!doneByIds2) setCardByTitle("Séances", "Objectif calories", calText);
+  try{
+    const res = await fetch(url, { cache: "no-store", signal: ctrl.signal });
+    if (!res.ok) {
+      const txt = await res.text().catch(()=> "");
+      throw new Error(`HTTP ${res.status} ${txt}`);
+    }
+    return await res.json().catch(()=> ({}));
+  } finally {
+    clearTimeout(t);
+  }
 }
 
 document.addEventListener("DOMContentLoaded", () => {
@@ -247,55 +226,9 @@ document.addEventListener("DOMContentLoaded", () => {
   if (usernameEl) usernameEl.textContent = username || "Profil";
   if (!userId) console.warn("Paramètre ?user_id manquant : les appels API ne fonctionneront pas.");
 
-  // ✅ applique le patch KPI dès le chargement UI
+  // KPI patch immédiat
   updateRatioAndCaloriesCards();
 
-  // ==========================
-  // PLACEHOLDERS (à brancher plus tard)
-  // ==========================
-  const UI_PLACEHOLDERS = {
-    shoulderWaistRatio: "1,62",     // <-- tu pourras calculer/charger plus tard
-    calorieTarget: "2 500 kcal",    // <-- idem (nutrition)
-  };
-  
-  // Remplace un "tile" dashboard en trouvant le titre exact (ex: "Série", "Séances")
-  function replaceDashboardTile(oldTitle, newTitle, newValueHtml){
-    const root = qs("#dashboard-page") || document;
-  
-    // Cherche un élément dont le texte est exactement oldTitle
-    const titleEl = Array.from(root.querySelectorAll("*"))
-      .find(el => el.children.length === 0 && (el.textContent || "").trim() === oldTitle);
-  
-    if (!titleEl) {
-      console.warn(`Tile "${oldTitle}" introuvable (HTML différent).`);
-      return false;
-    }
-  
-    // Trouve le conteneur de la carte (selon tes classes)
-    const card = titleEl.closest(".stat-card, .dash-card, .card, .metric-card, .tile, .panel") || titleEl.parentElement;
-  
-    // Titre
-    titleEl.textContent = newTitle;
-  
-    // Valeur : on privilégie le <strong> existant, sinon on le crée
-    let strong = card?.querySelector("strong");
-    if (!strong) {
-      // Essaie de viser un bloc "valeur" courant
-      const candidate = card?.querySelector(".value, .stat-value, .metric-value") || card;
-      strong = document.createElement("strong");
-      candidate?.appendChild(strong);
-    }
-  
-    if (strong) strong.innerHTML = newValueHtml;
-  
-    return true;
-  }
-  
-  // ✅ Applique le remplacement
-  replaceDashboardTile("Série", "Ratio épaules / taille", UI_PLACEHOLDERS.shoulderWaistRatio);
-  replaceDashboardTile("Séances", "Objectif calories", UI_PLACEHOLDERS.calorieTarget);
-  
-  
   // ==========================
   // DASHBOARD STATS (API ALL PERFS)
   // ==========================
@@ -303,17 +236,16 @@ document.addEventListener("DOMContentLoaded", () => {
     if (!userId) return [];
     const u = encodeURIComponent(userId);
 
-    // 1) récupère les exercices
-    let exercises = [];
+    // 1) exercices
     const exRes = await fetch(`/api/exercises?user_id=${u}`, { cache: "no-store" });
     if (!exRes.ok) return [];
     const exJson = await exRes.json().catch(()=>[]);
-    exercises = Array.isArray(exJson) ? exJson : [];
+    const exercises = Array.isArray(exJson) ? exJson : [];
 
     const ids = exercises.map(e => e.exercise_id || e.id).filter(Boolean);
     if (!ids.length) return [];
 
-    // 2) récupère les perfs par exercice
+    // 2) perfs
     const packs = await Promise.all(ids.map(async (eid) => {
       const url = `/api/performances?user_id=${u}&exercise_id=${encodeURIComponent(eid)}`;
       const r = await fetch(url, { cache: "no-store" });
@@ -338,7 +270,6 @@ document.addEventListener("DOMContentLoaded", () => {
     let weekVolume = 0;
     let weekPerfCount = 0;
     let monthVolume = 0;
-
     const daysWithSession = new Set();
 
     for (const p of (perfs || [])){
@@ -376,14 +307,13 @@ document.addEventListener("DOMContentLoaded", () => {
     setObjectiveText(stats.cappedSessions, 3);
     setRingProgress(stats.cappedSessions / 3);
 
-    // ✅ s’assure que les KPI restent bons même après rerender/refresh
+    // garde Ratio/Calories même après refresh
     updateRatioAndCaloriesCards();
   }
 
   async function refreshDashboardStats(){
     try{
       const perfs = await fetchAllPerformances();
-      console.log("PERFS COUNT:", perfs.length, perfs[0]);
       const stats = computeDashboardStats(perfs);
       renderDashboardStats(stats);
     }catch(err){
@@ -410,6 +340,7 @@ document.addEventListener("DOMContentLoaded", () => {
     exercisesPage?.classList.add("hidden");
     setActiveNav("dashboard");
     refreshDashboardStats();
+    loadLeastExercise(); // recharge aussi le CTA
   }
 
   async function showExercises() {
@@ -484,6 +415,7 @@ document.addEventListener("DOMContentLoaded", () => {
 
       await loadExercises();
       await refreshDashboardStats();
+      await loadLeastExercise();
     } catch (err) {
       console.error(err);
       alert("Erreur lors de la création");
@@ -610,6 +542,7 @@ document.addEventListener("DOMContentLoaded", () => {
       await loadPerformancesForExercise(currentExercise);
       await loadExercises();
       await refreshDashboardStats();
+      await loadLeastExercise();
     } catch (err) {
       console.error(err);
       alert("Erreur lors de l'enregistrement.");
@@ -707,6 +640,7 @@ document.addEventListener("DOMContentLoaded", () => {
       await loadPerformancesForExercise(currentExercise);
       await loadExercises();
       await refreshDashboardStats();
+      await loadLeastExercise();
     } catch (err) {
       console.error(err);
       alert("Erreur suppression");
@@ -714,15 +648,14 @@ document.addEventListener("DOMContentLoaded", () => {
   }
 
   // ==========================
-  // API — LEAST EXERCISE
+  // API — LEAST EXERCISE (CTA cliquable)
   // ==========================
   let leastExerciseRef = null; // { exercise_id, name, zone }
-  
+
   function bindLeastExerciseClick(){
     const label = qs("#least-exercise-name");
     if (!label) return;
-  
-    // On cible soit un conteneur dédié, soit un parent logique
+
     const host =
       qs("#least-exercise-card") ||
       qs("#least-exercise-btn") ||
@@ -730,23 +663,22 @@ document.addEventListener("DOMContentLoaded", () => {
       label.closest(".dash-cta") ||
       label.closest(".card") ||
       label.parentElement;
-  
+
     if (!host) return;
-  
-    // évite de binder 10 fois
+
     if (host.dataset.boundClick === "1") return;
     host.dataset.boundClick = "1";
-  
+
     host.style.cursor = "pointer";
-  
+
     host.addEventListener("click", async (e) => {
       e.preventDefault();
       e.stopPropagation();
-  
+
       try {
         if (!userId) return;
-  
-        // 1) Si on a déjà l'id : on ouvre direct
+
+        // si on a l'id, on ouvre direct
         if (leastExerciseRef?.exercise_id) {
           openExerciseModal({
             exercise_id: leastExerciseRef.exercise_id,
@@ -755,14 +687,14 @@ document.addEventListener("DOMContentLoaded", () => {
           });
           return;
         }
-  
-        // 2) Sinon : on cherche dans /api/exercises par le nom affiché
+
+        // sinon : fallback par nom
         const targetName = String(leastExerciseRef?.name || label.textContent || "").trim();
         if (!targetName || targetName === "Chargement…" || targetName === "Aucun exercice") return;
-  
+
         const res = await fetch(`/api/exercises?user_id=${encodeURIComponent(userId)}`, { cache: "no-store" });
         if (!res.ok) throw new Error("Impossible de récupérer la liste des exercices");
-  
+
         const exercises = await res.json().catch(() => []);
         const normalized = (Array.isArray(exercises) ? exercises : []).map((ex) => ({
           exercise_id: ex.exercise_id || ex.id || "",
@@ -770,79 +702,61 @@ document.addEventListener("DOMContentLoaded", () => {
           zone: ex.zone || "",
           video_url: ex.video_url || ex.video || "",
         }));
-  
+
         const tn = targetName.toLowerCase();
         const found =
           normalized.find(x => String(x.name || "").trim().toLowerCase() === tn) ||
           normalized.find(x => String(x.name || "").trim().toLowerCase().includes(tn));
-  
+
         if (!found?.exercise_id) {
-          alert("Exercice introuvable. (Le backend ne renvoie pas l'exercise_id)");
+          alert("Exercice introuvable.");
           return;
         }
-  
-        // On ouvre le même modal que "Ouvrir"
+
         openExerciseModal(found);
-  
+
       } catch (err) {
         console.error("Erreur ouverture least exercise:", err);
         alert("Erreur lors de l'ouverture de l'exercice.");
       }
     });
   }
-  
-  async function loadLeastExercise() {
+
+  async function loadLeastExercise(){
     const label = qs("#least-exercise-name");
-  
-    // Si l'élément n'existe pas, on sort proprement
     if (!label) {
-      console.warn("loadLeastExercise: #least-exercise-name introuvable dans le DOM");
+      console.warn("loadLeastExercise: #least-exercise-name introuvable");
       return;
     }
-  
-    // On met "Chargement..." MAIS on garantit qu'on ne restera pas bloqué
+
     label.textContent = "Chargement…";
-  
+
     if (!userId) {
-      console.warn("loadLeastExercise: userId manquant");
       label.textContent = "Aucun exercice";
       leastExerciseRef = null;
       return;
     }
-  
+
     try {
       const url = `/api/least-exercise?user_id=${encodeURIComponent(userId)}`;
-      const res = await fetch(url, { cache: "no-store" });
-  
-      if (!res.ok) {
-        const txt = await res.text().catch(() => "");
-        throw new Error(`least-exercise HTTP ${res.status} ${txt}`);
-      }
-  
-      const data = await res.json().catch(() => ({}));
+      const data = await fetchJsonWithTimeout(url, { timeoutMs: 7000 });
       console.log("least-exercise payload:", data);
-  
-      // Tolérant : {exercise:""} ou {name:""} + éventuellement {exercise_id:""}
+
       const exName = String(data.exercise || data.name || "").trim();
       const exId = data.exercise_id || data.id || null;
-  
+
       leastExerciseRef = { exercise_id: exId, name: exName, zone: data.zone || "" };
-  
+
       label.textContent = exName || "Aucun exercice";
-  
-      // Rend la tuile cliquable (on bind une seule fois)
+
       bindLeastExerciseClick();
-  
     } catch (err) {
-      console.error("Erreur chargement exercice faible:", err);
-  
-      // ✅ IMPORTANT : on évite de rester sur "Chargement..."
+      console.error("least-exercise error:", err);
       label.textContent = "Aucun exercice";
       leastExerciseRef = null;
+      bindLeastExerciseClick();
     }
   }
-
-
 
   // ==========================
   // API — EXERCISES
@@ -937,7 +851,6 @@ document.addEventListener("DOMContentLoaded", () => {
   // INIT
   // ==========================
   showDashboard();
-  renderRatioAndCalories();
   loadLeastExercise();
   refreshDashboardStats();
 });
