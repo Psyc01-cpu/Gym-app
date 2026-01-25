@@ -2980,7 +2980,7 @@ body.app {
 
 /* 3) La nav du bas ne doit pas manger le contenu */
 .bottom-nav {
-  height: 78px; /* ajuste à ta vraie hauteur */
+  height: 48px; /* ajuste à ta vraie hauteur */
   padding-bottom: env(safe-area-inset-bottom);
 }
 
@@ -2996,7 +2996,7 @@ body.app {
 
 /* Hauteurs (ajuste si besoin) */
 :root{
-  --topbar-h: 72px;     /* hauteur de ta top-bar */
+  --topbar-h: 48px;     /* hauteur de ta top-bar */
   --bottomnav-h: 78px;  /* hauteur de ta bottom-nav */
 }
 
@@ -3034,5 +3034,5 @@ body.app {
    ========================= */
 
 .chat-page{
-  padding-top: calc(24px + env(safe-area-inset-top));
+  padding-top: calc(32px + env(safe-area-inset-top));
 }
