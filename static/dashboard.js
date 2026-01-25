@@ -152,7 +152,7 @@ function setRingProgress(ratio){
 }
 
 /* ==========================
-   KPI PATCH (Ratio / Calories)
+   KPI PATCH (Ratio / Calories) — ROBUSTE
    ========================== */
 
 function computeShoulderWaistRatio(shoulderCm, waistCm){
@@ -162,6 +162,36 @@ function computeShoulderWaistRatio(shoulderCm, waistCm){
   return (s / w).toFixed(2).replace(".", ","); // affichage FR
 }
 
+// Méthode robuste : trouve le texte exact "Série" / "Séances" même si pas de class
+function replaceDashboardTile(oldTitle, newTitle, newValue){
+  const normalize = (s) => String(s || "").trim().toLowerCase();
+
+  const leafEls = Array.from(document.querySelectorAll("*"))
+    .filter(el => el.children.length === 0);
+
+  const titleEl = leafEls.find(el => normalize(el.textContent) === normalize(oldTitle));
+  if (!titleEl) return false;
+
+  const card =
+    titleEl.closest(".stat-card, .dash-card, .card, .metric-card, .tile, .panel") ||
+    titleEl.parentElement;
+
+  titleEl.textContent = newTitle;
+
+  let valueEl =
+    card.querySelector("strong") ||
+    card.querySelector(".value, .stat-value, .metric-value, .kpi-value, .number");
+
+  if (!valueEl) {
+    valueEl = document.createElement("strong");
+    card.appendChild(valueEl);
+  }
+
+  valueEl.textContent = newValue;
+  return true;
+}
+
+// Fallback (si ton HTML a des titres structurés)
 function setCardByTitle(oldTitle, newTitle, newValue){
   const normalize = (t) => String(t || "").trim().toLowerCase();
 
@@ -187,11 +217,16 @@ function setCardByTitle(oldTitle, newTitle, newValue){
 
 function updateRatioAndCaloriesCards(){
   // valeurs en dur pour l’instant
-  const ratio = computeShoulderWaistRatio(120, 75); // => 1,60
+  const ratio = computeShoulderWaistRatio(120, 75); // ex: 1,60
   const calText = `${(2500).toLocaleString("fr-FR")} kcal`;
 
-  setCardByTitle("Série", "Ratio épaules / taille", ratio);
-  setCardByTitle("Séances", "Objectif calories", calText);
+  // 1) robuste (texte exact)
+  const ok1 = replaceDashboardTile("Série", "Ratio épaules / taille", ratio);
+  const ok2 = replaceDashboardTile("Séances", "Objectif calories", calText);
+
+  // 2) fallback si jamais
+  if (!ok1) setCardByTitle("Série", "Ratio épaules / taille", ratio);
+  if (!ok2) setCardByTitle("Séances", "Objectif calories", calText);
 }
 
 /* ==========================
@@ -678,7 +713,6 @@ document.addEventListener("DOMContentLoaded", () => {
       try {
         if (!userId) return;
 
-        // si on a l'id, on ouvre direct
         if (leastExerciseRef?.exercise_id) {
           openExerciseModal({
             exercise_id: leastExerciseRef.exercise_id,
@@ -688,7 +722,6 @@ document.addEventListener("DOMContentLoaded", () => {
           return;
         }
 
-        // sinon : fallback par nom
         const targetName = String(leastExerciseRef?.name || label.textContent || "").trim();
         if (!targetName || targetName === "Chargement…" || targetName === "Aucun exercice") return;
 
@@ -740,13 +773,11 @@ document.addEventListener("DOMContentLoaded", () => {
     try {
       const url = `/api/least-exercise?user_id=${encodeURIComponent(userId)}`;
       const data = await fetchJsonWithTimeout(url, { timeoutMs: 7000 });
-      console.log("least-exercise payload:", data);
 
       const exName = String(data.exercise || data.name || "").trim();
       const exId = data.exercise_id || data.id || null;
 
       leastExerciseRef = { exercise_id: exId, name: exName, zone: data.zone || "" };
-
       label.textContent = exName || "Aucun exercice";
 
       bindLeastExerciseClick();
